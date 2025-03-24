@@ -1,0 +1,45 @@
+# Dependency directories
+node_modules/
+# Build output directories
+# Log files
+*.log
+
+# Environment files
+.env
+.env.*
+
+# Ignore all directories that might contain dependencies or build artifacts
+# Common folders that should not be touched
+coverage/
+public/
+
+# Specific ignore patterns for nested node modules and build outputs
+# Other specific directories (if you have other directories like this)
+**/compiled
+**/polyfills
+**/.github
+
+# Ignore large configuration and manifest files
+package-lock.json
+
+# Ignore specific large and less relevant directories from the provided list
+.git/
+.editorconfig/
+.editorconfig/node_modules/
+.editorconfig/node_modules/.bin/
+.editorconfig/node_modules/brace-expansion/
+.editorconfig/node_modules/minimatch/
+.editorconfig/node_modules/minimatch/dist/
+.editorconfig/node_modules/minimatch/dist/cjs/
+.editorconfig/node_modules/minimatch/dist/mjs/
+.editorconfig/node_modules/semver/
+.editorconfig/node_modules/semver/bin/
+.editorconfig/node_modules/semver/classes/
+.editorconfig/node_modules/semver/functions/
+.editorconfig/node_modules/semver/internal/
+.editorconfig/node_modules/semver/ranges/
+
+# Specific directories from your project structure
+.history
+*.tmp
+*.temp
