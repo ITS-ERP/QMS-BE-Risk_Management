@@ -1,4 +1,4 @@
-import * as assetIntegration from '../../data-access/integrations/asset.integration';
+import * as assetIntegration from '../../data-access/integrations/erp_asset.integration';
 
 export class AssetService {
   async fetchAsset() {

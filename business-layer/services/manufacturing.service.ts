@@ -1,4 +1,4 @@
-import * as manufacturingIntegration from '../../data-access/integrations/manufacturing.integration';
+import * as manufacturingIntegration from '../../data-access/integrations/erp_manufacturing.integration';
 
 export class ManufacturingService {
   async fetchProductionRequestHeader() {

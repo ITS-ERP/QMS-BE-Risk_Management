@@ -1,4 +1,4 @@
-import * as inventoryIntegration from '../../data-access/integrations/inventory.integration';
+import * as inventoryIntegration from '../../data-access/integrations/erp_inventory.integration';
 
 export class InventoryService {
   async fetchAllReceive() {
