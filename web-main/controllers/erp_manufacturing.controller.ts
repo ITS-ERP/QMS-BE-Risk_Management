@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ManufacturingService } from '../../business-layer/services/manufacturing.service';
+import { ManufacturingService } from '../../business-layer/services/erp_manufacturing.service';
 import { BaseController } from '../common/base.controller';
 import { MessagesKey } from '../../helpers/messages/messagesKey';
 

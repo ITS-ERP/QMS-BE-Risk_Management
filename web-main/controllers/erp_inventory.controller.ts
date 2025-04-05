@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { InventoryService } from '../../business-layer/services/inventory.service';
+import { InventoryService } from '../../business-layer/services/erp_inventory.service';
 import { BaseController } from '../common/base.controller';
 import { MessagesKey } from '../../helpers/messages/messagesKey';
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { AssetController } from '../controllers/asset.controller';
+import { AssetController } from '../controllers/erp_asset.controller';
 
 const router = Router();
 const assetController = new AssetController();

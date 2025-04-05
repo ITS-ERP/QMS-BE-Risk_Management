@@ -2,9 +2,9 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import db from '../infrastructure/models';
-import inventoryRouter from './routers/inventory.router';
-import manufacturingRouter from './routers/manufacturing.router';
-import assetRouter from './routers/asset.router';
+import inventoryRouter from './routers/erp_inventory.router';
+import manufacturingRouter from './routers/erp_manufacturing.router';
+import assetRouter from './routers/erp_asset.router';
 
 dotenv.config();
 

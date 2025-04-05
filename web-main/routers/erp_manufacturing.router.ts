@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { ManufacturingController } from '../controllers/manufacturing.controller';
+import { ManufacturingController } from '../controllers/erp_manufacturing.controller';
 
 const router = Router();
 const manufacturingController = new ManufacturingController();
