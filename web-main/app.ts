@@ -26,7 +26,7 @@ db.sequelize
 // Define routes
 app.use('/rm/api/in', inventoryRouter);
 app.use('/rm/api/mf', manufacturingRouter);
-app.use('/rm//api/fa', assetRouter);
+app.use('/rm/api/fa', assetRouter);
 
 // Set the port
 const PORT = process.env.PORT;
