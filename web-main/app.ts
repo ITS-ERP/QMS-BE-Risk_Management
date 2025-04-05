@@ -2,9 +2,9 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import db from '../infrastructure/models';
-import bookRouter from './routers/book.router';
-import loanRouter from './routers/loan.router';
-import userRouter from './routers/user.router';
+import inventoryRouter from './routers/inventory.router';
+import manufacturingRouter from './routers/manufacturing.router';
+import assetRouter from './routers/asset.router';
 
 dotenv.config();
 
@@ -24,9 +24,9 @@ db.sequelize
   .catch((err: object) => console.log('Error syncing tables: ', err));
 
 // Define routes
-app.use('/api/book', bookRouter);
-app.use('/api/loan', loanRouter);
-app.use('/api/user', userRouter);
+app.use('/rm/api/in', inventoryRouter);
+app.use('/rm/api/mf', manufacturingRouter);
+app.use('/rm//api/fa', assetRouter);
 
 // Set the port
 const PORT = process.env.PORT;
