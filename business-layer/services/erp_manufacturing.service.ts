@@ -194,7 +194,7 @@ export class ManufacturingService {
     return top5Monthly;
   }
 
-  async getInspectionProductByYear() {
+  async getAllInspectionProductByYear() {
     const response = await manufacturingIntegration.getInspectionProduct();
     const data = response.data.data;
 
@@ -220,9 +220,40 @@ export class ManufacturingService {
       },
     );
 
+    const allYearlyData = Object.entries(yearlyData)
+      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+      .map(([year, values]) => ({ year, ...values }));
+
+    return allYearlyData;
+  }
+
+  async getDefectInspectionProductByYear() {
+    const response = await manufacturingIntegration.getInspectionProduct();
+    const data = response.data.data;
+
+    const yearlyData: { [key: string]: { defect: number } } = {};
+
+    data.forEach(
+      (item: {
+        quantity_used: string;
+        quantity_reject: string;
+        entry_date: string;
+      }) => {
+        const quantityReject = parseFloat(item.quantity_reject);
+        const entryDate = new Date(item.entry_date);
+        const yearKey = entryDate.getFullYear().toString();
+
+        if (!yearlyData[yearKey]) {
+          yearlyData[yearKey] = { defect: 0 };
+        }
+
+        yearlyData[yearKey].defect += quantityReject;
+      },
+    );
+
     const top5Yearly = Object.entries(yearlyData)
       .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      // .slice(0, 5)
+      .slice(0, 5)
       .map(([year, values]) => ({ year, ...values }));
 
     return top5Yearly;

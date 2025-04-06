@@ -144,13 +144,32 @@ export class ManufacturingController extends BaseController {
     }
   }
 
-  public async getInspectionProductByYearController(
+  public async getDefectInspectionProductByYearController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
       const inspectionProductByYear =
-        await this.manufacturingService.getInspectionProductByYear();
+        await this.manufacturingService.getDefectInspectionProductByYear();
+      return this.sendSuccessGet(
+        req,
+        res,
+        inspectionProductByYear,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  public async getAllInspectionProductByYearController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const inspectionProductByYear =
+        await this.manufacturingService.getAllInspectionProductByYear();
       return this.sendSuccessGet(
         req,
         res,

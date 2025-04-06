@@ -29,6 +29,24 @@ export class InventoryController extends BaseController {
     }
   }
 
+  getAllTransferController = async (
+    req: Request,
+    res: Response,
+  ): Promise<Response> => {
+    try {
+      const allTransfer = await this.inventoryService.fetchAllTransfer();
+      return this.sendSuccessGet(
+        req,
+        res,
+        allTransfer,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  };
+
   public async getReceiveTypeController(
     req: Request,
     res: Response,
@@ -65,12 +83,12 @@ export class InventoryController extends BaseController {
     }
   }
 
-  public async getReceiveByYearController(
+  public async getAllReceiveByYearController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      const receiveByYear = await this.inventoryService.getReceiveByYear();
+      const receiveByYear = await this.inventoryService.getAllReceiveByYear();
       return this.sendSuccessGet(
         req,
         res,
@@ -83,30 +101,50 @@ export class InventoryController extends BaseController {
     }
   }
 
-  getAllTransferController = async (
+  public async getRejectReceiveByYearController(
     req: Request,
     res: Response,
-  ): Promise<Response> => {
+  ): Promise<Response> {
     try {
-      const allTransfer = await this.inventoryService.fetchAllTransfer();
+      const receiveByYear =
+        await this.inventoryService.getRejectReceiveByYear();
       return this.sendSuccessGet(
         req,
         res,
-        allTransfer,
+        receiveByYear,
         MessagesKey.SUCCESSGET,
         200,
       );
     } catch (error) {
       return this.handleError(req, res, error, 500);
     }
-  };
+  }
 
-  public async getTransferByYearController(
+  public async getAllTransferByYearController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      const transferByYear = await this.inventoryService.getTransferByYear();
+      const transferByYear = await this.inventoryService.getAllTransferByYear();
+      return this.sendSuccessGet(
+        req,
+        res,
+        transferByYear,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  public async getRejectTransferByYearController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const transferByYear =
+        await this.inventoryService.getRejectTransferByYear();
       return this.sendSuccessGet(
         req,
         res,

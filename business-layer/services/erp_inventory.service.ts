@@ -91,7 +91,7 @@ export class InventoryService {
     return top5Monthly;
   }
 
-  async getReceiveByYear() {
+  async getAllReceiveByYear() {
     const response = await inventoryIntegration.getAllReceive();
     const data = response.data.data;
 
@@ -122,15 +122,51 @@ export class InventoryService {
       },
     );
 
+    const allYearlyData = Object.entries(yearlyData)
+      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+      .reverse()
+      .map(([year, values]) => ({ year, ...values }));
+
+    return allYearlyData;
+  }
+
+  async getRejectReceiveByYear() {
+    const response = await inventoryIntegration.getAllReceive();
+    const data = response.data.data;
+
+    const yearlyData: { [key: string]: { reject: number } } = {};
+
+    data.forEach(
+      (item: {
+        received_date: string;
+        receiveDetails: {
+          item_rejected_quantity: string;
+        }[];
+      }) => {
+        const receivedDate = new Date(item.received_date);
+        const yearKey = receivedDate.getFullYear().toString();
+
+        if (!yearlyData[yearKey]) {
+          yearlyData[yearKey] = { reject: 0 };
+        }
+
+        item.receiveDetails.forEach((detail) => {
+          const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
+          yearlyData[yearKey].reject += rejectedQuantity;
+        });
+      },
+    );
+
     const top5Yearly = Object.entries(yearlyData)
       .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      // .slice(0, 5)
+      .slice(0, 5)
+      .reverse()
       .map(([year, values]) => ({ year, ...values }));
 
     return top5Yearly;
   }
 
-  async getTransferByYear() {
+  async getAllTransferByYear() {
     const response = await inventoryIntegration.getAllTransfer();
     const data = response.data.data;
 
@@ -161,9 +197,45 @@ export class InventoryService {
       },
     );
 
+    const allYearlyData = Object.entries(yearlyData)
+      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+      .reverse()
+      .map(([year, values]) => ({ year, ...values }));
+
+    return allYearlyData;
+  }
+
+  async getRejectTransferByYear() {
+    const response = await inventoryIntegration.getAllTransfer();
+    const data = response.data.data;
+
+    const yearlyData: { [key: string]: { reject: number } } = {};
+
+    data.forEach(
+      (item: {
+        transfer_date: string;
+        transferDetails: {
+          item_rejected_quantity: string;
+        }[];
+      }) => {
+        const transferDate = new Date(item.transfer_date);
+        const yearKey = transferDate.getFullYear().toString();
+
+        if (!yearlyData[yearKey]) {
+          yearlyData[yearKey] = { reject: 0 };
+        }
+
+        item.transferDetails.forEach((detail) => {
+          const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
+          yearlyData[yearKey].reject += rejectedQuantity;
+        });
+      },
+    );
+
     const top5Yearly = Object.entries(yearlyData)
       .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      // .slice(0, 5)
+      .slice(0, 5)
+      .reverse()
       .map(([year, values]) => ({ year, ...values }));
 
     return top5Yearly;
