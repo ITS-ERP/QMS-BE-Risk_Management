@@ -46,4 +46,98 @@ export class CRMRequisitionController extends BaseController {
       return this.handleError(req, res, error, 500);
     }
   }
+
+  public async getAllLoRAcceptRejectController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const retail_code = req.query.retail_code as string | undefined;
+      const allLoRAcceptReject =
+        await this.crmRequisitionService.getAllLoRAcceptReject(
+          industry_code,
+          retail_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        allLoRAcceptReject,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  public async getLoRRejectController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const retail_code = req.query.retail_code as string | undefined;
+      const loRReject = await this.crmRequisitionService.getLoRReject(
+        industry_code,
+        retail_code,
+      );
+      return this.sendSuccessGet(
+        req,
+        res,
+        loRReject,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  public async getAllLoAAcceptRejectController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const retail_code = req.query.retail_code as string | undefined;
+      const allLoAAcceptReject =
+        await this.crmRequisitionService.getAllLoAAcceptReject(
+          industry_code,
+          retail_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        allLoAAcceptReject,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  public async getLoARejectController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const retail_code = req.query.retail_code as string | undefined;
+      const loAReject = await this.crmRequisitionService.getLoAReject(
+        industry_code,
+        retail_code,
+      );
+      return this.sendSuccessGet(
+        req,
+        res,
+        loAReject,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
 }
