@@ -124,7 +124,7 @@ export class InventoryService {
 
     const top5Yearly = Object.entries(yearlyData)
       .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .slice(0, 5)
+      // .slice(0, 5)
       .map(([year, values]) => ({ year, ...values }));
 
     return top5Yearly;
@@ -163,7 +163,7 @@ export class InventoryService {
 
     const top5Yearly = Object.entries(yearlyData)
       .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .slice(0, 5)
+      // .slice(0, 5)
       .map(([year, values]) => ({ year, ...values }));
 
     return top5Yearly;

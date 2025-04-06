@@ -4,32 +4,32 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // ERP
-export const manufacturingApi = axios.create({
-  baseURL: process.env.BASE_URL_MANUFACTURING,
+export const erpInventoryApi = axios.create({
+  baseURL: process.env.BASE_URL_ERP_INVENTORY,
 });
 
-export const assetApi = axios.create({
-  baseURL: process.env.BASE_URL_ASSET,
+export const erpManufacturingApi = axios.create({
+  baseURL: process.env.BASE_URL_ERP_MANUFACTURING,
 });
 
-export const inventoryApi = axios.create({
-  baseURL: process.env.BASE_URL_INVENTORY,
+export const erpAssetApi = axios.create({
+  baseURL: process.env.BASE_URL_ERP_ASSET,
 });
 
 // SRM
-export const procurementApi = axios.create({
-  baseURL: process.env.BASE_URL_PROCUREMENT,
+export const srmProcurementApi = axios.create({
+  baseURL: process.env.BASE_URL_SRM_PROCUREMENT,
 });
 
-export const contractSRMApi = axios.create({
-  baseURL: process.env.BASE_URL_CONTRACT_SRM,
+export const srmContractApi = axios.create({
+  baseURL: process.env.BASE_URL_SRM_CONTRACT,
 });
 
 // CRM
-export const requisitionApi = axios.create({
-  baseURL: process.env.BASE_URL_REQUISITION,
+export const crmRequisitionApi = axios.create({
+  baseURL: process.env.BASE_URL_CRM_REQUISITION,
 });
 
-export const contractCRMApi = axios.create({
-  baseURL: process.env.BASE_URL_CONTRACT_CRM,
+export const crmContractApi = axios.create({
+  baseURL: process.env.BASE_URL_CRM_CONTRACT,
 });

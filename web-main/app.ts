@@ -5,6 +5,10 @@ import db from '../infrastructure/models';
 import inventoryRouter from './routers/erp_inventory.router';
 import manufacturingRouter from './routers/erp_manufacturing.router';
 import assetRouter from './routers/erp_asset.router';
+import srmProcurementRouter from './routers/srm_procurement.router';
+import srmContractRouter from './routers/srm_contract.router';
+import crmRequisitionApi from './routers/crm_requisition.router';
+import crmContractRouter from './routers/crm_contract.router';
 
 dotenv.config();
 
@@ -27,6 +31,10 @@ db.sequelize
 app.use('/rm/api/in', inventoryRouter);
 app.use('/rm/api/mf', manufacturingRouter);
 app.use('/rm/api/fa', assetRouter);
+app.use('/rm/api/srm-procurement', srmProcurementRouter);
+app.use('/rm/api/srm-contract', srmContractRouter);
+app.use('/rm/api/crm-requisition', crmRequisitionApi);
+app.use('/rm/api/crm-contract', crmContractRouter);
 
 // Set the port
 const PORT = process.env.PORT;

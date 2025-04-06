@@ -1,11 +1,13 @@
-import { contractCRMApi } from '.';
+import { crmContractApi } from '.';
 
-// Penurunan jumlah kontrak
+export const getAllCRMContract = () => crmContractApi.get(`/contract_crm/`);
 
-// Pengiriman terlambat
-export const getOnTimeVsLateTrend = () =>
-  contractCRMApi.get(`/contract_crm/trend/on-time-late`);
+// 1. Penurunan jumlah kontrak
 
-// Jumlah tidak sesuai
-export const getCompliantVsNonCompliantTrend = () =>
-  contractCRMApi.get(`/contract_crm/trend/compliant-noncompliant`);
+// 2. Pengiriman terlambat
+// export const getOnTimeVsLateTrend = () =>
+//   crmContractApi.get(`/contract_crm/trend/on-time-late`);
+
+// 3. Jumlah tidak sesuai
+// export const getCompliantVsNonCompliantTrend = () =>
+//   crmContractApi.get(`/contract_crm/trend/compliant-noncompliant`);

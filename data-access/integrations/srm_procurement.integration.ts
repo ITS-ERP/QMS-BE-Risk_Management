@@ -1,3 +1,6 @@
-// import { procurementApi } from '.';
+import { srmProcurementApi } from '.';
 
-//Keterlambatan RFQ dari purchase request
+export const getAllSRMProcurement = () =>
+  srmProcurementApi.get(`/procurement_srm`);
+
+//1. Keterlambatan RFQ dari purchase request

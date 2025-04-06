@@ -1,4 +1,4 @@
-import { inventoryApi } from '.';
+import { erpInventoryApi } from '.';
 
-export const getAllReceive = () => inventoryApi.get(`/receive`);
-export const getAllTransfer = () => inventoryApi.get(`/transfer`);
+export const getAllReceive = () => erpInventoryApi.get(`/receive`);
+export const getAllTransfer = () => erpInventoryApi.get(`/transfer`);
