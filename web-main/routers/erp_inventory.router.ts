@@ -21,11 +21,17 @@ router.get('/receive-by-month', (req, res) =>
 router.get('/receive-by-year', (req, res) =>
   inventoryController.getAllReceiveByYearController(req, res),
 );
+router.get('/receive-summary', (req, res) =>
+  inventoryController.getReceiveSummaryController(req, res),
+);
 router.get('/reject-receive-by-year', (req, res) =>
   inventoryController.getRejectReceiveByYearController(req, res),
 );
 router.get('/transfer-by-year', (req, res) =>
   inventoryController.getAllTransferByYearController(req, res),
+);
+router.get('/transfer-summary', (req, res) =>
+  inventoryController.getTransferSummaryController(req, res),
 );
 router.get('/reject-transfer-by-year', (req, res) =>
   inventoryController.getRejectTransferByYearController(req, res),

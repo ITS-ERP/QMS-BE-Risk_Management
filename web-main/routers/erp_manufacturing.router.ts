@@ -30,6 +30,9 @@ router.get('/inspection-product-by-month', (req, res) =>
 router.get('/inspection-product-by-year', (req, res) =>
   manufacturingController.getAllInspectionProductByYearController(req, res),
 );
+router.get('/inspection-product-summary', (req, res) =>
+  manufacturingController.getInspectionProductSummaryController(req, res),
+);
 router.get('/defect-inspection-product-by-year', (req, res) =>
   manufacturingController.getDefectInspectionProductByYearController(req, res),
 );

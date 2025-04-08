@@ -130,6 +130,34 @@ export class InventoryService {
     return allYearlyData;
   }
 
+  async getReceiveSummary() {
+    const allYearlyData = await this.getAllReceiveByYear();
+
+    let totalAccept = 0;
+    let totalReject = 0;
+
+    allYearlyData.forEach(({ accept, reject }) => {
+      totalAccept += accept;
+      totalReject += reject;
+    });
+
+    const totalQuantity = totalAccept + totalReject;
+
+    return {
+      total_quantity: totalQuantity > 0 ? totalQuantity : '0',
+      total_accept: totalAccept > 0 ? totalAccept : '0',
+      total_reject: totalReject > 0 ? totalReject : '0',
+      accept_rate:
+        totalQuantity > 0
+          ? ((totalAccept / totalQuantity) * 100).toFixed(2)
+          : '0.00',
+      reject_rate:
+        totalQuantity > 0
+          ? ((totalReject / totalQuantity) * 100).toFixed(2)
+          : '0.00',
+    };
+  }
+
   async getRejectReceiveByYear() {
     const response = await inventoryIntegration.getAllReceive();
     const data = response.data.data;
@@ -203,6 +231,34 @@ export class InventoryService {
       .map(([year, values]) => ({ year, ...values }));
 
     return allYearlyData;
+  }
+
+  async getTransferSummary() {
+    const allYearlyData = await this.getAllTransferByYear();
+
+    let totalAccept = 0;
+    let totalReject = 0;
+
+    allYearlyData.forEach(({ accept, reject }) => {
+      totalAccept += accept;
+      totalReject += reject;
+    });
+
+    const totalQuantity = totalAccept + totalReject;
+
+    return {
+      total_quantity: totalQuantity > 0 ? totalQuantity : '0',
+      total_accept: totalAccept > 0 ? totalAccept : '0',
+      total_reject: totalReject > 0 ? totalReject : '0',
+      accept_rate:
+        totalQuantity > 0
+          ? ((totalAccept / totalQuantity) * 100).toFixed(2)
+          : '0.00',
+      reject_rate:
+        totalQuantity > 0
+          ? ((totalReject / totalQuantity) * 100).toFixed(2)
+          : '0.00',
+    };
   }
 
   async getRejectTransferByYear() {

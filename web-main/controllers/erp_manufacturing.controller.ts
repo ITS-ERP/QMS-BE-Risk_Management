@@ -181,4 +181,23 @@ export class ManufacturingController extends BaseController {
       return this.handleError(req, res, error, 500);
     }
   }
+
+  public async getInspectionProductSummaryController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const inspectionProductSummary =
+        await this.manufacturingService.getInspectionProductSummary();
+      return this.sendSuccessGet(
+        req,
+        res,
+        inspectionProductSummary,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
 }

@@ -227,6 +227,34 @@ export class ManufacturingService {
     return allYearlyData;
   }
 
+  async getInspectionProductSummary() {
+    const allYearlyData = await this.getAllInspectionProductByYear();
+
+    let totalGood = 0;
+    let totalDefect = 0;
+
+    allYearlyData.forEach(({ good, defect }) => {
+      totalGood += good;
+      totalDefect += defect;
+    });
+
+    const totalQuantity = totalGood + totalDefect;
+
+    return {
+      total_quantity: totalQuantity > 0 ? totalQuantity : '0',
+      total_good: totalGood > 0 ? totalGood : '0',
+      total_defect: totalDefect > 0 ? totalDefect : '0',
+      good_rate:
+        totalQuantity > 0
+          ? ((totalGood / totalQuantity) * 100).toFixed(2)
+          : '0.00',
+      defect_rate:
+        totalQuantity > 0
+          ? ((totalDefect / totalQuantity) * 100).toFixed(2)
+          : '0.00',
+    };
+  }
+
   async getDefectInspectionProductByYear() {
     const response = await manufacturingIntegration.getInspectionProduct();
     const data = response.data.data;
