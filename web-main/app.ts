@@ -9,6 +9,7 @@ import srmProcurementRouter from './routers/srm_procurement.router';
 import srmContractRouter from './routers/srm_contract.router';
 import crmRequisitionApi from './routers/crm_requisition.router';
 import crmContractRouter from './routers/crm_contract.router';
+import riskBaseRouter from './routers/risk_base.router';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ db.sequelize
   .catch((err: object) => console.log('Error syncing tables: ', err));
 
 // Define routes
+app.use('/rm/api/risk-base', riskBaseRouter);
 app.use('/rm/api/in', inventoryRouter);
 app.use('/rm/api/mf', manufacturingRouter);
 app.use('/rm/api/fa', assetRouter);
