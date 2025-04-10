@@ -7,7 +7,7 @@ import { CRMContractService } from './crm_contract.service';
 import { RiskBaseService } from './risk_base.service';
 import * as forecastIntegration from '../../data-access/integrations/forecast.integration';
 import { Request } from 'express';
-import { ForecastData } from '../../helpers/dtos/risk_identification.dto'; // Mengimpor ForecastData yang telah Anda buat
+import { ForecastData } from '../../helpers/dtos/risk_identification.dto';
 
 export class RiskIdentificationService {
   private inventoryService: InventoryService;
@@ -90,62 +90,343 @@ export class RiskIdentificationService {
             );
           }
         } else if (risk_group === 'SRM Procurement') {
+          if (risk_name === 'Keterlambatan RFQ') {
+            const procurementSummary =
+              await this.srmProcurementService.getRFQDelaySummary(industryCode);
+            riskRate = procurementSummary.delay_rate;
+            console.log(`Risk Rate (Keterlambatan RFQ): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            // Catatan: Belum ada API yang spesifik, menggunakan getLateSRMIndustry sebagai alternatif
+            const forecastData = await forecastIntegration.getLateSRMIndustry(
+              industryCode || '',
+            );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
+          }
+        } else if (risk_group === 'SRM Contract') {
           if (risk_name === 'Penerimaan terlambat') {
-            // Handle the logic here
+            const contractSummary =
+              await this.srmContractService.getLateReceiptSummary(
+                undefined,
+                industryCode,
+              );
+            riskRate = contractSummary.late_receipt_rate;
+            console.log(`Risk Rate (Penerimaan terlambat): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData = await forecastIntegration.getLateSRMIndustry(
+              industryCode || '',
+            );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           } else if (risk_name === 'Jumlah tidak sesuai') {
-            // Handle the logic here
+            const contractSummary =
+              await this.srmContractService.getQuantityMismatchSummary(
+                undefined,
+                industryCode,
+              );
+            riskRate = contractSummary.mismatch_rate;
+            console.log(`Risk Rate (Jumlah tidak sesuai): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData =
+              await forecastIntegration.getNoncompliantQuantitySRMIndustry(
+                industryCode || '',
+              );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           }
         } else if (risk_group === 'SRM Inspection') {
           if (risk_name === 'Tidak lolos cek kebersihan') {
-            // Handle the logic here
+            const inspectionSummary =
+              await this.srmContractService.getCleanlinessCheckSummary(
+                undefined,
+                industryCode,
+              );
+            riskRate = inspectionSummary.fail_rate;
+            console.log(`Risk Rate (Tidak lolos cek kebersihan): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData =
+              await forecastIntegration.getUncleanCheckIndustry(
+                industryCode || '',
+              );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           } else if (risk_name === 'Tidak lolos cek brix') {
-            // Handle the logic here
+            const inspectionSummary =
+              await this.srmContractService.getBrixCheckSummary(
+                undefined,
+                industryCode,
+              );
+            riskRate = inspectionSummary.fail_rate;
+            console.log(`Risk Rate (Tidak lolos cek brix): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData =
+              await forecastIntegration.getUnderBrixCheckIndustry(
+                industryCode || '',
+              );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           }
         } else if (risk_group === 'CRM Requisition') {
           if (risk_name === 'Penolakan LoR') {
-            // Handle the logic here
+            const requisitionSummary =
+              await this.crmRequisitionService.getLoRRejectionSummary(
+                undefined,
+                industryCode,
+              );
+            riskRate = requisitionSummary.rejection_rate;
+            console.log(`Risk Rate (Penolakan LoR): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData = await forecastIntegration.getLORRejectIndustry(
+              industryCode || '',
+            );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           } else if (risk_name === 'Penolakan LoA') {
-            // Handle the logic here
+            const requisitionSummary =
+              await this.crmRequisitionService.getLoARejectionSummary(
+                undefined,
+                industryCode,
+              );
+            riskRate = requisitionSummary.rejection_rate;
+            console.log(`Risk Rate (Penolakan LoA): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData = await forecastIntegration.getLOARejectIndustry(
+              industryCode || '',
+            );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           }
         } else if (risk_group === 'CRM Contract') {
           if (risk_name === 'Penurunan jumlah kontrak') {
-            // Handle the logic here
+            const contractSummary =
+              await this.crmContractService.getContractDeclineSummary(
+                industryCode,
+              );
+            riskRate = contractSummary.decline_rate;
+            console.log(`Risk Rate (Penurunan jumlah kontrak): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData =
+              await forecastIntegration.getTotalContractCRMIndustry(
+                industryCode || '',
+              );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           } else if (risk_name === 'Pengiriman terlambat') {
-            // Handle the logic here
+            const contractSummary =
+              await this.crmContractService.getLateDeliverySummary(
+                industryCode,
+              );
+            riskRate = contractSummary.late_delivery_rate;
+            console.log(`Risk Rate (Pengiriman terlambat): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData = await forecastIntegration.getLateCRMIndustry(
+              industryCode || '',
+            );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
+          } else if (risk_name === 'Jumlah tidak sesuai') {
+            const contractSummary =
+              await this.crmContractService.getQuantityMismatchSummary(
+                industryCode,
+              );
+            riskRate = contractSummary.mismatch_rate;
+            console.log(`Risk Rate (Jumlah tidak sesuai): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData =
+              await forecastIntegration.getNoncompliantQuantityCRMIndustry(
+                industryCode || '',
+              );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           }
         }
-      } else if (riskUser === 'SUPPLIER') {
+      } else if (riskUser === 'Supplier') {
         // Logika untuk SUPPLIER
         if (risk_group === 'Procurement') {
           if (risk_name === 'Kekalahan pada proses RFQ') {
-            // Handle logic for 'Kekalahan pada proses RFQ'
+            const procurementSummary =
+              await this.srmProcurementService.getRFQLossSummary(
+                supplierCode || '',
+              );
+            riskRate = procurementSummary.loss_rate;
+            console.log(`Risk Rate (Kekalahan pada proses RFQ): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData = await forecastIntegration.getLoseCountSupplier(
+              supplierCode || '',
+            );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           }
         } else if (risk_group === 'Contract') {
           if (risk_name === 'Penurunan jumlah kontrak') {
-            // Handle logic here
+            const contractSummary =
+              await this.srmContractService.getContractDeclineSummary(
+                supplierCode,
+              );
+            riskRate = contractSummary.decline_rate;
+            console.log(`Risk Rate (Penurunan jumlah kontrak): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData =
+              await forecastIntegration.getTotalContractSRMSupplier(
+                supplierCode || '',
+              );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           } else if (risk_name === 'Penerimaan terlambat') {
-            // Handle logic here
+            const contractSummary =
+              await this.srmContractService.getLateReceiptSummary(supplierCode);
+            riskRate = contractSummary.late_receipt_rate;
+            console.log(`Risk Rate (Penerimaan terlambat): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData = await forecastIntegration.getLateSRMSupplier(
+              supplierCode || '',
+            );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
+          } else if (risk_name === 'Jumlah tidak sesuai') {
+            const contractSummary =
+              await this.srmContractService.getQuantityMismatchSummary(
+                supplierCode,
+              );
+            riskRate = contractSummary.mismatch_rate;
+            console.log(`Risk Rate (Jumlah tidak sesuai): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData =
+              await forecastIntegration.getNoncompliantQuantitySRMSupplier(
+                supplierCode || '',
+              );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           }
         } else if (risk_group === 'Inspection') {
           if (risk_name === 'Tidak lolos cek kebersihan') {
-            // Handle logic here
+            const inspectionSummary =
+              await this.srmContractService.getCleanlinessCheckSummary(
+                supplierCode,
+              );
+            riskRate = inspectionSummary.fail_rate;
+            console.log(`Risk Rate (Tidak lolos cek kebersihan): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData =
+              await forecastIntegration.getUncleanCheckSupplier(
+                supplierCode || '',
+              );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           } else if (risk_name === 'Tidak lolos cek brix') {
-            // Handle logic here
+            const inspectionSummary =
+              await this.srmContractService.getBrixCheckSummary(supplierCode);
+            riskRate = inspectionSummary.fail_rate;
+            console.log(`Risk Rate (Tidak lolos cek brix): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData =
+              await forecastIntegration.getUnderBrixCheckSupplier(
+                supplierCode || '',
+              );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           }
         }
-      } else if (riskUser === 'RETAIL') {
+      } else if (riskUser === 'Retail') {
         // Logika untuk RETAIL
         if (risk_group === 'Requisition') {
           if (risk_name === 'Penolakan LoR') {
-            // Handle logic here
+            const requisitionSummary =
+              await this.crmRequisitionService.getLoRRejectionSummary(
+                retailCode,
+              );
+            riskRate = requisitionSummary.rejection_rate;
+            console.log(`Risk Rate (Penolakan LoR): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData = await forecastIntegration.getLORRejectRetail(
+              retailCode || '',
+            );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           } else if (risk_name === 'Penolakan LoA') {
-            // Handle logic here
+            const requisitionSummary =
+              await this.crmRequisitionService.getLoARejectionSummary(
+                retailCode,
+              );
+            riskRate = requisitionSummary.rejection_rate;
+            console.log(`Risk Rate (Penolakan LoA): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData = await forecastIntegration.getLOARejectRetail(
+              retailCode || '',
+            );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           }
         } else if (risk_group === 'Contract') {
           if (risk_name === 'Pengiriman terlambat') {
-            // Handle logic here
+            const contractSummary =
+              await this.crmContractService.getLateDeliverySummary(
+                undefined,
+                retailCode,
+              );
+            riskRate = contractSummary.late_delivery_rate;
+            console.log(`Risk Rate (Pengiriman terlambat): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData = await forecastIntegration.getLateCRMRetail(
+              retailCode || '',
+            );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           } else if (risk_name === 'Jumlah tidak sesuai') {
-            // Handle logic here
+            const contractSummary =
+              await this.crmContractService.getQuantityMismatchSummary(
+                undefined,
+                retailCode,
+              );
+            riskRate = contractSummary.mismatch_rate;
+            console.log(`Risk Rate (Jumlah tidak sesuai): ${riskRate}`);
+
+            // Untuk forecastData dan prediksi
+            const forecastData =
+              await forecastIntegration.getNoncompliantQuantityCRMRetail(
+                retailCode || '',
+              );
+            forecastPrediction = this.calculateForecastPrediction(
+              forecastData.data,
+            );
           }
         }
       }

@@ -140,4 +140,103 @@ export class CRMRequisitionController extends BaseController {
       return this.handleError(req, res, error, 500);
     }
   }
+
+  //BARU
+  public async getLoRRejectionSummaryController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const retail_code = req.query.retail_code as string | undefined;
+      const loRRejectionSummary =
+        await this.crmRequisitionService.getLoRRejectionSummary(
+          retail_code,
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        loRRejectionSummary,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  public async getLoARejectionSummaryController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const retail_code = req.query.retail_code as string | undefined;
+      const loARejectionSummary =
+        await this.crmRequisitionService.getLoARejectionSummary(
+          retail_code,
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        loARejectionSummary,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  // Controller untuk Risk Rate Trend pada Penolakan LoR
+  public async getLoRRejectionRiskRateTrendController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const retail_code = req.query.retail_code as string | undefined;
+      const loRRejectionRiskRateTrend =
+        await this.crmRequisitionService.getLoRRejectionRiskRateTrend(
+          retail_code,
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        loRRejectionRiskRateTrend,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  // Controller untuk Risk Rate Trend pada Penolakan LoA
+  public async getLoARejectionRiskRateTrendController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const retail_code = req.query.retail_code as string | undefined;
+      const loARejectionRiskRateTrend =
+        await this.crmRequisitionService.getLoARejectionRiskRateTrend(
+          retail_code,
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        loARejectionRiskRateTrend,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
 }

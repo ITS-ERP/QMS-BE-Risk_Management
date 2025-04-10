@@ -210,12 +210,123 @@ export class CRMRequisitionService {
 
     return allYearlyReject;
   }
+
+  //INDUSTRY
+  // 1. Penolakan LoR
+  // 2. Penolakan LoA
+
+  //RETAIL
+  // 1. Penolakan LoR
+  // 2. Penolakan LoA
+
+  async getLoRRejectionSummary(retail_code?: string, industry_code?: string) {
+    const lorData = await this.getAllLoRAcceptReject(
+      industry_code,
+      retail_code,
+    );
+
+    let totalAccepted = 0;
+    let totalRejected = 0;
+
+    lorData.forEach((item) => {
+      totalAccepted += item.accepted;
+      totalRejected += item.rejected;
+    });
+
+    const totalLoR = totalAccepted + totalRejected;
+
+    return {
+      total_lor: totalLoR > 0 ? totalLoR : 0,
+      accepted_lor: totalAccepted > 0 ? totalAccepted : 0,
+      rejected_lor: totalRejected > 0 ? totalRejected : 0,
+      acceptance_rate:
+        totalLoR > 0
+          ? parseFloat(((totalAccepted / totalLoR) * 100).toFixed(2))
+          : 0.0,
+      rejection_rate:
+        totalLoR > 0
+          ? parseFloat(((totalRejected / totalLoR) * 100).toFixed(2))
+          : 0.0,
+    };
+  }
+
+  // Summary untuk Penolakan LoA
+  async getLoARejectionSummary(retail_code?: string, industry_code?: string) {
+    const loaData = await this.getAllLoAAcceptReject(
+      industry_code,
+      retail_code,
+    );
+
+    let totalAccepted = 0;
+    let totalRejected = 0;
+
+    loaData.forEach((item) => {
+      totalAccepted += item.accepted;
+      totalRejected += item.rejected;
+    });
+
+    const totalLoA = totalAccepted + totalRejected;
+
+    return {
+      total_loa: totalLoA > 0 ? totalLoA : 0,
+      accepted_loa: totalAccepted > 0 ? totalAccepted : 0,
+      rejected_loa: totalRejected > 0 ? totalRejected : 0,
+      acceptance_rate:
+        totalLoA > 0
+          ? parseFloat(((totalAccepted / totalLoA) * 100).toFixed(2))
+          : 0.0,
+      rejection_rate:
+        totalLoA > 0
+          ? parseFloat(((totalRejected / totalLoA) * 100).toFixed(2))
+          : 0.0,
+    };
+  }
+
+  // Risk Rate Trend untuk Penolakan LoR
+  async getLoRRejectionRiskRateTrend(
+    retail_code?: string,
+    industry_code?: string,
+  ) {
+    const yearlyData = await this.getAllLoRAcceptReject(
+      industry_code,
+      retail_code,
+    );
+
+    const riskRateTrend = yearlyData.map((item) => {
+      const total = item.accepted + item.rejected;
+      const riskRate =
+        total > 0 ? parseFloat(((item.rejected / total) * 100).toFixed(2)) : 0;
+
+      return {
+        year: item.year,
+        value: riskRate,
+      };
+    });
+
+    return riskRateTrend;
+  }
+
+  // Risk Rate Trend untuk Penolakan LoA
+  async getLoARejectionRiskRateTrend(
+    retail_code?: string,
+    industry_code?: string,
+  ) {
+    const yearlyData = await this.getAllLoAAcceptReject(
+      industry_code,
+      retail_code,
+    );
+
+    const riskRateTrend = yearlyData.map((item) => {
+      const total = item.accepted + item.rejected;
+      const riskRate =
+        total > 0 ? parseFloat(((item.rejected / total) * 100).toFixed(2)) : 0;
+
+      return {
+        year: item.year,
+        value: riskRate,
+      };
+    });
+
+    return riskRateTrend;
+  }
 }
-
-//INDUSTRY
-// 1. Penolakan LoR
-// 2. Penolakan LoA
-
-//RETAIL
-// 1. Penolakan LoR
-// 2. Penolakan LoA

@@ -200,4 +200,23 @@ export class ManufacturingController extends BaseController {
       return this.handleError(req, res, error, 500);
     }
   }
+  // Controller untuk Risk Rate Trend pada Produk Cacat
+  public async getDefectRiskRateTrendController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const defectRiskRateTrend =
+        await this.manufacturingService.getDefectRiskRateTrend();
+      return this.sendSuccessGet(
+        req,
+        res,
+        defectRiskRateTrend,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
 }

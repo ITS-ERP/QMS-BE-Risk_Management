@@ -255,4 +255,220 @@ export class CRMContractService {
   //RETAIL
   // 1. Penerimaan terlambat
   // 2. Jumlah tidak sesuai
+
+  async getContractDeclineSummary(
+    industry_code?: string,
+    retail_code?: string,
+  ) {
+    const contractData = await this.getContractTotal(
+      industry_code,
+      retail_code,
+    );
+
+    if (contractData.length < 2) {
+      return {
+        current_year_contracts:
+          contractData.length > 0
+            ? contractData[contractData.length - 1].total
+            : 0,
+        previous_year_contracts: 0,
+        total_contracts:
+          contractData.length > 0
+            ? contractData[contractData.length - 1].total
+            : 0,
+        growth_rate: 0.0,
+        decline_rate: 0.0,
+      };
+    }
+
+    const currentYearData = contractData[contractData.length - 1];
+    const previousYearData = contractData[contractData.length - 2];
+
+    const currentYearContracts = currentYearData.total;
+    const previousYearContracts = previousYearData.total;
+    const totalContracts = currentYearContracts + previousYearContracts;
+
+    // Hitung persentase pertumbuhan/penurunan
+    let growthRate = 0.0;
+    let declineRate = 0.0;
+
+    if (currentYearContracts > previousYearContracts) {
+      growthRate = parseFloat(
+        (
+          ((currentYearContracts - previousYearContracts) /
+            previousYearContracts) *
+          100
+        ).toFixed(2),
+      );
+    } else if (currentYearContracts < previousYearContracts) {
+      declineRate = parseFloat(
+        (
+          ((previousYearContracts - currentYearContracts) /
+            previousYearContracts) *
+          100
+        ).toFixed(2),
+      );
+    }
+
+    return {
+      current_year_contracts: currentYearContracts,
+      previous_year_contracts: previousYearContracts,
+      total_contracts: totalContracts,
+      growth_rate: growthRate,
+      decline_rate: declineRate,
+    };
+  }
+
+  // Summary untuk Pengiriman Terlambat (CRM)
+  async getLateDeliverySummary(industry_code?: string, retail_code?: string) {
+    const onTimeLateTrend = await this.getAllOnTimeVsLateTrend(
+      industry_code,
+      retail_code,
+    );
+
+    let totalOnTime = 0;
+    let totalLate = 0;
+
+    onTimeLateTrend.forEach((item) => {
+      totalOnTime += item.on_time;
+      totalLate += item.late;
+    });
+
+    const totalDeliveries = totalOnTime + totalLate;
+
+    return {
+      total_deliveries: totalDeliveries > 0 ? totalDeliveries : 0,
+      on_time_deliveries: totalOnTime > 0 ? totalOnTime : 0,
+      late_deliveries: totalLate > 0 ? totalLate : 0,
+      on_time_rate:
+        totalDeliveries > 0
+          ? parseFloat(((totalOnTime / totalDeliveries) * 100).toFixed(2))
+          : 0.0,
+      late_delivery_rate:
+        totalDeliveries > 0
+          ? parseFloat(((totalLate / totalDeliveries) * 100).toFixed(2))
+          : 0.0,
+    };
+  }
+
+  // Summary untuk Jumlah Tidak Sesuai (CRM)
+  async getQuantityMismatchSummary(
+    industry_code?: string,
+    retail_code?: string,
+  ) {
+    const complianceData = await this.getQuantityCompliance(
+      industry_code,
+      retail_code,
+    );
+
+    let totalCompliant = 0;
+    let totalNonCompliant = 0;
+
+    complianceData.forEach((item) => {
+      totalCompliant += item.compliant;
+      totalNonCompliant += item.noncompliant;
+    });
+
+    const totalContracts = totalCompliant + totalNonCompliant;
+
+    return {
+      total_contract: totalContracts > 0 ? totalContracts : 0,
+      compliant_quantity: totalCompliant > 0 ? totalCompliant : 0,
+      mismatch_quantity: totalNonCompliant > 0 ? totalNonCompliant : 0,
+      compliant_rate:
+        totalContracts > 0
+          ? parseFloat(((totalCompliant / totalContracts) * 100).toFixed(2))
+          : 0.0,
+      mismatch_rate:
+        totalContracts > 0
+          ? parseFloat(((totalNonCompliant / totalContracts) * 100).toFixed(2))
+          : 0.0,
+    };
+  }
+
+  async getContractDeclineRiskRateTrend(
+    industry_code?: string,
+    retail_code?: string,
+  ) {
+    const yearlyData = await this.getContractTotal(industry_code, retail_code);
+
+    // Convert ke format yang diperlukan
+    const riskRateTrend = [];
+
+    // Kita perlu minimal 2 tahun data untuk menghitung penurunan
+    if (yearlyData.length >= 2) {
+      for (let i = 1; i < yearlyData.length; i++) {
+        const currentYear = yearlyData[i];
+        const previousYear = yearlyData[i - 1];
+
+        // Hitung persentase penurunan jika ada penurunan
+        let declineRate = 0;
+        if (currentYear.total < previousYear.total) {
+          declineRate = parseFloat(
+            (
+              ((previousYear.total - currentYear.total) / previousYear.total) *
+              100
+            ).toFixed(2),
+          );
+        }
+
+        riskRateTrend.push({
+          year: currentYear.year,
+          value: declineRate,
+        });
+      }
+    }
+
+    return riskRateTrend;
+  }
+
+  // Risk Rate Trend untuk Pengiriman terlambat
+  async getLateDeliveryRiskRateTrend(
+    industry_code?: string,
+    retail_code?: string,
+  ) {
+    const yearlyData = await this.getAllOnTimeVsLateTrend(
+      industry_code,
+      retail_code,
+    );
+
+    const riskRateTrend = yearlyData.map((item) => {
+      const total = item.on_time + item.late;
+      const riskRate =
+        total > 0 ? parseFloat(((item.late / total) * 100).toFixed(2)) : 0;
+
+      return {
+        year: item.year,
+        value: riskRate,
+      };
+    });
+
+    return riskRateTrend;
+  }
+
+  // Risk Rate Trend untuk Jumlah tidak sesuai
+  async getQuantityMismatchRiskRateTrend(
+    industry_code?: string,
+    retail_code?: string,
+  ) {
+    const yearlyData = await this.getQuantityCompliance(
+      industry_code,
+      retail_code,
+    );
+
+    const riskRateTrend = yearlyData.map((item) => {
+      const total = item.compliant + item.noncompliant;
+      const riskRate =
+        total > 0
+          ? parseFloat(((item.noncompliant / total) * 100).toFixed(2))
+          : 0;
+
+      return {
+        year: item.year,
+        value: riskRate,
+      };
+    });
+
+    return riskRateTrend;
+  }
 }

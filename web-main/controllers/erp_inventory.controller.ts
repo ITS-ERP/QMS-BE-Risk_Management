@@ -192,4 +192,44 @@ export class InventoryController extends BaseController {
       return this.handleError(req, res, error, 500);
     }
   }
+
+  // Controller untuk Risk Rate Trend pada Received Items
+  public async getReceiveRiskRateTrendController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const receiveRiskRateTrend =
+        await this.inventoryService.getReceiveRiskRateTrend();
+      return this.sendSuccessGet(
+        req,
+        res,
+        receiveRiskRateTrend,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  // Controller untuk Risk Rate Trend pada Transferred Items
+  public async getTransferRiskRateTrendController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const transferRiskRateTrend =
+        await this.inventoryService.getTransferRiskRateTrend();
+      return this.sendSuccessGet(
+        req,
+        res,
+        transferRiskRateTrend,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
 }

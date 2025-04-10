@@ -264,4 +264,250 @@ export class SRMContractController extends BaseController {
       return this.handleError(req, res, error, 500);
     }
   }
+
+  // BARU
+  public async getLateReceiptSummaryController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const supplier_code = req.query.supplier_code as string | undefined;
+      const lateReceiptSummary =
+        await this.srmContractService.getLateReceiptSummary(
+          supplier_code,
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        lateReceiptSummary,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  public async getQuantityMismatchSummaryController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const supplier_code = req.query.supplier_code as string | undefined;
+      const quantityMismatchSummary =
+        await this.srmContractService.getQuantityMismatchSummary(
+          supplier_code,
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        quantityMismatchSummary,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  public async getCleanlinessCheckSummaryController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const supplier_code = req.query.supplier_code as string | undefined;
+      const cleanlinessCheckSummary =
+        await this.srmContractService.getCleanlinessCheckSummary(
+          supplier_code,
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        cleanlinessCheckSummary,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  public async getBrixCheckSummaryController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const supplier_code = req.query.supplier_code as string | undefined;
+      const brixCheckSummary =
+        await this.srmContractService.getBrixCheckSummary(
+          supplier_code,
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        brixCheckSummary,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  public async getContractDeclineSummaryController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const supplier_code = req.query.supplier_code as string | undefined;
+      const contractDeclineSummary =
+        await this.srmContractService.getContractDeclineSummary(
+          supplier_code,
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        contractDeclineSummary,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  // Controller untuk Risk Rate Trend pada Penerimaan terlambat
+  public async getLateReceiptRiskRateTrendController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const supplier_code = req.query.supplier_code as string | undefined;
+      const lateReceiptRiskRateTrend =
+        await this.srmContractService.getLateReceiptRiskRateTrend(
+          supplier_code,
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        lateReceiptRiskRateTrend,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  // Controller untuk Risk Rate Trend pada Jumlah tidak sesuai
+  public async getQuantityMismatchRiskRateTrendController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const supplier_code = req.query.supplier_code as string | undefined;
+      const quantityMismatchRiskRateTrend =
+        await this.srmContractService.getQuantityMismatchRiskRateTrend(
+          supplier_code,
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        quantityMismatchRiskRateTrend,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  // Controller untuk Risk Rate Trend pada Tidak lolos cek kebersihan
+  public async getCleanlinessCheckRiskRateTrendController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const supplier_code = req.query.supplier_code as string | undefined;
+      const cleanlinessCheckRiskRateTrend =
+        await this.srmContractService.getCleanlinessCheckRiskRateTrend(
+          supplier_code,
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        cleanlinessCheckRiskRateTrend,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  // Controller untuk Risk Rate Trend pada Tidak lolos cek brix
+  public async getBrixCheckRiskRateTrendController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const supplier_code = req.query.supplier_code as string | undefined;
+      const brixCheckRiskRateTrend =
+        await this.srmContractService.getBrixCheckRiskRateTrend(
+          supplier_code,
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        brixCheckRiskRateTrend,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  // Controller untuk Risk Rate Trend pada Penurunan jumlah kontrak
+  public async getContractDeclineRiskRateTrendController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const supplier_code = req.query.supplier_code as string | undefined;
+      const contractDeclineRiskRateTrend =
+        await this.srmContractService.getContractDeclineRiskRateTrend(
+          supplier_code,
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        contractDeclineRiskRateTrend,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
 }

@@ -28,4 +28,13 @@ router.get('/loa-reject', (req, res) =>
   crmRequisitionController.getLoARejectController(req, res),
 );
 
+// Tambahan router untuk fungsi Summary
+router.get('/lor-rejection-summary', (req, res) =>
+  crmRequisitionController.getLoRRejectionSummaryController(req, res),
+);
+
+router.get('/loa-rejection-summary', (req, res) =>
+  crmRequisitionController.getLoARejectionSummaryController(req, res),
+);
+
 export default router;

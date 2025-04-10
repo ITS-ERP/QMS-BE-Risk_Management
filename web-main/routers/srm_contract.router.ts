@@ -38,4 +38,21 @@ router.get('/total-contract', (req, res) =>
   srmContractController.getContractTotalController(req, res),
 );
 
+// Tambahan router untuk fungsi Summary
+router.get('/late-receipt-summary', (req, res) =>
+  srmContractController.getLateReceiptSummaryController(req, res),
+);
+router.get('/quantity-mismatch-summary', (req, res) =>
+  srmContractController.getQuantityMismatchSummaryController(req, res),
+);
+router.get('/cleanliness-check-summary', (req, res) =>
+  srmContractController.getCleanlinessCheckSummaryController(req, res),
+);
+router.get('/brix-check-summary', (req, res) =>
+  srmContractController.getBrixCheckSummaryController(req, res),
+);
+router.get('/contract-decline-summary', (req, res) =>
+  srmContractController.getContractDeclineSummaryController(req, res),
+);
+
 export default router;

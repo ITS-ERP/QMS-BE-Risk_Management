@@ -286,4 +286,22 @@ export class ManufacturingService {
 
     return top5Yearly;
   }
+
+  // Risk Rate Trend untuk Produk Cacat
+  async getDefectRiskRateTrend() {
+    const yearlyData = await this.getAllInspectionProductByYear();
+
+    const riskRateTrend = yearlyData.map((item) => {
+      const total = item.good + item.defect;
+      const riskRate =
+        total > 0 ? parseFloat(((item.defect / total) * 100).toFixed(2)) : 0;
+
+      return {
+        year: item.year,
+        value: riskRate,
+      };
+    });
+
+    return riskRateTrend;
+  }
 }

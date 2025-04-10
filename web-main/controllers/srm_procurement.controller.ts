@@ -77,4 +77,97 @@ export class SRMProcurementController extends BaseController {
       return this.handleError(req, res, error, 500);
     }
   }
+
+  //BARU
+  public async getRFQDelaySummaryController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const rfqDelaySummary =
+        await this.srmProcurementService.getRFQDelaySummary(industry_code);
+      return this.sendSuccessGet(
+        req,
+        res,
+        rfqDelaySummary,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  public async getRFQLossSummaryController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const supplier_code = req.query.supplier_code as string;
+      if (!supplier_code) {
+        return res.status(400).json({ message: 'supplier_code is required' });
+      }
+
+      const rfqLossSummary =
+        await this.srmProcurementService.getRFQLossSummary(supplier_code);
+      return this.sendSuccessGet(
+        req,
+        res,
+        rfqLossSummary,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  // Controller untuk Risk Rate Trend pada Keterlambatan RFQ
+  public async getRFQDelayRiskRateTrendController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const rfqDelayRiskRateTrend =
+        await this.srmProcurementService.getRFQDelayRiskRateTrend(
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        rfqDelayRiskRateTrend,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  // Controller untuk Risk Rate Trend pada Kekalahan pada proses RFQ
+  public async getRFQLossRiskRateTrendController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const supplier_code = req.query.supplier_code as string;
+      if (!supplier_code) {
+        return res.status(400).json({ message: 'supplier_code is required' });
+      }
+
+      const rfqLossRiskRateTrend =
+        await this.srmProcurementService.getRFQLossRiskRateTrend(supplier_code);
+      return this.sendSuccessGet(
+        req,
+        res,
+        rfqLossRiskRateTrend,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
 }

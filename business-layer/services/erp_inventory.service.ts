@@ -296,4 +296,40 @@ export class InventoryService {
 
     return top5Yearly;
   }
+
+  // Risk Rate Trend untuk Ketidaksesuaian Jumlah (Received Items)
+  async getReceiveRiskRateTrend() {
+    const yearlyData = await this.getAllReceiveByYear();
+
+    const riskRateTrend = yearlyData.map((item) => {
+      const total = item.accept + item.reject;
+      const riskRate =
+        total > 0 ? parseFloat(((item.reject / total) * 100).toFixed(2)) : 0;
+
+      return {
+        year: item.year,
+        value: riskRate,
+      };
+    });
+
+    return riskRateTrend;
+  }
+
+  // Risk Rate Trend untuk Ketidaksesuaian Jumlah (Transferred Items)
+  async getTransferRiskRateTrend() {
+    const yearlyData = await this.getAllTransferByYear();
+
+    const riskRateTrend = yearlyData.map((item) => {
+      const total = item.accept + item.reject;
+      const riskRate =
+        total > 0 ? parseFloat(((item.reject / total) * 100).toFixed(2)) : 0;
+
+      return {
+        year: item.year,
+        value: riskRate,
+      };
+    });
+
+    return riskRateTrend;
+  }
 }

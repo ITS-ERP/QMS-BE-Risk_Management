@@ -16,4 +16,13 @@ router.get('/lose-count', (req, res) =>
   srmProcurementController.getLoseCountController(req, res),
 );
 
+// Tambahan router untuk fungsi Summary
+router.get('/rfq-delay-summary', (req, res) =>
+  srmProcurementController.getRFQDelaySummaryController(req, res),
+);
+
+router.get('/rfq-loss-summary', (req, res) =>
+  srmProcurementController.getRFQLossSummaryController(req, res),
+);
+
 export default router;
