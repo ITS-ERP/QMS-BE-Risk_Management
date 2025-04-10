@@ -9,4 +9,12 @@ export interface RiskBaseInputDTO {
   risk_mitigation: string;
 }
 
+export interface RiskData {
+  total_quantity: number;
+  total_good: number;
+  total_defect: number;
+  good_rate: number;
+  defect_rate: number;
+}
+
 export interface RiskBaseResultDTO extends RiskBaseAttributes {}

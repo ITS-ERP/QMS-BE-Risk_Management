@@ -144,17 +144,17 @@ export class InventoryService {
     const totalQuantity = totalAccept + totalReject;
 
     return {
-      total_quantity: totalQuantity > 0 ? totalQuantity : '0',
-      total_accept: totalAccept > 0 ? totalAccept : '0',
-      total_reject: totalReject > 0 ? totalReject : '0',
+      total_quantity: totalQuantity > 0 ? totalQuantity : 0,
+      total_accept: totalAccept > 0 ? totalAccept : 0,
+      total_reject: totalReject > 0 ? totalReject : 0,
       accept_rate:
         totalQuantity > 0
-          ? ((totalAccept / totalQuantity) * 100).toFixed(2)
-          : '0.00',
+          ? parseFloat(((totalAccept / totalQuantity) * 100).toFixed(2))
+          : 0.0,
       reject_rate:
         totalQuantity > 0
-          ? ((totalReject / totalQuantity) * 100).toFixed(2)
-          : '0.00',
+          ? parseFloat(((totalReject / totalQuantity) * 100).toFixed(2))
+          : 0.0,
     };
   }
 
@@ -247,17 +247,17 @@ export class InventoryService {
     const totalQuantity = totalAccept + totalReject;
 
     return {
-      total_quantity: totalQuantity > 0 ? totalQuantity : '0',
-      total_accept: totalAccept > 0 ? totalAccept : '0',
-      total_reject: totalReject > 0 ? totalReject : '0',
+      total_quantity: totalQuantity > 0 ? totalQuantity : 0,
+      total_accept: totalAccept > 0 ? totalAccept : 0,
+      total_reject: totalReject > 0 ? totalReject : 0,
       accept_rate:
         totalQuantity > 0
-          ? ((totalAccept / totalQuantity) * 100).toFixed(2)
-          : '0.00',
+          ? parseFloat(((totalAccept / totalQuantity) * 100).toFixed(2))
+          : 0.0,
       reject_rate:
         totalQuantity > 0
-          ? ((totalReject / totalQuantity) * 100).toFixed(2)
-          : '0.00',
+          ? parseFloat(((totalReject / totalQuantity) * 100).toFixed(2))
+          : 0.0,
     };
   }
 

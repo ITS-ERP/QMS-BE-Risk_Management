@@ -14,18 +14,20 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     super(new RiskBaseRepository());
   }
 
-  async findAllRiskBases(req: Request): Promise<Model<RiskBaseAttributes>[]> {
+  public async findAllRiskBases(
+    req: Request,
+  ): Promise<Model<RiskBaseAttributes>[]> {
     return await super.findAll(req);
   }
 
-  async findRiskBaseByID(
+  public async findRiskBaseByID(
     req: Request,
     pkid: number,
   ): Promise<Model<RiskBaseAttributes> | null> {
     return await super.findByPKID(req, pkid);
   }
 
-  async findRiskBasesByCriteria(
+  public async findRiskBasesByCriteria(
     req: Request,
     criteria: Partial<RiskBaseAttributes>,
   ): Promise<RiskBaseResultDTO[]> {
@@ -39,7 +41,7 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     );
   }
 
-  async RiskBaseExists(
+  public async RiskBaseExists(
     req: Request,
     criteria: Partial<RiskBaseAttributes>,
   ): Promise<boolean> {
@@ -52,7 +54,7 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     return model.toJSON();
   }
 
-  async createRiskBase(
+  public async createRiskBase(
     req: Request,
     vm: RiskBaseInputVM,
   ): Promise<RiskBaseResultVM> {
@@ -73,7 +75,7 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     return new RiskBaseResultVM(resultDTO);
   }
 
-  async bulkCreateRiskBases(
+  public async bulkCreateRiskBases(
     req: Request,
     vms: RiskBaseInputVM[],
   ): Promise<RiskBaseResultVM[]> {
@@ -97,7 +99,7 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     );
   }
 
-  async updateRiskBase(
+  public async updateRiskBase(
     req: Request,
     pkid: number,
     entity: Partial<RiskBaseAttributes>,
@@ -105,22 +107,22 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     return await super.update(req, pkid, entity);
   }
 
-  async bulkUpdateRiskBases(
+  public async bulkUpdateRiskBases(
     req: Request,
     entities: { pkid: number; values: Partial<RiskBaseAttributes> }[],
   ): Promise<void> {
     await super.bulkUpdate(req, entities);
   }
 
-  async softDeleteRiskBase(req: Request, pkid: number): Promise<void> {
+  public async softDeleteRiskBase(req: Request, pkid: number): Promise<void> {
     await super.softDelete(req, pkid);
   }
 
-  async hardDeleteRiskBase(req: Request, pkid: number): Promise<void> {
+  public async hardDeleteRiskBase(req: Request, pkid: number): Promise<void> {
     await super.hardDelete(req, pkid);
   }
 
-  async restoreRiskBase(req: Request, pkid: number): Promise<void> {
+  public async restoreRiskBase(req: Request, pkid: number): Promise<void> {
     await super.restore(req, pkid);
   }
 }

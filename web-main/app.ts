@@ -10,6 +10,7 @@ import srmContractRouter from './routers/srm_contract.router';
 import crmRequisitionApi from './routers/crm_requisition.router';
 import crmContractRouter from './routers/crm_contract.router';
 import riskBaseRouter from './routers/risk_base.router';
+import riskIdentificationRouter from './routers/risk_identification.router';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ db.sequelize
 
 // Define routes
 app.use('/rm/api/risk-base', riskBaseRouter);
+app.use('/rm/api/risk-identification', riskIdentificationRouter);
 app.use('/rm/api/in', inventoryRouter);
 app.use('/rm/api/mf', manufacturingRouter);
 app.use('/rm/api/fa', assetRouter);

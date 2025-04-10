@@ -33,3 +33,8 @@ export const crmRequisitionApi = axios.create({
 export const crmContractApi = axios.create({
   baseURL: process.env.BASE_URL_CRM_CONTRACT,
 });
+
+// FORECAST
+export const forecastApi = axios.create({
+  baseURL: process.env.BASE_URL_FORECAST,
+});

@@ -246,12 +246,12 @@ export class ManufacturingService {
       total_defect: totalDefect > 0 ? totalDefect : '0',
       good_rate:
         totalQuantity > 0
-          ? ((totalGood / totalQuantity) * 100).toFixed(2)
-          : '0.00',
+          ? parseFloat(((totalGood / totalQuantity) * 100).toFixed(2))
+          : 0.0,
       defect_rate:
         totalQuantity > 0
-          ? ((totalDefect / totalQuantity) * 100).toFixed(2)
-          : '0.00',
+          ? parseFloat(((totalDefect / totalQuantity) * 100).toFixed(2))
+          : 0.0,
     };
   }
 

@@ -135,7 +135,7 @@ module.exports = {
           risk_mitigation: 'Peningkatan inspeksi',
         },
         {
-          risk_name: 'Tisak lolos cek kebersihan',
+          risk_name: 'Tidak lolos cek kebersihan',
           risk_desc:
             'Bahan baku yang dikirim oleh Supplier dalam kondisi kotor',
           risk_user: 'Supplier',
