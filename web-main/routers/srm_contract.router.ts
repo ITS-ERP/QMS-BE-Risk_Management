@@ -10,6 +10,9 @@ router.get('/', (req, res) =>
 router.get('/on-time-vs-late', (req, res) =>
   srmContractController.getAllOnTimeVsLateTrendController(req, res),
 );
+router.get('/on-time-late-summary', (req, res) =>
+  srmContractController.getOnTimeAndLateSummaryController(req, res),
+);
 router.get('/late', (req, res) =>
   srmContractController.getLateTrendController(req, res),
 );

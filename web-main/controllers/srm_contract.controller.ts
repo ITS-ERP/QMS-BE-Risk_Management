@@ -54,6 +54,30 @@ export class SRMContractController extends BaseController {
     }
   }
 
+  public async getOnTimeAndLateSummaryController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string | undefined;
+      const supplier_code = req.query.supplier_code as string | undefined;
+      const onTimeAndLateSummary =
+        await this.srmContractService.getOnTimeAndLateSummary(
+          industry_code,
+          supplier_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        onTimeAndLateSummary,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
   public async getLateTrendController(
     req: Request,
     res: Response,
