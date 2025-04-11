@@ -30,6 +30,56 @@ export class SRMProcurementController extends BaseController {
     }
   }
 
+  public async getRFQOnTimeDelayedCountController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string;
+      if (!industry_code) {
+        return res.status(400).json({ message: 'industry_code is required' });
+      }
+
+      const winLoseCount =
+        await this.srmProcurementService.getRFQOnTimeDelayedCount(
+          industry_code,
+        );
+      return this.sendSuccessGet(
+        req,
+        res,
+        winLoseCount,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  public async getRFQDelayCountController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_code = req.query.industry_code as string;
+      if (!industry_code) {
+        return res.status(400).json({ message: 'industry_code is required' });
+      }
+
+      const delayCount =
+        await this.srmProcurementService.getRFQDelayCount(industry_code);
+      return this.sendSuccessGet(
+        req,
+        res,
+        delayCount,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
   public async getWinLoseCountController(
     req: Request,
     res: Response,

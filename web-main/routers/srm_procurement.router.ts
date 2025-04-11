@@ -8,11 +8,19 @@ router.get('/', (req, res) =>
   srmProcurementController.getAllSRMProcurementController(req, res),
 );
 
-router.get('/win-lose-count', (req, res) =>
+router.get('/rfq-ontime-delayed-count', (req, res) =>
+  srmProcurementController.getRFQOnTimeDelayedCountController(req, res),
+);
+
+router.get('/rfq-delayed-count', (req, res) =>
+  srmProcurementController.getRFQDelayCountController(req, res),
+);
+
+router.get('/rfq-win-lose-count', (req, res) =>
   srmProcurementController.getWinLoseCountController(req, res),
 );
 
-router.get('/lose-count', (req, res) =>
+router.get('/rfq-lose-count', (req, res) =>
   srmProcurementController.getLoseCountController(req, res),
 );
 

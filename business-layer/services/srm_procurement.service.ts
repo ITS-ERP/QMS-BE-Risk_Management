@@ -8,22 +8,169 @@ export class SRMProcurementService {
 
   //INDUSTRY
   //1. Keterlambatan RFQ dari purchase request
-  async getRFQDelaySummary(industry_code?: string) {
-    // Karena belum ada implementasi spesifik di file yang diberikan,
-    // kita buat implementasi dengan struktur yang serupa dengan contoh
+  async getRFQOnTimeDelayedCount(industry_code?: string) {
+    const response = await srmProcurementIntegration.getAllSRMProcurement();
+    const data = response.data.data;
 
-    // Asumsikan kita memiliki beberapa data contoh
-    const totalRFQ = 100;
-    const delayedRFQ = 25;
+    if (!Array.isArray(data)) {
+      throw new Error('Data is not an array');
+    }
+
+    // Dictionary untuk menyimpan data per tahun
+    const yearlyData: { [key: string]: { ontime: number; delayed: number } } =
+      {};
+
+    data.forEach(
+      (item: {
+        purchase_request_date: string;
+        purchase_order_date: string;
+        end_date: string;
+        industry_code: string;
+      }) => {
+        // Skip jika tidak ada purchase_request_date atau purchase_order_date
+        if (!item.purchase_request_date || !item.purchase_order_date) {
+          return;
+        }
+
+        // Filter berdasarkan industry_code jika diberikan
+        if (industry_code && item.industry_code !== industry_code) {
+          return;
+        }
+
+        const requestDate = new Date(item.purchase_request_date);
+        const orderDate = new Date(item.purchase_order_date);
+        const yearKey = new Date(item.end_date).getFullYear().toString();
+
+        if (!yearlyData[yearKey]) {
+          yearlyData[yearKey] = { ontime: 0, delayed: 0 };
+        }
+
+        // Hitung selisih dalam hari
+        const diffTime = Math.abs(orderDate.getTime() - requestDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // Jika kurang dari 30 hari, maka ontime, jika tidak maka delayed
+        if (diffDays < 30) {
+          yearlyData[yearKey].ontime += 1;
+        } else {
+          yearlyData[yearKey].delayed += 1;
+        }
+      },
+    );
+
+    const allYearlyStatus = Object.entries(yearlyData)
+      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+      .map(([year, values]) => ({ year, ...values }))
+      .reverse();
+
+    return allYearlyStatus;
+  }
+
+  async getRFQDelayCount(industry_code?: string) {
+    const response = await srmProcurementIntegration.getAllSRMProcurement();
+    const data = response.data.data;
+
+    if (!Array.isArray(data)) {
+      throw new Error('Data is not an array');
+    }
+
+    const yearlyDelayCount: { [key: string]: { delay: number } } = {};
+    const allYears: Set<string> = new Set();
+
+    data.forEach(
+      (item: {
+        purchase_request_date: string;
+        purchase_order_date: string;
+        end_date: string;
+        industry_code: string;
+      }) => {
+        const yearKey = new Date(item.end_date).getFullYear().toString();
+        allYears.add(yearKey);
+
+        // Skip jika tidak ada purchase_request_date atau purchase_order_date
+        if (!item.purchase_request_date || !item.purchase_order_date) {
+          return;
+        }
+
+        // Filter berdasarkan industry_code jika diberikan
+        if (industry_code && item.industry_code !== industry_code) {
+          return;
+        }
+
+        const requestDate = new Date(item.purchase_request_date);
+        const orderDate = new Date(item.purchase_order_date);
+
+        // Hitung selisih dalam hari
+        const diffTime = Math.abs(orderDate.getTime() - requestDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // Jika lebih dari atau sama dengan 30 hari, maka delayed
+        if (diffDays >= 30) {
+          if (!yearlyDelayCount[yearKey]) {
+            yearlyDelayCount[yearKey] = { delay: 0 };
+          }
+          yearlyDelayCount[yearKey].delay += 1;
+        }
+      },
+    );
+
+    const allYearlyDelayCount = Array.from(allYears)
+      .map((year) => ({
+        year,
+        delay: yearlyDelayCount[year]?.delay || 0,
+      }))
+      .sort((a, b) => parseInt(b.year) - parseInt(a.year))
+      .slice(0, 5)
+      .reverse();
+
+    return allYearlyDelayCount;
+  }
+
+  // async getRFQDelaySummary(industry_code?: string) {
+  //   // Karena belum ada implementasi spesifik di file yang diberikan,
+  //   // kita buat implementasi dengan struktur yang serupa dengan contoh
+
+  //   // Asumsikan kita memiliki beberapa data contoh
+  //   const totalRFQ = 100;
+  //   const delayedRFQ = 25;
+
+  //   return {
+  //     total_rfq: totalRFQ,
+  //     delayed_rfq: delayedRFQ,
+  //     on_time_rfq: totalRFQ - delayedRFQ,
+  //     on_time_rate: parseFloat(
+  //       (((totalRFQ - delayedRFQ) / totalRFQ) * 100).toFixed(2),
+  //     ),
+  //     delay_rate: parseFloat(((delayedRFQ / totalRFQ) * 100).toFixed(2)),
+  //   };
+  // }
+
+  async getRFQDelaySummary(industry_code?: string) {
+    const delayData = await this.getRFQOnTimeDelayedCount(industry_code);
+
+    // Hitung total dari semua tahun
+    let totalOntime = 0;
+    let totalDelayed = 0;
+
+    delayData.forEach((item) => {
+      totalOntime += item.ontime;
+      totalDelayed += item.delayed;
+    });
+
+    const totalRFQ = totalOntime + totalDelayed;
 
     return {
       total_rfq: totalRFQ,
-      delayed_rfq: delayedRFQ,
-      on_time_rfq: totalRFQ - delayedRFQ,
-      on_time_rate: parseFloat(
-        (((totalRFQ - delayedRFQ) / totalRFQ) * 100).toFixed(2),
-      ),
-      delay_rate: parseFloat(((delayedRFQ / totalRFQ) * 100).toFixed(2)),
+      delayed_rfq: totalDelayed,
+      on_time_rfq: totalOntime,
+      on_time_rate:
+        totalRFQ > 0
+          ? parseFloat(((totalOntime / totalRFQ) * 100).toFixed(2))
+          : 0,
+      delay_rate:
+        totalRFQ > 0
+          ? parseFloat(((totalDelayed / totalRFQ) * 100).toFixed(2))
+          : 0,
     };
   }
 
@@ -140,16 +287,34 @@ export class SRMProcurementService {
     return allYearlyLoseCount;
   }
 
+  // async getRFQDelayRiskRateTrend(industry_code?: string) {
+  //   // Karena belum ada implementasi spesifik yang ada data tahunan,
+  //   // kita buat contoh data sederhana
+  //   return [
+  //     { year: '2019', value: 18.5 },
+  //     { year: '2020', value: 22.3 },
+  //     { year: '2021', value: 25.7 },
+  //     { year: '2022', value: 20.1 },
+  //     { year: '2023', value: 23.6 },
+  //   ];
+  // }
+
   async getRFQDelayRiskRateTrend(industry_code?: string) {
-    // Karena belum ada implementasi spesifik yang ada data tahunan,
-    // kita buat contoh data sederhana
-    return [
-      { year: '2019', value: 18.5 },
-      { year: '2020', value: 22.3 },
-      { year: '2021', value: 25.7 },
-      { year: '2022', value: 20.1 },
-      { year: '2023', value: 23.6 },
-    ];
+    const yearlyData = await this.getRFQOnTimeDelayedCount(industry_code);
+
+    // Transformasi data menjadi format yang diinginkan
+    const riskRateTrend = yearlyData.map((item) => {
+      const total = item.ontime + item.delayed;
+      const delayRate =
+        total > 0 ? parseFloat(((item.delayed / total) * 100).toFixed(2)) : 0;
+
+      return {
+        year: item.year,
+        value: delayRate,
+      };
+    });
+
+    return riskRateTrend;
   }
 
   // Risk Rate Trend untuk Kekalahan pada proses RFQ
