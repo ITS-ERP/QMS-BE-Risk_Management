@@ -33,4 +33,7 @@ router.get('/late-delivery-summary', (req, res) =>
 router.get('/quantity-mismatch-summary', (req, res) =>
   crmContractController.getQuantityMismatchSummaryController(req, res),
 );
+router.get('/late-delivery-riskrate', (req, res) =>
+  crmContractController.getLateDeliveryRiskRateTrendController(req, res),
+);
 export default router;

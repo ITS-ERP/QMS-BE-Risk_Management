@@ -96,11 +96,10 @@ export class RiskIdentificationService {
             riskRate = procurementSummary.delay_rate;
             console.log(`Risk Rate (Keterlambatan RFQ): ${riskRate}`);
 
-            // Untuk forecastData dan prediksi
-            // Catatan: Belum ada API yang spesifik, menggunakan getLateSRMIndustry sebagai alternatif
-            const forecastData = await forecastIntegration.getLateSRMIndustry(
-              industryCode || '',
-            );
+            const forecastData =
+              await forecastIntegration.getDelayedSRMIndustry(
+                industryCode || '',
+              );
             forecastPrediction = this.calculateForecastPrediction(
               forecastData.data,
             );
@@ -122,14 +121,16 @@ export class RiskIdentificationService {
             forecastPrediction = this.calculateForecastPrediction(
               forecastData.data,
             );
-          } else if (risk_name === 'Jumlah tidak sesuai') {
+          } else if (risk_name === 'Jumlah diterima tidak sesuai') {
             const contractSummary =
               await this.srmContractService.getQuantityMismatchSummary(
                 undefined,
                 industryCode,
               );
             riskRate = contractSummary.mismatch_rate;
-            console.log(`Risk Rate (Jumlah tidak sesuai): ${riskRate}`);
+            console.log(
+              `Risk Rate (Jumlah diterima tidak sesuai): ${riskRate}`,
+            );
 
             // Untuk forecastData dan prediksi
             const forecastData =
@@ -242,13 +243,13 @@ export class RiskIdentificationService {
             forecastPrediction = this.calculateForecastPrediction(
               forecastData.data,
             );
-          } else if (risk_name === 'Jumlah tidak sesuai') {
+          } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
             const contractSummary =
               await this.crmContractService.getQuantityMismatchSummary(
                 industryCode,
               );
             riskRate = contractSummary.mismatch_rate;
-            console.log(`Risk Rate (Jumlah tidak sesuai): ${riskRate}`);
+            console.log(`Risk Rate (Jumlah dikirim tidak sesuai): ${riskRate}`);
 
             // Untuk forecastData dan prediksi
             const forecastData =
@@ -296,11 +297,11 @@ export class RiskIdentificationService {
             forecastPrediction = this.calculateForecastPrediction(
               forecastData.data,
             );
-          } else if (risk_name === 'Penerimaan terlambat') {
+          } else if (risk_name === 'Pengiriman terlambat') {
             const contractSummary =
               await this.srmContractService.getLateReceiptSummary(supplierCode);
             riskRate = contractSummary.late_receipt_rate;
-            console.log(`Risk Rate (Penerimaan terlambat): ${riskRate}`);
+            console.log(`Risk Rate (Pengiriman terlambat): ${riskRate}`);
 
             // Untuk forecastData dan prediksi
             const forecastData = await forecastIntegration.getLateSRMSupplier(
@@ -309,13 +310,13 @@ export class RiskIdentificationService {
             forecastPrediction = this.calculateForecastPrediction(
               forecastData.data,
             );
-          } else if (risk_name === 'Jumlah tidak sesuai') {
+          } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
             const contractSummary =
               await this.srmContractService.getQuantityMismatchSummary(
                 supplierCode,
               );
             riskRate = contractSummary.mismatch_rate;
-            console.log(`Risk Rate (Jumlah tidak sesuai): ${riskRate}`);
+            console.log(`Risk Rate (Jumlah dikirim tidak sesuai): ${riskRate}`);
 
             // Untuk forecastData dan prediksi
             const forecastData =
@@ -394,14 +395,14 @@ export class RiskIdentificationService {
             );
           }
         } else if (risk_group === 'Contract') {
-          if (risk_name === 'Pengiriman terlambat') {
+          if (risk_name === 'Penerimaan terlambat') {
             const contractSummary =
               await this.crmContractService.getLateDeliverySummary(
                 undefined,
                 retailCode,
               );
             riskRate = contractSummary.late_delivery_rate;
-            console.log(`Risk Rate (Pengiriman terlambat): ${riskRate}`);
+            console.log(`Risk Rate (Penerimaan terlambat): ${riskRate}`);
 
             // Untuk forecastData dan prediksi
             const forecastData = await forecastIntegration.getLateCRMRetail(
@@ -410,14 +411,16 @@ export class RiskIdentificationService {
             forecastPrediction = this.calculateForecastPrediction(
               forecastData.data,
             );
-          } else if (risk_name === 'Jumlah tidak sesuai') {
+          } else if (risk_name === 'Jumlah diterima tidak sesuai') {
             const contractSummary =
               await this.crmContractService.getQuantityMismatchSummary(
                 undefined,
                 retailCode,
               );
             riskRate = contractSummary.mismatch_rate;
-            console.log(`Risk Rate (Jumlah tidak sesuai): ${riskRate}`);
+            console.log(
+              `Risk Rate (Jumlah diterima tidak sesuai): ${riskRate}`,
+            );
 
             // Untuk forecastData dan prediksi
             const forecastData =

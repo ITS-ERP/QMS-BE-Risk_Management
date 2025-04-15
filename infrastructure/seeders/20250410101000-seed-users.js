@@ -32,7 +32,7 @@ module.exports = {
         {
           risk_name: 'Keterlambatan RFQ',
           risk_desc:
-            'eterlambatan proses RFQ dalam rentang waktu purchase request ke pembuatan RFQ',
+            'Keterlambatan proses RFQ dalam rentang waktu purchase request ke pembuatan RFQ',
           risk_user: 'Industry',
           risk_group: 'SRM Procurement',
           risk_mitigation: 'Peningkatan komunikasi dengan supplier',
@@ -45,7 +45,7 @@ module.exports = {
           risk_mitigation: 'Pengetatan jadwal pengiriman',
         },
         {
-          risk_name: 'Jumlah tidak sesuai',
+          risk_name: 'Jumlah diterima tidak sesuai',
           risk_desc:
             'Ketidaksesuaian jumlah bahan baku yang diterima dari Supplier',
           risk_user: 'Industry',
@@ -97,7 +97,7 @@ module.exports = {
           risk_mitigation: 'Pengetatan jadwal pengiriman',
         },
         {
-          risk_name: 'Jumlah tidak sesuai',
+          risk_name: 'Jumlah dikirim tidak sesuai',
           risk_desc: 'Ketidaksesuaian jumlah produk yang dikirim oleh Industri',
           risk_user: 'Industry',
           risk_group: 'CRM Contract',
@@ -120,14 +120,14 @@ module.exports = {
           risk_mitigation: 'Peningkatan jumlah kontrak',
         },
         {
-          risk_name: 'Penerimaan terlambat',
+          risk_name: 'Pengiriman terlambat',
           risk_desc: 'Ketidaktepatan waktu pengiriman bahan baku oleh Supplier',
           risk_user: 'Supplier',
           risk_group: 'Contract',
           risk_mitigation: 'Pengetatan jadwal pengiriman',
         },
         {
-          risk_name: 'Jumlah tidak sesuai',
+          risk_name: 'Jumlah dikirim tidak sesuai',
           risk_desc:
             'Ketidaksesuaian jumlah bahan baku yang dikirim oleh Supplier',
           risk_user: 'Supplier',
@@ -166,19 +166,19 @@ module.exports = {
           risk_mitigation: 'Penolakan LoA',
         },
         {
-          risk_name: 'Pengiriman terlambat',
+          risk_name: 'Penerimaan terlambat',
           risk_desc: 'Ketidaktepatan waktu penerimaan produk dari Industri',
           risk_user: 'Retail',
           risk_group: 'Contract',
-          risk_mitigation: 'Pengiriman terlambat',
+          risk_mitigation: 'Pengetatan jadwal pengiriman',
         },
         {
-          risk_name: 'Jumlah tidak sesuai',
+          risk_name: 'Jumlah diterima tidak sesuai',
           risk_desc:
             'Ketidaksesuaian jumlah produk yang diterima dari Industri',
           risk_user: 'Retail',
           risk_group: 'Contract',
-          risk_mitigation: 'Jumlah tidak sesuai',
+          risk_mitigation: 'Peningkatan inspeksi',
         },
       ],
       {},

@@ -1,3 +1,5 @@
+// business-layer\services\risk_mitigation.service.ts:
+
 import { Request } from 'express';
 import { InventoryService } from './erp_inventory.service';
 import { ManufacturingService } from './erp_manufacturing.service';
@@ -101,7 +103,7 @@ export class RiskMitigationService {
                 undefined,
                 industryCode,
               );
-          } else if (risk_name === 'Jumlah tidak sesuai') {
+          } else if (risk_name === 'Jumlah diterima tidak sesuai') {
             riskRateTrend =
               await this.srmContractService.getQuantityMismatchRiskRateTrend(
                 undefined,
@@ -147,7 +149,7 @@ export class RiskMitigationService {
               await this.crmContractService.getLateDeliveryRiskRateTrend(
                 industryCode,
               );
-          } else if (risk_name === 'Jumlah tidak sesuai') {
+          } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
             riskRateTrend =
               await this.crmContractService.getQuantityMismatchRiskRateTrend(
                 industryCode,
@@ -169,12 +171,12 @@ export class RiskMitigationService {
               await this.srmContractService.getContractDeclineRiskRateTrend(
                 supplierCode,
               );
-          } else if (risk_name === 'Penerimaan terlambat') {
+          } else if (risk_name === 'Pengiriman terlambat') {
             riskRateTrend =
               await this.srmContractService.getLateReceiptRiskRateTrend(
                 supplierCode,
               );
-          } else if (risk_name === 'Jumlah tidak sesuai') {
+          } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
             riskRateTrend =
               await this.srmContractService.getQuantityMismatchRiskRateTrend(
                 supplierCode,
@@ -208,13 +210,13 @@ export class RiskMitigationService {
               );
           }
         } else if (risk_group === 'Contract') {
-          if (risk_name === 'Pengiriman terlambat') {
+          if (risk_name === 'Penerimaan terlambat') {
             riskRateTrend =
               await this.crmContractService.getLateDeliveryRiskRateTrend(
                 undefined,
                 retailCode,
               );
-          } else if (risk_name === 'Jumlah tidak sesuai') {
+          } else if (risk_name === 'Jumlah diterima tidak sesuai') {
             riskRateTrend =
               await this.crmContractService.getQuantityMismatchRiskRateTrend(
                 undefined,
@@ -296,7 +298,7 @@ export class RiskMitigationService {
     const normalizedRiskUser = riskUser.toLowerCase();
 
     // Logic sama dengan getRiskMitigation tetapi hanya untuk satu risiko spesifik
-    if (normalizedRiskUser === 'Industry') {
+    if (normalizedRiskUser === 'industry') {
       // Proses berdasarkan risk_group Industry
       if (risk_group === 'Inventory') {
         if (risk_name === 'Ketidaksesuaian Jumlah (Received Items)') {
@@ -324,7 +326,7 @@ export class RiskMitigationService {
               undefined,
               industryCode,
             );
-        } else if (risk_name === 'Jumlah tidak sesuai') {
+        } else if (risk_name === 'Jumlah diterima tidak sesuai') {
           riskRateTrend =
             await this.srmContractService.getQuantityMismatchRiskRateTrend(
               undefined,
@@ -370,14 +372,14 @@ export class RiskMitigationService {
             await this.crmContractService.getLateDeliveryRiskRateTrend(
               industryCode,
             );
-        } else if (risk_name === 'Jumlah tidak sesuai') {
+        } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
           riskRateTrend =
             await this.crmContractService.getQuantityMismatchRiskRateTrend(
               industryCode,
             );
         }
       }
-    } else if (normalizedRiskUser === 'Supplier') {
+    } else if (normalizedRiskUser === 'supplier') {
       // Logika untuk SUPPLIER
       if (risk_group === 'Procurement') {
         if (risk_name === 'Kekalahan pada proses RFQ') {
@@ -392,12 +394,12 @@ export class RiskMitigationService {
             await this.srmContractService.getContractDeclineRiskRateTrend(
               supplierCode,
             );
-        } else if (risk_name === 'Penerimaan terlambat') {
+        } else if (risk_name === 'Pengiriman terlambat') {
           riskRateTrend =
             await this.srmContractService.getLateReceiptRiskRateTrend(
               supplierCode,
             );
-        } else if (risk_name === 'Jumlah tidak sesuai') {
+        } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
           riskRateTrend =
             await this.srmContractService.getQuantityMismatchRiskRateTrend(
               supplierCode,
@@ -416,7 +418,7 @@ export class RiskMitigationService {
             );
         }
       }
-    } else if (normalizedRiskUser === 'Retail') {
+    } else if (normalizedRiskUser === 'retail') {
       // Logika untuk RETAIL
       if (risk_group === 'Requisition') {
         if (risk_name === 'Penolakan LoR') {
@@ -431,13 +433,13 @@ export class RiskMitigationService {
             );
         }
       } else if (risk_group === 'Contract') {
-        if (risk_name === 'Pengiriman terlambat') {
+        if (risk_name === 'Penerimaan terlambat') {
           riskRateTrend =
             await this.crmContractService.getLateDeliveryRiskRateTrend(
               undefined,
               retailCode,
             );
-        } else if (risk_name === 'Jumlah tidak sesuai') {
+        } else if (risk_name === 'Jumlah diterima tidak sesuai') {
           riskRateTrend =
             await this.crmContractService.getQuantityMismatchRiskRateTrend(
               undefined,

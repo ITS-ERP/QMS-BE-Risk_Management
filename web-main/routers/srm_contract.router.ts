@@ -10,9 +10,9 @@ router.get('/', (req, res) =>
 router.get('/on-time-vs-late', (req, res) =>
   srmContractController.getAllOnTimeVsLateTrendController(req, res),
 );
-router.get('/on-time-late-summary', (req, res) =>
-  srmContractController.getOnTimeAndLateSummaryController(req, res),
-);
+// router.get('/on-time-late-summary', (req, res) =>
+//   srmContractController.getOnTimeAndLateSummaryController(req, res),
+// );
 router.get('/late', (req, res) =>
   srmContractController.getLateTrendController(req, res),
 );
@@ -53,6 +53,9 @@ router.get('/brix-check-summary', (req, res) =>
 );
 router.get('/contract-decline-summary', (req, res) =>
   srmContractController.getContractDeclineSummaryController(req, res),
+);
+router.get('/contract-decline-riskrate', (req, res) =>
+  srmContractController.getContractDeclineRiskRateTrendController(req, res),
 );
 
 export default router;

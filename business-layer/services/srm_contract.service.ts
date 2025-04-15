@@ -58,39 +58,39 @@ export class SRMContractService {
     return allYearlyTrend;
   }
 
-  async getOnTimeAndLateSummary(
-    industry_code?: string,
-    supplier_code?: string,
-  ) {
-    const allYearlyData = await this.getAllOnTimeVsLateTrend(
-      industry_code,
-      supplier_code,
-    );
+  // async getOnTimeAndLateSummary(
+  //   industry_code?: string,
+  //   supplier_code?: string,
+  // ) {
+  //   const allYearlyData = await this.getAllOnTimeVsLateTrend(
+  //     industry_code,
+  //     supplier_code,
+  //   );
 
-    let totalOnTime = 0;
-    let totalLate = 0;
+  //   let totalOnTime = 0;
+  //   let totalLate = 0;
 
-    allYearlyData.forEach(({ on_time, late }) => {
-      totalOnTime += on_time;
-      totalLate += late;
-    });
+  //   allYearlyData.forEach(({ on_time, late }) => {
+  //     totalOnTime += on_time;
+  //     totalLate += late;
+  //   });
 
-    const totalContract = totalOnTime + totalLate;
+  //   const totalContract = totalOnTime + totalLate;
 
-    return {
-      total_contract: totalContract > 0 ? totalContract : '0',
-      total_on_time: totalOnTime > 0 ? totalOnTime : '0',
-      total_late: totalLate > 0 ? totalLate : '0',
-      on_time_rate:
-        totalContract > 0
-          ? ((totalOnTime / totalContract) * 100).toFixed(2)
-          : '0.00',
-      late_rate:
-        totalContract > 0
-          ? ((totalLate / totalContract) * 100).toFixed(2)
-          : '0.00',
-    };
-  }
+  //   return {
+  //     total_contract: totalContract > 0 ? totalContract : '0',
+  //     total_on_time: totalOnTime > 0 ? totalOnTime : '0',
+  //     total_late: totalLate > 0 ? totalLate : '0',
+  //     on_time_rate:
+  //       totalContract > 0
+  //         ? ((totalOnTime / totalContract) * 100).toFixed(2)
+  //         : '0.00',
+  //     late_rate:
+  //       totalContract > 0
+  //         ? ((totalLate / totalContract) * 100).toFixed(2)
+  //         : '0.00',
+  //   };
+  // }
 
   async getLateTrend(industry_code?: string, supplier_code?: string) {
     const response = await srmContractIntegration.getAllSRMContract();

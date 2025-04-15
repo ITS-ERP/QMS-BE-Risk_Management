@@ -17,7 +17,7 @@ export class CRMRequisitionService {
     const yearlyAcceptReject: {
       [key: string]: { accepted: number; rejected: number };
     } = {};
-    const allYears: Set<string> = new Set();
+    const filteredYears: Set<string> = new Set();
 
     data.forEach(
       (item: {
@@ -34,7 +34,7 @@ export class CRMRequisitionService {
         }
 
         const yearKey = new Date(item.due_date).getFullYear().toString();
-        allYears.add(yearKey);
+        filteredYears.add(yearKey);
 
         if (!yearlyAcceptReject[yearKey]) {
           yearlyAcceptReject[yearKey] = { accepted: 0, rejected: 0 };
@@ -48,14 +48,13 @@ export class CRMRequisitionService {
       },
     );
 
-    const allYearlyAcceptReject = Array.from(allYears)
+    const allYearlyAcceptReject = Array.from(filteredYears)
       .map((year) => ({
         year,
         accepted: yearlyAcceptReject[year]?.accepted || 0,
         rejected: yearlyAcceptReject[year]?.rejected || 0,
       }))
-      .sort((a, b) => parseInt(b.year) - parseInt(a.year))
-      .reverse();
+      .sort((a, b) => parseInt(a.year) - parseInt(b.year));
 
     return allYearlyAcceptReject;
   }
@@ -64,8 +63,7 @@ export class CRMRequisitionService {
     const data = await this.fetchAllCRMLoR();
 
     const yearlyReject: { [key: string]: { rejected: number } } = {};
-    const allYears: Set<string> = new Set();
-
+    const filteredYears: Set<string> = new Set();
     data.forEach(
       (item: {
         due_date: string;
@@ -73,39 +71,37 @@ export class CRMRequisitionService {
         retail_code: string;
         status: string;
       }) => {
-        const yearKey = new Date(item.due_date).getFullYear().toString();
-        allYears.add(yearKey);
-
         if (
           (industry_code && item.industry_code !== industry_code) ||
-          (retail_code && item.retail_code !== retail_code) ||
-          item.status !== 'rejected'
+          (retail_code && item.retail_code !== retail_code)
         ) {
           return;
         }
 
-        if (!yearlyReject[yearKey]) {
-          yearlyReject[yearKey] = { rejected: 0 };
-        }
+        const yearKey = new Date(item.due_date).getFullYear().toString();
+        filteredYears.add(yearKey);
 
-        yearlyReject[yearKey].rejected += 1;
+        if (item.status === 'rejected') {
+          if (!yearlyReject[yearKey]) {
+            yearlyReject[yearKey] = { rejected: 0 };
+          }
+          yearlyReject[yearKey].rejected += 1;
+        }
       },
     );
 
-    // Tambahkan tahun-tahun yang tidak ada data rejected-nya
-    allYears.forEach((year) => {
+    filteredYears.forEach((year) => {
       if (!yearlyReject[year]) {
         yearlyReject[year] = { rejected: 0 };
       }
     });
 
-    const allYearlyReject = Array.from(allYears)
+    const allYearlyReject = Array.from(filteredYears)
       .map((year) => ({
         year,
         rejected: yearlyReject[year]?.rejected || 0,
       }))
-      .sort((a, b) => parseInt(b.year) - parseInt(a.year))
-      .reverse()
+      .sort((a, b) => parseInt(a.year) - parseInt(b.year)) // Ascending sort by year
       .slice(0, 5);
 
     return allYearlyReject;
@@ -117,7 +113,7 @@ export class CRMRequisitionService {
     const yearlyAcceptReject: {
       [key: string]: { accepted: number; rejected: number };
     } = {};
-    const allYears: Set<string> = new Set();
+    const filteredYears: Set<string> = new Set();
 
     data.forEach(
       (item: {
@@ -134,7 +130,7 @@ export class CRMRequisitionService {
         }
 
         const yearKey = new Date(item.due_date).getFullYear().toString();
-        allYears.add(yearKey);
+        filteredYears.add(yearKey);
 
         if (!yearlyAcceptReject[yearKey]) {
           yearlyAcceptReject[yearKey] = { accepted: 0, rejected: 0 };
@@ -148,14 +144,13 @@ export class CRMRequisitionService {
       },
     );
 
-    const allYearlyAcceptReject = Array.from(allYears)
+    const allYearlyAcceptReject = Array.from(filteredYears)
       .map((year) => ({
         year,
         accepted: yearlyAcceptReject[year]?.accepted || 0,
         rejected: yearlyAcceptReject[year]?.rejected || 0,
       }))
-      .sort((a, b) => parseInt(b.year) - parseInt(a.year))
-      .reverse();
+      .sort((a, b) => parseInt(a.year) - parseInt(b.year));
 
     return allYearlyAcceptReject;
   }
@@ -164,7 +159,7 @@ export class CRMRequisitionService {
     const data = await this.fetchAllCRMLoA();
 
     const yearlyReject: { [key: string]: { rejected: number } } = {};
-    const allYears: Set<string> = new Set();
+    const filteredYears: Set<string> = new Set();
 
     data.forEach(
       (item: {
@@ -173,39 +168,37 @@ export class CRMRequisitionService {
         retail_code: string;
         status: string;
       }) => {
-        const yearKey = new Date(item.due_date).getFullYear().toString();
-        allYears.add(yearKey);
-
         if (
           (industry_code && item.industry_code !== industry_code) ||
-          (retail_code && item.retail_code !== retail_code) ||
-          item.status !== 'rejected'
+          (retail_code && item.retail_code !== retail_code)
         ) {
           return;
         }
 
-        if (!yearlyReject[yearKey]) {
-          yearlyReject[yearKey] = { rejected: 0 };
-        }
+        const yearKey = new Date(item.due_date).getFullYear().toString();
+        filteredYears.add(yearKey);
 
-        yearlyReject[yearKey].rejected += 1;
+        if (item.status === 'rejected') {
+          if (!yearlyReject[yearKey]) {
+            yearlyReject[yearKey] = { rejected: 0 };
+          }
+          yearlyReject[yearKey].rejected += 1;
+        }
       },
     );
 
-    // Tambahkan tahun-tahun yang tidak ada data rejected-nya
-    allYears.forEach((year) => {
+    filteredYears.forEach((year) => {
       if (!yearlyReject[year]) {
         yearlyReject[year] = { rejected: 0 };
       }
     });
 
-    const allYearlyReject = Array.from(allYears)
+    const allYearlyReject = Array.from(filteredYears)
       .map((year) => ({
         year,
         rejected: yearlyReject[year]?.rejected || 0,
       }))
-      .sort((a, b) => parseInt(b.year) - parseInt(a.year))
-      .reverse()
+      .sort((a, b) => parseInt(a.year) - parseInt(b.year)) // Ascending sort by year
       .slice(0, 5);
 
     return allYearlyReject;

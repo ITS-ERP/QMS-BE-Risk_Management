@@ -9,7 +9,10 @@ export const getDefectInspectionProductByYearIndustry = () =>
   forecastApi.get(
     '/general_forecast?endpoint=defect_inspection_product_by_year',
   );
-//Keterlambatan RFQ (belum ada api nya)
+export const getDelayedSRMIndustry = (industry_code: string) =>
+  forecastApi.get(
+    `/general_forecast?endpoint=delayed_count&industry_code=${industry_code}`,
+  );
 export const getLateSRMIndustry = (industry_code: string) =>
   forecastApi.get(
     `/general_forecast?endpoint=late&industry_code=${industry_code}`,
@@ -90,8 +93,4 @@ export const getLateCRMRetail = (retail_code: string) =>
 export const getNoncompliantQuantityCRMRetail = (retail_code: string) =>
   forecastApi.get(
     `/general_forecast?endpoint=crm_noncompliant_quantity&retail_code=${retail_code}`,
-  );
-export const getTotalContractCRMRetail = (retail_code: string) =>
-  forecastApi.get(
-    `/general_forecast?endpoint=crm_total_contract&retail_code=${retail_code}`,
   );
