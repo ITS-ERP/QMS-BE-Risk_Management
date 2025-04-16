@@ -13,6 +13,7 @@ import { RiskRateTrendData } from './risk_monitoring.service';
 // Interface untuk hasil mitigasi risiko
 export interface RiskMitigationResult {
   risk_name: string;
+  risk_group: string;
   risk_mitigation: string;
   mitigation_effectivity: number | string;
 }
@@ -250,6 +251,7 @@ export class RiskMitigationService {
       // Tambahkan ke hasil
       riskMitigationList.push({
         risk_name,
+        risk_group,
         risk_mitigation,
         mitigation_effectivity: mitigationEffectivity,
       });
@@ -287,7 +289,7 @@ export class RiskMitigationService {
     }
 
     const riskBase = riskBaseList[0];
-    const { risk_name, risk_mitigation, risk_group } = riskBase;
+    const { risk_name, risk_group, risk_mitigation } = riskBase;
 
     // Inisialisasi dengan nilai default
     let mitigationEffectivity: number | string =
@@ -473,6 +475,7 @@ export class RiskMitigationService {
     // Kembalikan hasil mitigasi untuk risiko spesifik
     return {
       risk_name,
+      risk_group,
       risk_mitigation,
       mitigation_effectivity: mitigationEffectivity,
     };

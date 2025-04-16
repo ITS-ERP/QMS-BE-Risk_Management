@@ -440,6 +440,7 @@ export class RiskIdentificationService {
       riskIdentificationList.push({
         risk_name,
         risk_desc,
+        risk_group,
         priority,
         forecast_prediction: forecastPrediction,
       });
@@ -480,6 +481,7 @@ export class RiskIdentificationService {
 interface RiskIdentificationResult {
   risk_name: string;
   risk_desc: string;
+  risk_group: string;
   priority: string;
   forecast_prediction: string;
 }
