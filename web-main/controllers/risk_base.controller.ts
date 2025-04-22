@@ -66,11 +66,42 @@ export class RiskBaseController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const criteria = req.query;
+      // Konversi req.query menjadi Record<string, string | number | undefined>
+      const criteria: Record<string, string | number | undefined> = {};
+
+      // Hanya ambil properti dari query yang relevan dan bisa dikonversi
+      Object.keys(req.query).forEach((key) => {
+        const value = req.query[key];
+        // Hanya ambil string dan number yang valid
+        if (typeof value === 'string') {
+          // Coba konversi ke number jika mungkin
+          const numValue = Number(value);
+          if (!isNaN(numValue) && value.trim() !== '') {
+            criteria[key] = numValue;
+          } else {
+            criteria[key] = value;
+          }
+        } else if (Array.isArray(value) && value.length > 0) {
+          // Jika array, ambil nilai pertama saja
+          const firstValue = value[0];
+          if (typeof firstValue === 'string') {
+            const numValue = Number(firstValue);
+            if (!isNaN(numValue) && firstValue.trim() !== '') {
+              criteria[key] = numValue;
+            } else {
+              criteria[key] = firstValue;
+            }
+          }
+        }
+      });
+
+      console.log('Filtered criteria for risk base search:', criteria);
+
       const riskBases = await this.riskBaseService.findRiskBasesByCriteria(
         req,
-        criteria as Partial<RiskBaseAttributes>,
+        criteria,
       );
+
       if (riskBases.length > 0) {
         return this.sendSuccessGet(
           req,
