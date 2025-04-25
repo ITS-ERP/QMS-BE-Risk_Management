@@ -22,6 +22,23 @@ export class RiskMitigationController extends BaseController {
       const supplierCode = req.query.supplier_code as string | undefined;
       const retailCode = req.query.retail_code as string | undefined;
 
+      // Ambil PKID dari parameter path jika ada
+      const pkidParam = req.params.pkid;
+
+      // Parse PKID jika disediakan
+      let pkid: number | undefined = undefined;
+      if (pkidParam) {
+        pkid = parseInt(pkidParam, 10);
+        if (isNaN(pkid)) {
+          return this.handleError(
+            req,
+            res,
+            'Invalid PKID. PKID must be a number',
+            400,
+          );
+        }
+      }
+
       if (!riskUser) {
         return this.handleError(req, res, 'Risk user is required', 400);
       }
@@ -49,7 +66,22 @@ export class RiskMitigationController extends BaseController {
         industryCode,
         supplierCode,
         retailCode,
+        pkid,
       );
+
+      // Jika menggunakan PKID dan hasilnya adalah objek kosong (array kosong), berarti PKID tidak ditemukan
+      if (
+        pkid &&
+        Array.isArray(riskMitigation) &&
+        riskMitigation.length === 0
+      ) {
+        return this.handleError(
+          req,
+          res,
+          `Risk with PKID ${pkid} not found`,
+          404,
+        );
+      }
 
       return this.sendSuccessGet(
         req,

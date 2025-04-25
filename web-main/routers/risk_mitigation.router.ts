@@ -5,7 +5,7 @@ const router = Router();
 const riskMitigationController = new RiskMitigationController();
 
 // Route untuk mendapatkan mitigasi risiko berdasarkan risk_user
-router.get('/', (req, res) =>
+router.get('/:pkid?', (req, res) =>
   riskMitigationController.getRiskMitigationController(req, res),
 );
 
