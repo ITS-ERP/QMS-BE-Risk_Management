@@ -22,37 +22,62 @@ export class RiskIdentificationController extends BaseController {
       const supplierCode = req.query.supplier_code as string | undefined;
       const retailCode = req.query.retail_code as string | undefined;
 
+      if (!riskUser) {
+        return this.handleError(req, res, 'Risk user is required', 400);
+      }
+
+      // Validasi kode yang sesuai diperlukan berdasarkan jenis user
       if (
-        !riskUser ||
-        (!industryCode && riskUser === 'Industry') ||
-        (!supplierCode && riskUser === 'Supplier') ||
-        (!retailCode && riskUser === 'Retail')
+        (riskUser === 'Industry' && !industryCode) ||
+        (riskUser === 'Supplier' && !supplierCode) ||
+        (riskUser === 'Retail' && !retailCode)
       ) {
         return this.handleError(
           req,
           res,
-          'Risk user and appropriate code (industry_code, supplier_code, or retail_code) are required',
+          `Parameter ${riskUser === 'Industry' ? 'industry_code' : riskUser === 'Supplier' ? 'supplier_code' : 'retail_code'} is required for risk_user ${riskUser}`,
           400,
         );
       }
 
-      const riskIdentification =
-        await this.riskIdentificationService.getRiskIdentification(
-          req,
-          riskUser,
-          industryCode,
-          supplierCode,
-          retailCode,
-        );
+      try {
+        const riskIdentification =
+          await this.riskIdentificationService.getRiskIdentification(
+            req,
+            riskUser,
+            industryCode,
+            supplierCode,
+            retailCode,
+          );
 
-      return this.sendSuccessGet(
-        req,
-        res,
-        riskIdentification,
-        MessagesKey.SUCCESSGET,
-        200,
-      );
+        // Jika tidak ada data yang ditemukan, kembalikan array kosong dengan pesan sukses
+        if (!riskIdentification || riskIdentification.length === 0) {
+          console.log(`No risk identification data found for ${riskUser}`);
+          return this.sendSuccessGet(req, res, [], MessagesKey.SUCCESSGET, 200);
+        }
+
+        return this.sendSuccessGet(
+          req,
+          res,
+          riskIdentification,
+          MessagesKey.SUCCESSGET,
+          200,
+        );
+      } catch (serviceError) {
+        console.error('Service error:', serviceError);
+        const errorMessage =
+          serviceError instanceof Error
+            ? serviceError.message
+            : 'Unknown service error';
+        return this.handleError(
+          req,
+          res,
+          `Error processing request: ${errorMessage}`,
+          500,
+        );
+      }
     } catch (error) {
+      console.error('Controller error:', error);
       return this.handleError(req, res, error, 500);
     }
   }

@@ -43,22 +43,44 @@ export class RiskMonitoringController extends BaseController {
         );
       }
 
-      const riskMonitoring = await this.riskMonitoringService.getRiskMonitoring(
-        req,
-        riskUser,
-        industryCode,
-        supplierCode,
-        retailCode,
-      );
+      try {
+        const riskMonitoring =
+          await this.riskMonitoringService.getRiskMonitoring(
+            req,
+            riskUser,
+            industryCode,
+            supplierCode,
+            retailCode,
+          );
 
-      return this.sendSuccessGet(
-        req,
-        res,
-        riskMonitoring,
-        MessagesKey.SUCCESSGET,
-        200,
-      );
+        // Jika tidak ada data yang ditemukan, kembalikan array kosong dengan pesan sukses
+        if (!riskMonitoring || riskMonitoring.length === 0) {
+          console.log(`No risk monitoring data found for ${riskUser}`);
+          return this.sendSuccessGet(req, res, [], MessagesKey.SUCCESSGET, 200);
+        }
+
+        return this.sendSuccessGet(
+          req,
+          res,
+          riskMonitoring,
+          MessagesKey.SUCCESSGET,
+          200,
+        );
+      } catch (serviceError) {
+        console.error('Service error:', serviceError);
+        const errorMessage =
+          serviceError instanceof Error
+            ? serviceError.message
+            : 'Unknown service error';
+        return this.handleError(
+          req,
+          res,
+          `Error processing request: ${errorMessage}`,
+          500,
+        );
+      }
     } catch (error) {
+      console.error('Controller error:', error);
       return this.handleError(req, res, error, 500);
     }
   }
@@ -101,33 +123,48 @@ export class RiskMonitoringController extends BaseController {
         );
       }
 
-      const specificRiskMonitoring =
-        await this.riskMonitoringService.getSpecificRiskMonitoring(
-          req,
-          riskUser,
-          riskName,
-          industryCode,
-          supplierCode,
-          retailCode,
-        );
+      try {
+        const specificRiskMonitoring =
+          await this.riskMonitoringService.getSpecificRiskMonitoring(
+            req,
+            riskUser,
+            riskName,
+            industryCode,
+            supplierCode,
+            retailCode,
+          );
 
-      if (!specificRiskMonitoring) {
+        if (!specificRiskMonitoring) {
+          return this.handleError(
+            req,
+            res,
+            `Risk with name "${riskName}" not found for ${riskUser}`,
+            404,
+          );
+        }
+
+        return this.sendSuccessGet(
+          req,
+          res,
+          specificRiskMonitoring,
+          MessagesKey.SUCCESSGET,
+          200,
+        );
+      } catch (serviceError) {
+        console.error('Service error in specific risk:', serviceError);
+        const errorMessage =
+          serviceError instanceof Error
+            ? serviceError.message
+            : 'Unknown service error';
         return this.handleError(
           req,
           res,
-          `Risk with name "${riskName}" not found for ${riskUser}`,
-          404,
+          `Error processing request: ${errorMessage}`,
+          500,
         );
       }
-
-      return this.sendSuccessGet(
-        req,
-        res,
-        specificRiskMonitoring,
-        MessagesKey.SUCCESSGET,
-        200,
-      );
     } catch (error) {
+      console.error('Controller error in specific risk:', error);
       return this.handleError(req, res, error, 500);
     }
   }
