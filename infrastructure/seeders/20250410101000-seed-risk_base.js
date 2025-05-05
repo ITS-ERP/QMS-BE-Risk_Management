@@ -8,8 +8,7 @@ module.exports = {
         // INDUSTRY
         {
           risk_name: 'Ketidaksesuaian Jumlah (Received Items)',
-          risk_desc:
-            'Ketidaksesuaian jumlah bahan baku yang diterima oleh Industri',
+          risk_desc: 'Ketidaksesuaian jumlah item yang diterima oleh Industri',
           risk_user: 'Industry',
           risk_group: 'Inventory',
           risk_mitigation: 'Verifikasi ulang jumlah saat penerimaan barang',
@@ -156,14 +155,14 @@ module.exports = {
           risk_desc: 'Industri menolak Letter of Request dari Supplier',
           risk_user: 'Retail',
           risk_group: 'Requisition',
-          risk_mitigation: 'Penolakan LoR',
+          risk_mitigation: 'Evaluasi ulang LoR',
         },
         {
           risk_name: 'Penolakan LoA',
           risk_desc: 'Penolakan Letter of Agreements oleh Supplier',
           risk_user: 'Retail',
           risk_group: 'Requisition',
-          risk_mitigation: 'Penolakan LoA',
+          risk_mitigation: 'Evaluasi ulang LoR',
         },
         {
           risk_name: 'Penerimaan terlambat',
