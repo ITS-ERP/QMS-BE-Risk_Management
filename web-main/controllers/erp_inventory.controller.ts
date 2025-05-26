@@ -29,10 +29,10 @@ export class InventoryController extends BaseController {
     }
   }
 
-  getAllTransferController = async (
+  public async getAllTransferController(
     req: Request,
     res: Response,
-  ): Promise<Response> => {
+  ): Promise<Response> {
     try {
       const allTransfer = await this.inventoryService.fetchAllTransfer();
       return this.sendSuccessGet(
@@ -45,7 +45,25 @@ export class InventoryController extends BaseController {
     } catch (error) {
       return this.handleError(req, res, error, 500);
     }
-  };
+  }
+
+  // getAllTransferController = async (
+  //   req: Request,
+  //   res: Response,
+  // ): Promise<Response> => {
+  //   try {
+  //     const allTransfer = await this.inventoryService.fetchAllTransfer();
+  //     return this.sendSuccessGet(
+  //       req,
+  //       res,
+  //       allTransfer,
+  //       MessagesKey.SUCCESSGET,
+  //       200,
+  //     );
+  //   } catch (error) {
+  //     return this.handleError(req, res, error, 500);
+  //   }
+  // };
 
   public async getReceiveTypeController(
     req: Request,

@@ -1,7 +1,7 @@
 import { RiskBaseAttributes } from '../../infrastructure/models/risk_base.model';
 
 export interface RiskBaseInputDTO {
-  pkid: number;
+  pkid?: number;
   risk_name: string;
   risk_desc: string;
   risk_user: string;

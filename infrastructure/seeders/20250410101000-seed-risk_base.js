@@ -162,7 +162,7 @@ module.exports = {
           risk_desc: 'Penolakan Letter of Agreements oleh Supplier',
           risk_user: 'Retail',
           risk_group: 'Requisition',
-          risk_mitigation: 'Evaluasi ulang LoR',
+          risk_mitigation: 'Evaluasi ulang LoA',
         },
         {
           risk_name: 'Penerimaan terlambat',

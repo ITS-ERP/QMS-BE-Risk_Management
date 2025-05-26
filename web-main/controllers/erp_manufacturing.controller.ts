@@ -87,10 +87,10 @@ export class ManufacturingController extends BaseController {
     }
   }
 
-  getAllInspectionProductController = async (
+  public async getAllInspectionProductController(
     req: Request,
     res: Response,
-  ): Promise<Response> => {
+  ): Promise<Response> {
     try {
       const allInspectionProduct =
         await this.manufacturingService.fetchInspectionProduct();
@@ -104,7 +104,7 @@ export class ManufacturingController extends BaseController {
     } catch (error) {
       return this.handleError(req, res, error, 500);
     }
-  };
+  }
 
   public async getInspectionProductTypeController(
     req: Request,

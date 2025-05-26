@@ -128,7 +128,7 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     );
 
     if (!(createdModel instanceof Model)) {
-      throw new Error('Failed to create KPI Performance');
+      throw new Error('Failed to create Risk Base');
     }
 
     const resultDTO = this.convertToResultDTO(createdModel);
