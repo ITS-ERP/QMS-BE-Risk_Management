@@ -1,13 +1,16 @@
 import { crmRequisitionApi } from '.';
 
-export const getAllCRMLoR = () => crmRequisitionApi.get(`/lor_crm/`);
+export const getAllLetterOfRequest = () =>
+  crmRequisitionApi.get(`/letterOfRequest/`);
 
-export const getAllCRMLoA = () => crmRequisitionApi.get(`/loa_crm/`);
+export const getLetterOfRequestByID = (pkid: number) =>
+  crmRequisitionApi.get(`/letterOfRequest/${pkid}`);
 
-// 1. Penolakan LoR
-// export const getLoRApprovedRejectedTrend = () =>
-//   requisitionCRMApi.get(`/lor_crm/trend/approved-rejected`);
+export const getLetterOfRequestDetailsByLORID = (pkid: number) =>
+  crmRequisitionApi.get(`/letterOfRequestProducts/${pkid}`);
 
-// 2. Penolakan LoA
-// export const getLoAApprovedRejectedTrend = () =>
-//   requisitionCRMApi.get(`/loa_crm/trend/approved-rejected`);
+export const getAllLetterOfAgreements = () =>
+  crmRequisitionApi.get(`/letterOfAgreement/`);
+
+export const getLetterOfAgreementByID = (pkid: number) =>
+  crmRequisitionApi.get(`/letterOfAgreement/${pkid}`);

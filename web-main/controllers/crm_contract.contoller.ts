@@ -35,11 +35,16 @@ export class CRMContractController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const contractTotal = await this.crmContractService.getContractTotal(
-        industry_code,
-        retail_code,
+        industry_tenant_id,
+        retail_tenant_id,
       );
       return this.sendSuccessGet(
         req,
@@ -58,12 +63,17 @@ export class CRMContractController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const allOnTimeVsLateTrend =
         await this.crmContractService.getAllOnTimeVsLateTrend(
-          industry_code,
-          retail_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,
@@ -82,11 +92,16 @@ export class CRMContractController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const top5LateTrend = await this.crmContractService.getLateTrend(
-        industry_code,
-        retail_code,
+        industry_tenant_id,
+        retail_tenant_id,
       );
       return this.sendSuccessGet(
         req,
@@ -105,12 +120,17 @@ export class CRMContractController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const quantityCompliance =
         await this.crmContractService.getQuantityCompliance(
-          industry_code,
-          retail_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,
@@ -129,12 +149,17 @@ export class CRMContractController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const nonCompliantQuantity =
         await this.crmContractService.getNonCompliantQuantity(
-          industry_code,
-          retail_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,
@@ -148,18 +173,22 @@ export class CRMContractController extends BaseController {
     }
   }
 
-  //BARU
   public async getContractDeclineSummaryController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const contractDeclineSummary =
         await this.crmContractService.getContractDeclineSummary(
-          industry_code,
-          retail_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,
@@ -178,12 +207,17 @@ export class CRMContractController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const lateDeliverySummary =
         await this.crmContractService.getLateDeliverySummary(
-          industry_code,
-          retail_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,
@@ -202,12 +236,17 @@ export class CRMContractController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const quantityMismatchSummary =
         await this.crmContractService.getQuantityMismatchSummary(
-          industry_code,
-          retail_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,
@@ -221,18 +260,22 @@ export class CRMContractController extends BaseController {
     }
   }
 
-  // Controller untuk Risk Rate Trend pada Penurunan jumlah kontrak
   public async getContractDeclineRiskRateTrendController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const contractDeclineRiskRateTrend =
         await this.crmContractService.getContractDeclineRiskRateTrend(
-          industry_code,
-          retail_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,
@@ -246,18 +289,22 @@ export class CRMContractController extends BaseController {
     }
   }
 
-  // Controller untuk Risk Rate Trend pada Pengiriman terlambat
   public async getLateDeliveryRiskRateTrendController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const lateDeliveryRiskRateTrend =
         await this.crmContractService.getLateDeliveryRiskRateTrend(
-          industry_code,
-          retail_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,
@@ -271,18 +318,22 @@ export class CRMContractController extends BaseController {
     }
   }
 
-  // Controller untuk Risk Rate Trend pada Jumlah tidak sesuai
   public async getQuantityMismatchRiskRateTrendController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const quantityMismatchRiskRateTrend =
         await this.crmContractService.getQuantityMismatchRiskRateTrend(
-          industry_code,
-          retail_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,

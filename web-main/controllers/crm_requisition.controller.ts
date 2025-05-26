@@ -52,12 +52,17 @@ export class CRMRequisitionController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const allLoRAcceptReject =
         await this.crmRequisitionService.getAllLoRAcceptReject(
-          industry_code,
-          retail_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,
@@ -76,11 +81,16 @@ export class CRMRequisitionController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const loRReject = await this.crmRequisitionService.getLoRReject(
-        industry_code,
-        retail_code,
+        industry_tenant_id,
+        retail_tenant_id,
       );
       return this.sendSuccessGet(
         req,
@@ -99,12 +109,17 @@ export class CRMRequisitionController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const allLoAAcceptReject =
         await this.crmRequisitionService.getAllLoAAcceptReject(
-          industry_code,
-          retail_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,
@@ -123,11 +138,16 @@ export class CRMRequisitionController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const loAReject = await this.crmRequisitionService.getLoAReject(
-        industry_code,
-        retail_code,
+        industry_tenant_id,
+        retail_tenant_id,
       );
       return this.sendSuccessGet(
         req,
@@ -141,18 +161,22 @@ export class CRMRequisitionController extends BaseController {
     }
   }
 
-  //BARU
   public async getLoRRejectionSummaryController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const loRRejectionSummary =
         await this.crmRequisitionService.getLoRRejectionSummary(
-          retail_code,
-          industry_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,
@@ -171,12 +195,17 @@ export class CRMRequisitionController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const loARejectionSummary =
         await this.crmRequisitionService.getLoARejectionSummary(
-          retail_code,
-          industry_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,
@@ -190,18 +219,22 @@ export class CRMRequisitionController extends BaseController {
     }
   }
 
-  // Controller untuk Risk Rate Trend pada Penolakan LoR
   public async getLoRRejectionRiskRateTrendController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const loRRejectionRiskRateTrend =
         await this.crmRequisitionService.getLoRRejectionRiskRateTrend(
-          retail_code,
-          industry_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,
@@ -215,18 +248,22 @@ export class CRMRequisitionController extends BaseController {
     }
   }
 
-  // Controller untuk Risk Rate Trend pada Penolakan LoA
   public async getLoARejectionRiskRateTrendController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      const industry_code = req.query.industry_code as string | undefined;
-      const retail_code = req.query.retail_code as string | undefined;
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+      const retail_tenant_id = req.query.retail_tenant_id
+        ? Number(req.query.retail_tenant_id)
+        : undefined;
+
       const loARejectionRiskRateTrend =
         await this.crmRequisitionService.getLoARejectionRiskRateTrend(
-          retail_code,
-          industry_code,
+          industry_tenant_id,
+          retail_tenant_id,
         );
       return this.sendSuccessGet(
         req,

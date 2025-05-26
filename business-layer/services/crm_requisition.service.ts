@@ -1,17 +1,50 @@
 import * as crmRequisitionIntegration from '../../data-access/integrations/crm_requisition.integration';
 
+// Interface untuk Letter of Request
+interface LetterOfRequest {
+  pkid: number;
+  code: string;
+  industry_pkid: number; // tenant_id milik industry
+  confirmation_due_date: string;
+  delivery_date: string;
+  start_date: string | null;
+  end_date: string | null;
+  location: string;
+  description: string;
+  contract_type: string;
+  status: string;
+  message: string | null;
+  tenant_id: number; // tenant_id milik retail
+}
+
+// Interface untuk Letter of Agreement
+interface LetterOfAgreement {
+  pkid: number;
+  code: string;
+  promotional_price: number;
+  payment_method: string;
+  down_payment_value: number | null;
+  confirmation_due_date: string;
+  status: string;
+  letter_of_request_pkid: number;
+  tenant_id: number; // tenant_id milik retail
+}
+
 export class CRMRequisitionService {
   async fetchAllCRMLoR() {
-    const response = await crmRequisitionIntegration.getAllCRMLoR();
+    const response = await crmRequisitionIntegration.getAllLetterOfRequest();
     return response.data.data;
   }
 
   async fetchAllCRMLoA() {
-    const response = await crmRequisitionIntegration.getAllCRMLoA();
+    const response = await crmRequisitionIntegration.getAllLetterOfAgreements();
     return response.data.data;
   }
 
-  async getAllLoRAcceptReject(industry_code?: string, retail_code?: string) {
+  async getAllLoRAcceptReject(
+    industry_tenant_id?: number,
+    retail_tenant_id?: number,
+  ) {
     const data = await this.fetchAllCRMLoR();
 
     const yearlyAcceptReject: {
@@ -19,34 +52,40 @@ export class CRMRequisitionService {
     } = {};
     const filteredYears: Set<string> = new Set();
 
-    data.forEach(
-      (item: {
-        due_date: string;
-        industry_code: string;
-        retail_code: string;
-        status: string;
-      }) => {
-        if (
-          (industry_code && item.industry_code !== industry_code) ||
-          (retail_code && item.retail_code !== retail_code)
-        ) {
-          return;
-        }
+    // Filter data berdasarkan tenant_id
+    const filteredData = data.filter((item: LetterOfRequest) => {
+      let includeItem = true;
 
-        const yearKey = new Date(item.due_date).getFullYear().toString();
-        filteredYears.add(yearKey);
+      if (industry_tenant_id && item.industry_pkid !== industry_tenant_id) {
+        includeItem = false;
+      }
 
-        if (!yearlyAcceptReject[yearKey]) {
-          yearlyAcceptReject[yearKey] = { accepted: 0, rejected: 0 };
-        }
+      if (retail_tenant_id && item.tenant_id !== retail_tenant_id) {
+        includeItem = false;
+      }
 
-        if (item.status === 'accepted') {
-          yearlyAcceptReject[yearKey].accepted += 1;
-        } else if (item.status === 'rejected') {
-          yearlyAcceptReject[yearKey].rejected += 1;
-        }
-      },
-    );
+      return includeItem;
+    });
+
+    filteredData.forEach((item: LetterOfRequest) => {
+      const yearKey = new Date(item.confirmation_due_date)
+        .getFullYear()
+        .toString();
+      filteredYears.add(yearKey);
+
+      if (!yearlyAcceptReject[yearKey]) {
+        yearlyAcceptReject[yearKey] = { accepted: 0, rejected: 0 };
+      }
+
+      if (
+        item.status.toLowerCase() === 'approved' ||
+        item.status.toLowerCase() === 'accepted'
+      ) {
+        yearlyAcceptReject[yearKey].accepted += 1;
+      } else if (item.status.toLowerCase() === 'rejected') {
+        yearlyAcceptReject[yearKey].rejected += 1;
+      }
+    });
 
     const allYearlyAcceptReject = Array.from(filteredYears)
       .map((year) => ({
@@ -59,36 +98,40 @@ export class CRMRequisitionService {
     return allYearlyAcceptReject;
   }
 
-  async getLoRReject(industry_code?: string, retail_code?: string) {
+  async getLoRReject(industry_tenant_id?: number, retail_tenant_id?: number) {
     const data = await this.fetchAllCRMLoR();
 
     const yearlyReject: { [key: string]: { rejected: number } } = {};
     const filteredYears: Set<string> = new Set();
-    data.forEach(
-      (item: {
-        due_date: string;
-        industry_code: string;
-        retail_code: string;
-        status: string;
-      }) => {
-        if (
-          (industry_code && item.industry_code !== industry_code) ||
-          (retail_code && item.retail_code !== retail_code)
-        ) {
-          return;
-        }
 
-        const yearKey = new Date(item.due_date).getFullYear().toString();
-        filteredYears.add(yearKey);
+    // Filter data berdasarkan tenant_id
+    const filteredData = data.filter((item: LetterOfRequest) => {
+      let includeItem = true;
 
-        if (item.status === 'rejected') {
-          if (!yearlyReject[yearKey]) {
-            yearlyReject[yearKey] = { rejected: 0 };
-          }
-          yearlyReject[yearKey].rejected += 1;
+      if (industry_tenant_id && item.industry_pkid !== industry_tenant_id) {
+        includeItem = false;
+      }
+
+      if (retail_tenant_id && item.tenant_id !== retail_tenant_id) {
+        includeItem = false;
+      }
+
+      return includeItem;
+    });
+
+    filteredData.forEach((item: LetterOfRequest) => {
+      const yearKey = new Date(item.confirmation_due_date)
+        .getFullYear()
+        .toString();
+      filteredYears.add(yearKey);
+
+      if (item.status.toLowerCase() === 'rejected') {
+        if (!yearlyReject[yearKey]) {
+          yearlyReject[yearKey] = { rejected: 0 };
         }
-      },
-    );
+        yearlyReject[yearKey].rejected += 1;
+      }
+    });
 
     filteredYears.forEach((year) => {
       if (!yearlyReject[year]) {
@@ -101,48 +144,72 @@ export class CRMRequisitionService {
         year,
         rejected: yearlyReject[year]?.rejected || 0,
       }))
-      .sort((a, b) => parseInt(a.year) - parseInt(b.year)) // Ascending sort by year
+      .sort((a, b) => parseInt(a.year) - parseInt(b.year))
       .slice(0, 5);
 
     return allYearlyReject;
   }
 
-  async getAllLoAAcceptReject(industry_code?: string, retail_code?: string) {
-    const data = await this.fetchAllCRMLoA();
+  async getAllLoAAcceptReject(
+    industry_tenant_id?: number,
+    retail_tenant_id?: number,
+  ) {
+    // Ambil data LoA dan LoR untuk join
+    const loaData = await this.fetchAllCRMLoA();
+    const lorData = await this.fetchAllCRMLoR();
+
+    // Create mapping dari LoR pkid ke industry_pkid
+    const lorToIndustryMapping = new Map<number, number>();
+    lorData.forEach((lor: LetterOfRequest) => {
+      lorToIndustryMapping.set(lor.pkid, lor.industry_pkid);
+    });
 
     const yearlyAcceptReject: {
       [key: string]: { accepted: number; rejected: number };
     } = {};
     const filteredYears: Set<string> = new Set();
 
-    data.forEach(
-      (item: {
-        due_date: string;
-        industry_code: string;
-        retail_code: string;
-        status: string;
-      }) => {
-        if (
-          (industry_code && item.industry_code !== industry_code) ||
-          (retail_code && item.retail_code !== retail_code)
-        ) {
-          return;
-        }
+    // Filter data LoA berdasarkan tenant_id
+    const filteredData = loaData.filter((item: LetterOfAgreement) => {
+      let includeItem = true;
 
-        const yearKey = new Date(item.due_date).getFullYear().toString();
-        filteredYears.add(yearKey);
+      // Filter berdasarkan retail tenant_id
+      if (retail_tenant_id && item.tenant_id !== retail_tenant_id) {
+        includeItem = false;
+      }
 
-        if (!yearlyAcceptReject[yearKey]) {
-          yearlyAcceptReject[yearKey] = { accepted: 0, rejected: 0 };
+      // Filter berdasarkan industry tenant_id (melalui join dengan LoR)
+      if (industry_tenant_id) {
+        const relatedIndustryPkid = lorToIndustryMapping.get(
+          item.letter_of_request_pkid,
+        );
+        if (relatedIndustryPkid !== industry_tenant_id) {
+          includeItem = false;
         }
+      }
 
-        if (item.status === 'accepted') {
-          yearlyAcceptReject[yearKey].accepted += 1;
-        } else if (item.status === 'rejected') {
-          yearlyAcceptReject[yearKey].rejected += 1;
-        }
-      },
-    );
+      return includeItem;
+    });
+
+    filteredData.forEach((item: LetterOfAgreement) => {
+      const yearKey = new Date(item.confirmation_due_date)
+        .getFullYear()
+        .toString();
+      filteredYears.add(yearKey);
+
+      if (!yearlyAcceptReject[yearKey]) {
+        yearlyAcceptReject[yearKey] = { accepted: 0, rejected: 0 };
+      }
+
+      if (
+        item.status.toLowerCase() === 'approved' ||
+        item.status.toLowerCase() === 'accepted'
+      ) {
+        yearlyAcceptReject[yearKey].accepted += 1;
+      } else if (item.status.toLowerCase() === 'rejected') {
+        yearlyAcceptReject[yearKey].rejected += 1;
+      }
+    });
 
     const allYearlyAcceptReject = Array.from(filteredYears)
       .map((year) => ({
@@ -155,37 +222,55 @@ export class CRMRequisitionService {
     return allYearlyAcceptReject;
   }
 
-  async getLoAReject(industry_code?: string, retail_code?: string) {
-    const data = await this.fetchAllCRMLoA();
+  async getLoAReject(industry_tenant_id?: number, retail_tenant_id?: number) {
+    // Ambil data LoA dan LoR untuk join
+    const loaData = await this.fetchAllCRMLoA();
+    const lorData = await this.fetchAllCRMLoR();
+
+    // Create mapping dari LoR pkid ke industry_pkid
+    const lorToIndustryMapping = new Map<number, number>();
+    lorData.forEach((lor: LetterOfRequest) => {
+      lorToIndustryMapping.set(lor.pkid, lor.industry_pkid);
+    });
 
     const yearlyReject: { [key: string]: { rejected: number } } = {};
     const filteredYears: Set<string> = new Set();
 
-    data.forEach(
-      (item: {
-        due_date: string;
-        industry_code: string;
-        retail_code: string;
-        status: string;
-      }) => {
-        if (
-          (industry_code && item.industry_code !== industry_code) ||
-          (retail_code && item.retail_code !== retail_code)
-        ) {
-          return;
-        }
+    // Filter data LoA berdasarkan tenant_id
+    const filteredData = loaData.filter((item: LetterOfAgreement) => {
+      let includeItem = true;
 
-        const yearKey = new Date(item.due_date).getFullYear().toString();
-        filteredYears.add(yearKey);
+      // Filter berdasarkan retail tenant_id
+      if (retail_tenant_id && item.tenant_id !== retail_tenant_id) {
+        includeItem = false;
+      }
 
-        if (item.status === 'rejected') {
-          if (!yearlyReject[yearKey]) {
-            yearlyReject[yearKey] = { rejected: 0 };
-          }
-          yearlyReject[yearKey].rejected += 1;
+      // Filter berdasarkan industry tenant_id (melalui join dengan LoR)
+      if (industry_tenant_id) {
+        const relatedIndustryPkid = lorToIndustryMapping.get(
+          item.letter_of_request_pkid,
+        );
+        if (relatedIndustryPkid !== industry_tenant_id) {
+          includeItem = false;
         }
-      },
-    );
+      }
+
+      return includeItem;
+    });
+
+    filteredData.forEach((item: LetterOfAgreement) => {
+      const yearKey = new Date(item.confirmation_due_date)
+        .getFullYear()
+        .toString();
+      filteredYears.add(yearKey);
+
+      if (item.status.toLowerCase() === 'rejected') {
+        if (!yearlyReject[yearKey]) {
+          yearlyReject[yearKey] = { rejected: 0 };
+        }
+        yearlyReject[yearKey].rejected += 1;
+      }
+    });
 
     filteredYears.forEach((year) => {
       if (!yearlyReject[year]) {
@@ -198,24 +283,20 @@ export class CRMRequisitionService {
         year,
         rejected: yearlyReject[year]?.rejected || 0,
       }))
-      .sort((a, b) => parseInt(a.year) - parseInt(b.year)) // Ascending sort by year
+      .sort((a, b) => parseInt(a.year) - parseInt(b.year))
       .slice(0, 5);
 
     return allYearlyReject;
   }
 
-  //INDUSTRY
-  // 1. Penolakan LoR
-  // 2. Penolakan LoA
-
-  //RETAIL
-  // 1. Penolakan LoR
-  // 2. Penolakan LoA
-
-  async getLoRRejectionSummary(retail_code?: string, industry_code?: string) {
+  // Summary untuk Penolakan LoR
+  async getLoRRejectionSummary(
+    industry_tenant_id?: number,
+    retail_tenant_id?: number,
+  ) {
     const lorData = await this.getAllLoRAcceptReject(
-      industry_code,
-      retail_code,
+      industry_tenant_id,
+      retail_tenant_id,
     );
 
     let totalAccepted = 0;
@@ -244,10 +325,13 @@ export class CRMRequisitionService {
   }
 
   // Summary untuk Penolakan LoA
-  async getLoARejectionSummary(retail_code?: string, industry_code?: string) {
+  async getLoARejectionSummary(
+    industry_tenant_id?: number,
+    retail_tenant_id?: number,
+  ) {
     const loaData = await this.getAllLoAAcceptReject(
-      industry_code,
-      retail_code,
+      industry_tenant_id,
+      retail_tenant_id,
     );
 
     let totalAccepted = 0;
@@ -277,12 +361,12 @@ export class CRMRequisitionService {
 
   // Risk Rate Trend untuk Penolakan LoR
   async getLoRRejectionRiskRateTrend(
-    retail_code?: string,
-    industry_code?: string,
+    industry_tenant_id?: number,
+    retail_tenant_id?: number,
   ) {
     const yearlyData = await this.getAllLoRAcceptReject(
-      industry_code,
-      retail_code,
+      industry_tenant_id,
+      retail_tenant_id,
     );
 
     const riskRateTrend = yearlyData.map((item) => {
@@ -301,12 +385,12 @@ export class CRMRequisitionService {
 
   // Risk Rate Trend untuk Penolakan LoA
   async getLoARejectionRiskRateTrend(
-    retail_code?: string,
-    industry_code?: string,
+    industry_tenant_id?: number,
+    retail_tenant_id?: number,
   ) {
     const yearlyData = await this.getAllLoAAcceptReject(
-      industry_code,
-      retail_code,
+      industry_tenant_id,
+      retail_tenant_id,
     );
 
     const riskRateTrend = yearlyData.map((item) => {

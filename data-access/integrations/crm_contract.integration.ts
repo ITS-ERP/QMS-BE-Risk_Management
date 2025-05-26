@@ -1,13 +1,15 @@
 import { crmContractApi } from '.';
 
-export const getAllCRMContract = () => crmContractApi.get(`/contract_crm/`);
+export const getAllContracts = () => crmContractApi.get(`/contract/`);
 
-// 1. Penurunan jumlah kontrak
+export const getContractByID = (pkid: number) =>
+  crmContractApi.get(`/contract/${pkid}`);
 
-// 2. Pengiriman terlambat
-// export const getOnTimeVsLateTrend = () =>
-//   crmContractApi.get(`/contract_crm/trend/on-time-late`);
+export const getAllContractDetails = () =>
+  crmContractApi.get(`/contractDetails/`);
 
-// 3. Jumlah tidak sesuai
-// export const getCompliantVsNonCompliantTrend = () =>
-//   crmContractApi.get(`/contract_crm/trend/compliant-noncompliant`);
+export const getAllContractDetailsByID = (pkid: number) =>
+  crmContractApi.get(`/contractDetails/${pkid}`);
+
+export const getContractDetailsByContractID = (pkid: number) =>
+  crmContractApi.get(`/contractDetails/contract/${pkid}`);
