@@ -1,521 +1,383 @@
 import * as srmContractIntegration from '../../data-access/integrations/srm_contract.integration';
+import * as srmSupplierPortalIntegration from '../../data-access/integrations/srm_supplier_portal.integration';
 
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+interface HistoryShipment {
+  pkid: number;
+  detail_contract_pkid: number;
+  target_deadline_date: string;
+  target_quantity: string;
+  actual_deadline_date: string | null;
+  actual_quantity: string | null;
+  actual_shipment_cost: string | null;
+  actual_item_total_price: string | null;
+  actual_grand_total: string | null;
+  status: string;
+}
+
+interface YearlyShipmentData {
+  year: number;
+  total: number;
+  historyShipments: HistoryShipment[];
+}
+
+interface TopSupplierData {
+  supplier_pkid: number;
+  detail_contract_count: number;
+  supplier: {
+    pkid: number;
+    name: string;
+  } | null;
+}
+
+interface TopIndustryData {
+  industry_pkid: number;
+  detail_contract_count: number;
+}
+
+interface SupplierData {
+  pkid: number;
+  name?: string;
+}
+
+interface ContractDeclineSummary {
+  current_year_contracts: number;
+  previous_year_contracts: number;
+  total_contracts: number;
+  growth_rate: number;
+  decline_rate: number;
+}
+
+/**
+ * SRM Contract Service for Risk Management
+ * Updated to work with new SRM integration system
+ * Maintains same function names and response structures for compatibility
+ */
 export class SRMContractService {
+  // ============================================================================
+  // LEGACY COMPATIBILITY METHOD
+  // ============================================================================
   async fetchAllSRMContract() {
     const response = await srmContractIntegration.getAllSRMContract();
     return response.data.data;
   }
 
-  async getAllOnTimeVsLateTrend(
-    industry_code?: string,
-    supplier_code?: string,
-  ) {
-    const response = await srmContractIntegration.getAllSRMContract();
-    const data = response.data.data;
-
-    if (!Array.isArray(data)) {
-      throw new Error('Data is not an array');
+  // ============================================================================
+  // TENANT RESOLUTION HELPER
+  // ============================================================================
+  /**
+   * Convert supplier_tenant_id to supplier_id using supplier portal API
+   */
+  private async resolveSupplierTenantId(
+    supplier_tenant_id: number,
+  ): Promise<number | null> {
+    try {
+      const response =
+        await srmSupplierPortalIntegration.findSupplierByParamTenantID(
+          supplier_tenant_id,
+        );
+      const supplierData = response.data.data as SupplierData;
+      return supplierData?.pkid || null;
+    } catch (error) {
+      console.error('Failed to resolve supplier tenant ID:', error);
+      return null;
     }
+  }
 
+  /**
+   * Get date range for analysis (default: last 5 years)
+   */
+  private getDateRange(years: number = 5): {
+    start_date: string;
+    end_date: string;
+  } {
+    const currentYear = new Date().getFullYear();
+    const startYear = currentYear - years + 1;
+    return {
+      start_date: `${startYear}-01-01`,
+      end_date: `${currentYear}-12-31`,
+    };
+  }
+
+  // ============================================================================
+  // DELIVERY PERFORMANCE ANALYSIS
+  // ============================================================================
+
+  /**
+   * Analyze on-time vs late delivery trend
+   * Uses actual shipment data from new system
+   */
+  async getAllOnTimeVsLateTrend(
+    industry_tenant_id?: number,
+    supplier_tenant_id?: number,
+  ) {
+    const dateRange = this.getDateRange(5);
     const yearlyTrend: { [key: string]: { on_time: number; late: number } } =
       {};
 
-    data.forEach(
-      (item: {
-        receipt_date_target: string;
-        receipt_date_actual: string;
-        industry_code: string;
-        supplier_code: string;
-      }) => {
-        if (
-          (industry_code && item.industry_code !== industry_code) ||
-          (supplier_code && item.supplier_code !== supplier_code)
-        ) {
-          return;
+    try {
+      let shipmentData: YearlyShipmentData[] = [];
+
+      if (industry_tenant_id) {
+        const industry_id = industry_tenant_id; // Direct mapping
+        const response =
+          await srmContractIntegration.findTotalHistoryShipmentByIndustryAndYear(
+            industry_id,
+            dateRange.start_date,
+            dateRange.end_date,
+          );
+        shipmentData = response.data.data || [];
+      } else if (supplier_tenant_id) {
+        const supplier_id =
+          await this.resolveSupplierTenantId(supplier_tenant_id);
+        if (!supplier_id) {
+          throw new Error('Invalid supplier_tenant_id');
+        }
+        const response =
+          await srmContractIntegration.findTotalHistoryShipmentBySupplierAndYear(
+            supplier_id,
+            dateRange.start_date,
+            dateRange.end_date,
+          );
+        shipmentData = response.data.data || [];
+      }
+
+      // Process shipment data
+      shipmentData.forEach((yearData: YearlyShipmentData) => {
+        const year = yearData.year.toString();
+        if (!yearlyTrend[year]) {
+          yearlyTrend[year] = { on_time: 0, late: 0 };
         }
 
-        const targetDate = new Date(item.receipt_date_target);
-        const actualDate = new Date(item.receipt_date_actual);
-        const yearKey = targetDate.getFullYear().toString();
+        yearData.historyShipments.forEach((shipment: HistoryShipment) => {
+          // STRICT: Only process complete data
+          if (shipment.target_deadline_date && shipment.actual_deadline_date) {
+            const targetDate = new Date(shipment.target_deadline_date);
+            const actualDate = new Date(shipment.actual_deadline_date);
 
-        if (!yearlyTrend[yearKey]) {
-          yearlyTrend[yearKey] = { on_time: 0, late: 0 };
-        }
+            if (actualDate <= targetDate) {
+              yearlyTrend[year].on_time += 1;
+            } else {
+              yearlyTrend[year].late += 1;
+            }
+          }
+        });
+      });
 
-        if (actualDate <= targetDate) {
-          yearlyTrend[yearKey].on_time += 1;
-        } else {
-          yearlyTrend[yearKey].late += 1;
-        }
-      },
-    );
+      // Convert to array format
+      const allYearlyTrend = Object.entries(yearlyTrend)
+        .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+        .map(([year, values]) => ({ year, ...values }))
+        .reverse();
 
-    const allYearlyTrend = Object.entries(yearlyTrend)
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .map(([year, values]) => ({ year, ...values }))
-      .reverse();
-
-    return allYearlyTrend;
+      return allYearlyTrend;
+    } catch (error) {
+      console.error('Error in getAllOnTimeVsLateTrend:', error);
+      throw error;
+    }
   }
 
-  // async getOnTimeAndLateSummary(
-  //   industry_code?: string,
-  //   supplier_code?: string,
-  // ) {
-  //   const allYearlyData = await this.getAllOnTimeVsLateTrend(
-  //     industry_code,
-  //     supplier_code,
-  //   );
-
-  //   let totalOnTime = 0;
-  //   let totalLate = 0;
-
-  //   allYearlyData.forEach(({ on_time, late }) => {
-  //     totalOnTime += on_time;
-  //     totalLate += late;
-  //   });
-
-  //   const totalContract = totalOnTime + totalLate;
-
-  //   return {
-  //     total_contract: totalContract > 0 ? totalContract : '0',
-  //     total_on_time: totalOnTime > 0 ? totalOnTime : '0',
-  //     total_late: totalLate > 0 ? totalLate : '0',
-  //     on_time_rate:
-  //       totalContract > 0
-  //         ? ((totalOnTime / totalContract) * 100).toFixed(2)
-  //         : '0.00',
-  //     late_rate:
-  //       totalContract > 0
-  //         ? ((totalLate / totalContract) * 100).toFixed(2)
-  //         : '0.00',
-  //   };
-  // }
-
-  async getLateTrend(industry_code?: string, supplier_code?: string) {
-    const response = await srmContractIntegration.getAllSRMContract();
-    const data = response.data.data;
-
-    if (!Array.isArray(data)) {
-      throw new Error('Data is not an array');
-    }
-
-    const yearlyTrend: { [key: string]: { late: number } } = {};
-
-    data.forEach(
-      (item: {
-        receipt_date_target: string;
-        receipt_date_actual: string;
-        industry_code: string;
-        supplier_code: string;
-      }) => {
-        if (
-          (industry_code && item.industry_code !== industry_code) ||
-          (supplier_code && item.supplier_code !== supplier_code)
-        ) {
-          return;
-        }
-
-        const targetDate = new Date(item.receipt_date_target);
-        const actualDate = new Date(item.receipt_date_actual);
-        const yearKey = targetDate.getFullYear().toString();
-
-        if (!yearlyTrend[yearKey]) {
-          yearlyTrend[yearKey] = { late: 0 };
-        }
-
-        if (actualDate > targetDate) {
-          yearlyTrend[yearKey].late += 1;
-        }
-      },
+  /**
+   * Get late delivery trend (only late deliveries)
+   */
+  async getLateTrend(industry_tenant_id?: number, supplier_tenant_id?: number) {
+    const onTimeVsLateData = await this.getAllOnTimeVsLateTrend(
+      industry_tenant_id,
+      supplier_tenant_id,
     );
 
-    const top5LateTrend = Object.entries(yearlyTrend)
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+    const top5LateTrend = onTimeVsLateData
+      .map((item) => ({
+        year: item.year,
+        late: item.late,
+      }))
+      .sort((a, b) => parseInt(b.year) - parseInt(a.year))
       .slice(0, 5)
-      .map(([year, values]) => ({ year, ...values }))
       .reverse();
 
     return top5LateTrend;
   }
 
-  async getQuantityCompliance(industry_code?: string, supplier_code?: string) {
-    const response = await srmContractIntegration.getAllSRMContract();
-    const data = response.data.data;
+  // ============================================================================
+  // QUANTITY COMPLIANCE ANALYSIS
+  // ============================================================================
 
-    if (!Array.isArray(data)) {
-      throw new Error('Data is not an array');
-    }
-
+  /**
+   * Analyze quantity compliance (target vs actual quantity)
+   */
+  async getQuantityCompliance(
+    industry_tenant_id?: number,
+    supplier_tenant_id?: number,
+  ) {
+    const dateRange = this.getDateRange(5);
     const yearlyCompliance: {
       [key: string]: { compliant: number; noncompliant: number };
     } = {};
 
-    data.forEach(
-      (item: {
-        quantity_target: string;
-        quantity_actual: string;
-        receipt_date_target: string;
-        industry_code: string;
-        supplier_code: string;
-      }) => {
-        if (
-          (industry_code && item.industry_code !== industry_code) ||
-          (supplier_code && item.supplier_code !== supplier_code)
-        ) {
-          return;
+    try {
+      let shipmentData: YearlyShipmentData[] = [];
+
+      if (industry_tenant_id) {
+        const industry_id = industry_tenant_id;
+        const response =
+          await srmContractIntegration.findTotalHistoryShipmentByIndustryAndYear(
+            industry_id,
+            dateRange.start_date,
+            dateRange.end_date,
+          );
+        shipmentData = response.data.data || [];
+      } else if (supplier_tenant_id) {
+        const supplier_id =
+          await this.resolveSupplierTenantId(supplier_tenant_id);
+        if (!supplier_id) {
+          throw new Error('Invalid supplier_tenant_id');
+        }
+        const response =
+          await srmContractIntegration.findTotalHistoryShipmentBySupplierAndYear(
+            supplier_id,
+            dateRange.start_date,
+            dateRange.end_date,
+          );
+        shipmentData = response.data.data || [];
+      }
+
+      // Process quantity compliance
+      shipmentData.forEach((yearData: YearlyShipmentData) => {
+        const year = yearData.year.toString();
+        if (!yearlyCompliance[year]) {
+          yearlyCompliance[year] = { compliant: 0, noncompliant: 0 };
         }
 
-        const yearKey = new Date(item.receipt_date_target)
-          .getFullYear()
-          .toString();
-        const targetQuantity = parseFloat(item.quantity_target);
-        const actualQuantity = parseFloat(item.quantity_actual);
+        yearData.historyShipments.forEach((shipment: HistoryShipment) => {
+          // STRICT: Only process complete data
+          if (shipment.target_quantity && shipment.actual_quantity) {
+            const targetQuantity = parseFloat(shipment.target_quantity);
+            const actualQuantity = parseFloat(shipment.actual_quantity);
 
-        if (!yearlyCompliance[yearKey]) {
-          yearlyCompliance[yearKey] = { compliant: 0, noncompliant: 0 };
-        }
+            if (actualQuantity >= targetQuantity) {
+              yearlyCompliance[year].compliant += 1;
+            } else {
+              yearlyCompliance[year].noncompliant += 1;
+            }
+          }
+        });
+      });
 
-        if (actualQuantity >= targetQuantity) {
-          yearlyCompliance[yearKey].compliant += 1;
-        } else {
-          yearlyCompliance[yearKey].noncompliant += 1;
-        }
-      },
-    );
+      const allYearlyCompliance = Object.entries(yearlyCompliance)
+        .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+        .map(([year, values]) => ({ year, ...values }))
+        .reverse();
 
-    const allYearlyCompliance = Object.entries(yearlyCompliance)
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .map(([year, values]) => ({ year, ...values }))
-      .reverse();
-
-    return allYearlyCompliance;
+      return allYearlyCompliance;
+    } catch (error) {
+      console.error('Error in getQuantityCompliance:', error);
+      throw error;
+    }
   }
 
+  /**
+   * Get non-compliant quantity trend
+   */
   async getNonCompliantQuantity(
-    industry_code?: string,
-    supplier_code?: string,
+    industry_tenant_id?: number,
+    supplier_tenant_id?: number,
   ) {
-    const response = await srmContractIntegration.getAllSRMContract();
-    const data = response.data.data;
-
-    if (!Array.isArray(data)) {
-      throw new Error('Data is not an array');
-    }
-
-    const yearlyNonCompliance: { [key: string]: { noncompliant: number } } = {};
-
-    data.forEach(
-      (item: {
-        quantity_target: string;
-        quantity_actual: string;
-        receipt_date_target: string;
-        industry_code: string;
-        supplier_code: string;
-      }) => {
-        if (
-          (industry_code && item.industry_code !== industry_code) ||
-          (supplier_code && item.supplier_code !== supplier_code)
-        ) {
-          return;
-        }
-
-        const yearKey = new Date(item.receipt_date_target)
-          .getFullYear()
-          .toString();
-        const targetQuantity = parseFloat(item.quantity_target);
-        const actualQuantity = parseFloat(item.quantity_actual);
-
-        if (!yearlyNonCompliance[yearKey]) {
-          yearlyNonCompliance[yearKey] = { noncompliant: 0 };
-        }
-
-        if (actualQuantity < targetQuantity) {
-          yearlyNonCompliance[yearKey].noncompliant += 1;
-        }
-      },
+    const complianceData = await this.getQuantityCompliance(
+      industry_tenant_id,
+      supplier_tenant_id,
     );
 
-    const top5NonCompliantQuantity = Object.entries(yearlyNonCompliance)
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+    const top5NonCompliantQuantity = complianceData
+      .map((item) => ({
+        year: item.year,
+        noncompliant: item.noncompliant,
+      }))
+      .sort((a, b) => parseInt(b.year) - parseInt(a.year))
       .slice(0, 5)
-      .map(([year, values]) => ({ year, ...values }))
       .reverse();
 
     return top5NonCompliantQuantity;
   }
 
-  async getCleanlinessCheck(industry_code?: string, supplier_code?: string) {
-    const response = await srmContractIntegration.getAllSRMContract();
-    const data = response.data.data;
+  // ============================================================================
+  // CONTRACT VOLUME ANALYSIS
+  // ============================================================================
 
-    if (!Array.isArray(data)) {
-      throw new Error('Data is not an array');
-    }
-
-    const yearlyCleanliness: {
-      [key: string]: { passed: number; notpassed: number };
-    } = {};
-
-    data.forEach(
-      (item: {
-        clean: number;
-        receipt_date_target: string;
-        industry_code: string;
-        supplier_code: string;
-      }) => {
-        if (
-          (industry_code && item.industry_code !== industry_code) ||
-          (supplier_code && item.supplier_code !== supplier_code)
-        ) {
-          return;
-        }
-
-        const yearKey = new Date(item.receipt_date_target)
-          .getFullYear()
-          .toString();
-
-        if (!yearlyCleanliness[yearKey]) {
-          yearlyCleanliness[yearKey] = { passed: 0, notpassed: 0 };
-        }
-
-        if (item.clean === 1) {
-          yearlyCleanliness[yearKey].passed += 1;
-        } else {
-          yearlyCleanliness[yearKey].notpassed += 1;
-        }
-      },
-    );
-
-    const allYearlyCleanliness = Object.entries(yearlyCleanliness)
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .map(([year, values]) => ({ year, ...values }))
-      .reverse();
-
-    return allYearlyCleanliness;
-  }
-
-  async getUncleanCheck(industry_code?: string, supplier_code?: string) {
-    const response = await srmContractIntegration.getAllSRMContract();
-    const data = response.data.data;
-
-    if (!Array.isArray(data)) {
-      throw new Error('Data is not an array');
-    }
-
-    const yearlyUnclean: { [key: string]: { notpassed: number } } = {};
-
-    data.forEach(
-      (item: {
-        clean: number;
-        receipt_date_target: string;
-        industry_code: string;
-        supplier_code: string;
-      }) => {
-        if (
-          (industry_code && item.industry_code !== industry_code) ||
-          (supplier_code && item.supplier_code !== supplier_code)
-        ) {
-          return;
-        }
-
-        const yearKey = new Date(item.receipt_date_target)
-          .getFullYear()
-          .toString();
-
-        if (!yearlyUnclean[yearKey]) {
-          yearlyUnclean[yearKey] = { notpassed: 0 };
-        }
-
-        if (item.clean !== 1) {
-          yearlyUnclean[yearKey].notpassed += 1;
-        }
-      },
-    );
-
-    const top5UncleanCheck = Object.entries(yearlyUnclean)
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .slice(0, 5)
-      .map(([year, values]) => ({ year, ...values }))
-      .reverse();
-
-    return top5UncleanCheck;
-  }
-
-  async getBrixCheck(industry_code?: string, supplier_code?: string) {
-    const response = await srmContractIntegration.getAllSRMContract();
-    const data = response.data.data;
-
-    if (!Array.isArray(data)) {
-      throw new Error('Data is not an array');
-    }
-
-    const yearlyBrix: { [key: string]: { passed: number; notpassed: number } } =
-      {};
-
-    data.forEach(
-      (item: {
-        brix_check_1: string;
-        brix_check_2: string;
-        receipt_date_target: string;
-        industry_code: string;
-        supplier_code: string;
-      }) => {
-        if (
-          (industry_code && item.industry_code !== industry_code) ||
-          (supplier_code && item.supplier_code !== supplier_code)
-        ) {
-          return;
-        }
-
-        const yearKey = new Date(item.receipt_date_target)
-          .getFullYear()
-          .toString();
-        const brix1 = parseFloat(item.brix_check_1);
-        const brix2 = parseFloat(item.brix_check_2);
-
-        if (!yearlyBrix[yearKey]) {
-          yearlyBrix[yearKey] = { passed: 0, notpassed: 0 };
-        }
-
-        if (brix1 >= 13) {
-          yearlyBrix[yearKey].passed += 1;
-        } else {
-          yearlyBrix[yearKey].notpassed += 1;
-        }
-
-        if (brix2 >= 13) {
-          yearlyBrix[yearKey].passed += 1;
-        } else {
-          yearlyBrix[yearKey].notpassed += 1;
-        }
-      },
-    );
-
-    const allYearlyBrix = Object.entries(yearlyBrix)
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .map(([year, values]) => ({ year, ...values }))
-      .reverse(); // Membalik urutan
-
-    return allYearlyBrix;
-  }
-
-  async getUnderBrixCheck(industry_code?: string, supplier_code?: string) {
-    const response = await srmContractIntegration.getAllSRMContract();
-    const data = response.data.data;
-
-    if (!Array.isArray(data)) {
-      throw new Error('Data is not an array');
-    }
-
-    const yearlyUnderBrix: { [key: string]: { notpassed: number } } = {};
-
-    data.forEach(
-      (item: {
-        brix_check_1: string;
-        brix_check_2: string;
-        receipt_date_target: string;
-        industry_code: string;
-        supplier_code: string;
-      }) => {
-        if (
-          (industry_code && item.industry_code !== industry_code) ||
-          (supplier_code && item.supplier_code !== supplier_code)
-        ) {
-          return;
-        }
-
-        const yearKey = new Date(item.receipt_date_target)
-          .getFullYear()
-          .toString();
-        const brix1 = parseFloat(item.brix_check_1);
-        const brix2 = parseFloat(item.brix_check_2);
-
-        if (!yearlyUnderBrix[yearKey]) {
-          yearlyUnderBrix[yearKey] = { notpassed: 0 };
-        }
-
-        if (brix1 < 13) {
-          yearlyUnderBrix[yearKey].notpassed += 1;
-        }
-
-        if (brix2 < 13) {
-          yearlyUnderBrix[yearKey].notpassed += 1;
-        }
-      },
-    );
-
-    const top5UnderBrixCheck = Object.entries(yearlyUnderBrix)
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .slice(0, 5)
-      .map(([year, values]) => ({ year, ...values }))
-      .reverse(); // Membalik urutan
-
-    return top5UnderBrixCheck;
-  }
-
-  async getContractTotal(industry_code?: string, supplier_code?: string) {
-    const response = await srmContractIntegration.getAllSRMContract();
-    const data = response.data.data;
-
-    if (!Array.isArray(data)) {
-      throw new Error('Data is not an array');
-    }
-
+  /**
+   * Get total contract count by year
+   */
+  async getContractTotal(
+    industry_tenant_id?: number,
+    supplier_tenant_id?: number,
+  ) {
+    const dateRange = this.getDateRange(5);
     const yearlyTotal: { [key: string]: number } = {};
 
-    data.forEach(
-      (item: {
-        receipt_date_target: string;
-        industry_code: string;
-        supplier_code: string;
-      }) => {
-        if (
-          (industry_code && item.industry_code !== industry_code) ||
-          (supplier_code && item.supplier_code !== supplier_code)
-        ) {
-          return;
+    try {
+      let shipmentData: YearlyShipmentData[] = [];
+
+      if (industry_tenant_id) {
+        const industry_id = industry_tenant_id;
+        const response =
+          await srmContractIntegration.findTotalHistoryShipmentByIndustryAndYear(
+            industry_id,
+            dateRange.start_date,
+            dateRange.end_date,
+          );
+        shipmentData = response.data.data || [];
+      } else if (supplier_tenant_id) {
+        const supplier_id =
+          await this.resolveSupplierTenantId(supplier_tenant_id);
+        if (!supplier_id) {
+          throw new Error('Invalid supplier_tenant_id');
         }
+        const response =
+          await srmContractIntegration.findTotalHistoryShipmentBySupplierAndYear(
+            supplier_id,
+            dateRange.start_date,
+            dateRange.end_date,
+          );
+        shipmentData = response.data.data || [];
+      }
 
-        const yearKey = new Date(item.receipt_date_target)
-          .getFullYear()
-          .toString();
-
-        if (!yearlyTotal[yearKey]) {
-          yearlyTotal[yearKey] = 0;
+      // Count contracts by year
+      shipmentData.forEach((yearData: YearlyShipmentData) => {
+        const year = yearData.year.toString();
+        if (!yearlyTotal[year]) {
+          yearlyTotal[year] = 0;
         }
+        yearlyTotal[year] = yearData.total;
+      });
 
-        yearlyTotal[yearKey] += 1;
-      },
-    );
+      const allYearlyTotal = Object.entries(yearlyTotal)
+        .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+        .map(([year, total]) => ({ year, total }))
+        .reverse();
 
-    const allYearlyTotal = Object.entries(yearlyTotal)
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .map(([year, total]) => ({ year, total }))
-      .reverse();
-
-    return allYearlyTotal;
+      return allYearlyTotal;
+    } catch (error) {
+      console.error('Error in getContractTotal:', error);
+      throw error;
+    }
   }
 
-  //INDUSTRY
-  // 1. Penerimaan terlambat
-  // 2. Jumlah tidak sesuai
-  // 3. Bahan baku kotor
-  // 4. Cek brix 1 tidak lolos
-  // 5. Cek brix 2 tidak lolos
+  // ============================================================================
+  // SUMMARY METHODS (Risk Analysis)
+  // ============================================================================
 
-  //SUPPLIER
-  // 1. Penurunan jumlah contract
-  // 2. Pengiriman terlambat
-  // 3. Jumlah tidak sesuai
-  // 4. Bahan baku kotor
-  // 5. Cek brix 1 tidak lolos
-  // 6. Cek brix 2 tidak lolos
-
-  async getLateReceiptSummary(supplier_code?: string, industry_code?: string) {
+  /**
+   * Get late receipt summary
+   */
+  async getLateReceiptSummary(
+    supplier_tenant_id?: number,
+    industry_tenant_id?: number,
+  ) {
     const allYearlyTrend = await this.getAllOnTimeVsLateTrend(
-      industry_code,
-      supplier_code,
+      industry_tenant_id,
+      supplier_tenant_id,
     );
 
     let totalOnTime = 0;
@@ -543,14 +405,16 @@ export class SRMContractService {
     };
   }
 
-  // Summary untuk Jumlah Tidak Sesuai (SRM)
+  /**
+   * Get quantity mismatch summary
+   */
   async getQuantityMismatchSummary(
-    supplier_code?: string,
-    industry_code?: string,
+    supplier_tenant_id?: number,
+    industry_tenant_id?: number,
   ) {
     const complianceData = await this.getQuantityCompliance(
-      industry_code,
-      supplier_code,
+      industry_tenant_id,
+      supplier_tenant_id,
     );
 
     let totalCompliant = 0;
@@ -578,78 +442,16 @@ export class SRMContractService {
     };
   }
 
-  // Summary untuk Tidak Lolos Cek Kebersihan
-  async getCleanlinessCheckSummary(
-    supplier_code?: string,
-    industry_code?: string,
-  ) {
-    const cleanlinessData = await this.getCleanlinessCheck(
-      industry_code,
-      supplier_code,
-    );
-
-    let totalPassed = 0;
-    let totalNotPassed = 0;
-
-    cleanlinessData.forEach((item) => {
-      totalPassed += item.passed;
-      totalNotPassed += item.notpassed;
-    });
-
-    const totalChecks = totalPassed + totalNotPassed;
-
-    return {
-      total_checks: totalChecks > 0 ? totalChecks : 0,
-      passed_checks: totalPassed > 0 ? totalPassed : 0,
-      failed_checks: totalNotPassed > 0 ? totalNotPassed : 0,
-      pass_rate:
-        totalChecks > 0
-          ? parseFloat(((totalPassed / totalChecks) * 100).toFixed(2))
-          : 0.0,
-      fail_rate:
-        totalChecks > 0
-          ? parseFloat(((totalNotPassed / totalChecks) * 100).toFixed(2))
-          : 0.0,
-    };
-  }
-
-  // Summary untuk Tidak Lolos Cek Brix
-  async getBrixCheckSummary(supplier_code?: string, industry_code?: string) {
-    const brixData = await this.getBrixCheck(industry_code, supplier_code);
-
-    let totalPassed = 0;
-    let totalNotPassed = 0;
-
-    brixData.forEach((item) => {
-      totalPassed += item.passed;
-      totalNotPassed += item.notpassed;
-    });
-
-    const totalChecks = totalPassed + totalNotPassed;
-
-    return {
-      total_checks: totalChecks > 0 ? totalChecks : 0,
-      passed_checks: totalPassed > 0 ? totalPassed : 0,
-      failed_checks: totalNotPassed > 0 ? totalNotPassed : 0,
-      pass_rate:
-        totalChecks > 0
-          ? parseFloat(((totalPassed / totalChecks) * 100).toFixed(2))
-          : 0.0,
-      fail_rate:
-        totalChecks > 0
-          ? parseFloat(((totalNotPassed / totalChecks) * 100).toFixed(2))
-          : 0.0,
-    };
-  }
-
-  // Summary untuk Penurunan Jumlah Kontrak (SRM)
+  /**
+   * Get contract decline summary
+   */
   async getContractDeclineSummary(
-    supplier_code?: string,
-    industry_code?: string,
-  ) {
+    supplier_tenant_id?: number,
+    industry_tenant_id?: number,
+  ): Promise<ContractDeclineSummary> {
     const contractData = await this.getContractTotal(
-      industry_code,
-      supplier_code,
+      industry_tenant_id,
+      supplier_tenant_id,
     );
 
     if (contractData.length < 2) {
@@ -675,7 +477,7 @@ export class SRMContractService {
     const previousYearContracts = previousYearData.total;
     const totalContracts = currentYearContracts + previousYearContracts;
 
-    // Hitung persentase pertumbuhan/penurunan
+    // Calculate growth/decline percentage
     let growthRate = 0.0;
     let declineRate = 0.0;
 
@@ -706,14 +508,20 @@ export class SRMContractService {
     };
   }
 
-  // Risk Rate Trend untuk Penerimaan terlambat
+  // ============================================================================
+  // RISK RATE TREND ANALYSIS
+  // ============================================================================
+
+  /**
+   * Get late receipt risk rate trend
+   */
   async getLateReceiptRiskRateTrend(
-    supplier_code?: string,
-    industry_code?: string,
+    supplier_tenant_id?: number,
+    industry_tenant_id?: number,
   ) {
     const yearlyData = await this.getAllOnTimeVsLateTrend(
-      industry_code,
-      supplier_code,
+      industry_tenant_id,
+      supplier_tenant_id,
     );
 
     const riskRateTrend = yearlyData.map((item) => {
@@ -730,14 +538,16 @@ export class SRMContractService {
     return riskRateTrend;
   }
 
-  // Risk Rate Trend untuk Jumlah tidak sesuai
+  /**
+   * Get quantity mismatch risk rate trend
+   */
   async getQuantityMismatchRiskRateTrend(
-    supplier_code?: string,
-    industry_code?: string,
+    supplier_tenant_id?: number,
+    industry_tenant_id?: number,
   ) {
     const yearlyData = await this.getQuantityCompliance(
-      industry_code,
-      supplier_code,
+      industry_tenant_id,
+      supplier_tenant_id,
     );
 
     const riskRateTrend = yearlyData.map((item) => {
@@ -756,71 +566,28 @@ export class SRMContractService {
     return riskRateTrend;
   }
 
-  // Risk Rate Trend untuk Tidak lolos cek kebersihan
-  async getCleanlinessCheckRiskRateTrend(
-    supplier_code?: string,
-    industry_code?: string,
-  ) {
-    const yearlyData = await this.getCleanlinessCheck(
-      industry_code,
-      supplier_code,
-    );
-
-    const riskRateTrend = yearlyData.map((item) => {
-      const total = item.passed + item.notpassed;
-      const riskRate =
-        total > 0 ? parseFloat(((item.notpassed / total) * 100).toFixed(2)) : 0;
-
-      return {
-        year: item.year,
-        value: riskRate,
-      };
-    });
-
-    return riskRateTrend;
-  }
-
-  // Risk Rate Trend untuk Tidak lolos cek brix
-  async getBrixCheckRiskRateTrend(
-    supplier_code?: string,
-    industry_code?: string,
-  ) {
-    const yearlyData = await this.getBrixCheck(industry_code, supplier_code);
-
-    const riskRateTrend = yearlyData.map((item) => {
-      const total = item.passed + item.notpassed;
-      const riskRate =
-        total > 0 ? parseFloat(((item.notpassed / total) * 100).toFixed(2)) : 0;
-
-      return {
-        year: item.year,
-        value: riskRate,
-      };
-    });
-
-    return riskRateTrend;
-  }
-
-  // Risk Rate Trend untuk Penurunan jumlah kontrak
+  /**
+   * Get contract decline risk rate trend
+   */
   async getContractDeclineRiskRateTrend(
-    supplier_code?: string,
-    industry_code?: string,
+    supplier_tenant_id?: number,
+    industry_tenant_id?: number,
   ) {
     const yearlyData = await this.getContractTotal(
-      industry_code,
-      supplier_code,
+      industry_tenant_id,
+      supplier_tenant_id,
     );
 
-    // Convert ke format yang diperlukan
+    // Convert to risk rate trend format
     const riskRateTrend = [];
 
-    // Kita perlu minimal 2 tahun data untuk menghitung penurunan
+    // Need at least 2 years of data to calculate decline
     if (yearlyData.length >= 2) {
       for (let i = 1; i < yearlyData.length; i++) {
         const currentYear = yearlyData[i];
         const previousYear = yearlyData[i - 1];
 
-        // Hitung persentase penurunan jika ada penurunan
+        // Calculate decline rate if there's a decline
         let declineRate = 0;
         if (currentYear.total < previousYear.total) {
           declineRate = parseFloat(
@@ -839,5 +606,48 @@ export class SRMContractService {
     }
 
     return riskRateTrend;
+  }
+
+  // ============================================================================
+  // ADDITIONAL ANALYTICS METHODS
+  // ============================================================================
+
+  /**
+   * Get top suppliers for industry
+   */
+  async getTopSuppliers(
+    industry_tenant_id: number,
+  ): Promise<TopSupplierData[]> {
+    const industry_id = industry_tenant_id;
+
+    try {
+      const response =
+        await srmContractIntegration.findTopSuppliersByIndustryID(industry_id);
+      return response.data.data || [];
+    } catch (error) {
+      console.error('Error in getTopSuppliers:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get top industries for supplier
+   */
+  async getTopIndustries(
+    supplier_tenant_id: number,
+  ): Promise<TopIndustryData[]> {
+    const supplier_id = await this.resolveSupplierTenantId(supplier_tenant_id);
+    if (!supplier_id) {
+      throw new Error('Invalid supplier_tenant_id');
+    }
+
+    try {
+      const response =
+        await srmContractIntegration.findTopIndustriesBySupplierID(supplier_id);
+      return response.data.data || [];
+    } catch (error) {
+      console.error('Error in getTopIndustries:', error);
+      throw error;
+    }
   }
 }

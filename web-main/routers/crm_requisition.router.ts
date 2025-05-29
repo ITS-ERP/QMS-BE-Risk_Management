@@ -39,13 +39,13 @@ router.get('/loa-rejection-summary', (req, res) =>
   crmRequisitionController.getLoARejectionSummaryController(req, res),
 );
 
-// // Risk rate trend endpoints
-// router.get('/lor-rejection-risk-rate', (req, res) =>
-//   crmRequisitionController.getLoRRejectionRiskRateTrendController(req, res),
-// );
+// Risk rate trend endpoints
+router.get('/lor-rejection-risk-rate', (req, res) =>
+  crmRequisitionController.getLoRRejectionRiskRateTrendController(req, res),
+);
 
-// router.get('/loa-rejection-risk-rate', (req, res) =>
-//   crmRequisitionController.getLoARejectionRiskRateTrendController(req, res),
-// );
+router.get('/loa-rejection-risk-rate', (req, res) =>
+  crmRequisitionController.getLoARejectionRiskRateTrendController(req, res),
+);
 
 export default router;

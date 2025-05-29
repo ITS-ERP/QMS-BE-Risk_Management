@@ -17,6 +17,10 @@ export const erpAssetApi = axios.create({
 });
 
 // SRM
+export const srmSupplierPortalApi = axios.create({
+  baseURL: process.env.BASE_URL_SRM_SUPPLIER_PORTAL,
+});
+
 export const srmProcurementApi = axios.create({
   baseURL: process.env.BASE_URL_SRM_PROCUREMENT,
 });

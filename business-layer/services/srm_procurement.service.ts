@@ -1,123 +1,202 @@
 import * as srmProcurementIntegration from '../../data-access/integrations/srm_procurement.integration';
+import * as srmSupplierPortalIntegration from '../../data-access/integrations/srm_supplier_portal.integration';
 
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+interface RFQItem {
+  pkid: number;
+  registration_start_date: string;
+  rfq_end_date: string;
+  status?: string;
+}
+
+interface DirectRFQItem {
+  pkid: number;
+  registration_start_date: string;
+  rfq_end_date: string;
+  status?: string;
+}
+
+interface YearlyRFQData {
+  year: number;
+  total: number;
+  rfqs?: RFQItem[];
+  directRFQs?: DirectRFQItem[];
+}
+
+interface YearlyWinLossData {
+  year: number;
+  total: number;
+  rfqs?: RFQItem[];
+}
+
+interface YearlyAcceptRejectData {
+  year: number;
+  total: number;
+  directRFQs?: DirectRFQItem[];
+}
+
+interface RFQStatusData {
+  status: string;
+  total: number;
+}
+
+interface SupplierData {
+  pkid: number;
+  name?: string;
+}
+
+/**
+ * SRM Procurement Service for Risk Management
+ * Updated to work with new SRM integration system
+ * Maintains same function names and response structures for compatibility
+ */
 export class SRMProcurementService {
+  // ============================================================================
+  // LEGACY COMPATIBILITY METHOD
+  // ============================================================================
   async fetchAllSRMProcurement() {
     const response = await srmProcurementIntegration.getAllSRMProcurement();
     return response.data.data;
   }
 
-  //INDUSTRY
-  //1. Keterlambatan RFQ dari purchase request
-  async getRFQOnTimeDelayedCount(industry_code?: string) {
-    const response = await srmProcurementIntegration.getAllSRMProcurement();
-    const data = response.data.data;
-
-    if (!Array.isArray(data)) {
-      throw new Error('Data is not an array');
+  // ============================================================================
+  // TENANT RESOLUTION HELPER
+  // ============================================================================
+  /**
+   * Convert supplier_tenant_id to supplier_id using supplier portal API
+   */
+  private async resolveSupplierTenantId(
+    supplier_tenant_id: number,
+  ): Promise<number | null> {
+    try {
+      const response =
+        await srmSupplierPortalIntegration.findSupplierByParamTenantID(
+          supplier_tenant_id,
+        );
+      const supplierData = response.data.data as SupplierData;
+      return supplierData?.pkid || null;
+    } catch (error) {
+      console.error('Failed to resolve supplier tenant ID:', error);
+      return null;
     }
-
-    // Dictionary untuk menyimpan data per tahun
-    const yearlyData: { [key: string]: { ontime: number; delayed: number } } =
-      {};
-
-    data.forEach(
-      (item: {
-        purchase_request_date: string;
-        purchase_order_date: string;
-        end_date: string;
-        industry_code: string;
-      }) => {
-        // Skip jika tidak ada purchase_request_date atau purchase_order_date
-        if (!item.purchase_request_date || !item.purchase_order_date) {
-          return;
-        }
-
-        // Filter berdasarkan industry_code jika diberikan
-        if (industry_code && item.industry_code !== industry_code) {
-          return;
-        }
-
-        const requestDate = new Date(item.purchase_request_date);
-        const orderDate = new Date(item.purchase_order_date);
-        const yearKey = new Date(item.end_date).getFullYear().toString();
-
-        if (!yearlyData[yearKey]) {
-          yearlyData[yearKey] = { ontime: 0, delayed: 0 };
-        }
-
-        // Hitung selisih dalam hari
-        const diffTime = Math.abs(orderDate.getTime() - requestDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        // Jika kurang dari 30 hari, maka ontime, jika tidak maka delayed
-        if (diffDays < 30) {
-          yearlyData[yearKey].ontime += 1;
-        } else {
-          yearlyData[yearKey].delayed += 1;
-        }
-      },
-    );
-
-    const allYearlyStatus = Object.entries(yearlyData)
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .map(([year, values]) => ({ year, ...values }))
-      .reverse();
-
-    return allYearlyStatus;
   }
 
-  async getRFQDelayCount(industry_code?: string) {
-    const response = await srmProcurementIntegration.getAllSRMProcurement();
-    const data = response.data.data;
+  // ============================================================================
+  // INDUSTRY PERSPECTIVE - RFQ DELAY RISK ANALYSIS
+  // ============================================================================
 
-    if (!Array.isArray(data)) {
-      throw new Error('Data is not an array');
+  /**
+   * Analyze RFQ on-time vs delayed count by industry
+   * Uses both Open/Invitation and Direct RFQ data for comprehensive analysis
+   */
+  async getRFQOnTimeDelayedCount(industry_tenant_id?: number) {
+    if (!industry_tenant_id) {
+      throw new Error('industry_tenant_id is required');
     }
 
-    const yearlyDelayCount: { [key: string]: { delay: number } } = {};
-    const allYears: Set<string> = new Set();
+    const industry_id = industry_tenant_id; // Direct mapping
 
-    data.forEach(
-      (item: {
-        purchase_request_date: string;
-        purchase_order_date: string;
-        end_date: string;
-        industry_code: string;
-      }) => {
-        const yearKey = new Date(item.end_date).getFullYear().toString();
-        allYears.add(yearKey);
+    try {
+      // Get last 5 years of RFQ data for trend analysis
+      const [openRFQResponse, directRFQResponse] = await Promise.all([
+        srmProcurementIntegration.findTotalRFQForLastYearsByIndustryID(
+          industry_id,
+          5,
+        ),
+        srmProcurementIntegration.findTotalDirectRFQForLastYearsByIndustryID(
+          industry_id,
+          5,
+        ),
+      ]);
 
-        // Skip jika tidak ada purchase_request_date atau purchase_order_date
-        if (!item.purchase_request_date || !item.purchase_order_date) {
-          return;
+      const openRFQData = openRFQResponse.data.data || [];
+      const directRFQData = directRFQResponse.data.data || [];
+
+      // Dictionary untuk menyimpan data per tahun
+      const yearlyData: { [key: string]: { ontime: number; delayed: number } } =
+        {};
+
+      // Process Open & Invitation RFQ data
+      openRFQData.forEach((yearData: YearlyRFQData) => {
+        const year = yearData.year.toString();
+        if (!yearlyData[year]) {
+          yearlyData[year] = { ontime: 0, delayed: 0 };
         }
 
-        // Filter berdasarkan industry_code jika diberikan
-        if (industry_code && item.industry_code !== industry_code) {
-          return;
-        }
+        yearData.rfqs?.forEach((rfq: RFQItem) => {
+          if (rfq.registration_start_date && rfq.rfq_end_date) {
+            const startDate = new Date(rfq.registration_start_date);
+            const endDate = new Date(rfq.rfq_end_date);
 
-        const requestDate = new Date(item.purchase_request_date);
-        const orderDate = new Date(item.purchase_order_date);
+            // Calculate difference in days
+            const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        // Hitung selisih dalam hari
-        const diffTime = Math.abs(orderDate.getTime() - requestDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        // Jika lebih dari atau sama dengan 30 hari, maka delayed
-        if (diffDays >= 30) {
-          if (!yearlyDelayCount[yearKey]) {
-            yearlyDelayCount[yearKey] = { delay: 0 };
+            // If less than 30 days, consider on-time, otherwise delayed
+            if (diffDays < 30) {
+              yearlyData[year].ontime += 1;
+            } else {
+              yearlyData[year].delayed += 1;
+            }
           }
-          yearlyDelayCount[yearKey].delay += 1;
-        }
-      },
-    );
+        });
+      });
 
-    const allYearlyDelayCount = Array.from(allYears)
-      .map((year) => ({
-        year,
-        delay: yearlyDelayCount[year]?.delay || 0,
+      // Process Direct RFQ data
+      directRFQData.forEach((yearData: YearlyRFQData) => {
+        const year = yearData.year.toString();
+        if (!yearlyData[year]) {
+          yearlyData[year] = { ontime: 0, delayed: 0 };
+        }
+
+        yearData.directRFQs?.forEach((rfq: DirectRFQItem) => {
+          if (rfq.registration_start_date && rfq.rfq_end_date) {
+            const startDate = new Date(rfq.registration_start_date);
+            const endDate = new Date(rfq.rfq_end_date);
+
+            const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays < 30) {
+              yearlyData[year].ontime += 1;
+            } else {
+              yearlyData[year].delayed += 1;
+            }
+          }
+        });
+      });
+
+      // Convert to array format and sort by year
+      const allYearlyStatus = Object.entries(yearlyData)
+        .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+        .map(([year, values]) => ({ year, ...values }))
+        .reverse();
+
+      return allYearlyStatus;
+    } catch (error) {
+      console.error('Error in getRFQOnTimeDelayedCount:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get RFQ delay count for industry (only delayed RFQs)
+   */
+  async getRFQDelayCount(industry_tenant_id?: number) {
+    if (!industry_tenant_id) {
+      throw new Error('industry_tenant_id is required');
+    }
+
+    const delayData = await this.getRFQOnTimeDelayedCount(industry_tenant_id);
+
+    // Extract only delayed count from the comprehensive data
+    const allYearlyDelayCount = delayData
+      .map((item) => ({
+        year: item.year,
+        delay: item.delayed,
       }))
       .sort((a, b) => parseInt(b.year) - parseInt(a.year))
       .slice(0, 5)
@@ -126,29 +205,24 @@ export class SRMProcurementService {
     return allYearlyDelayCount;
   }
 
-  // async getRFQDelaySummary(industry_code?: string) {
-  //   // Karena belum ada implementasi spesifik di file yang diberikan,
-  //   // kita buat implementasi dengan struktur yang serupa dengan contoh
+  /**
+   * Get RFQ delay summary for industry
+   */
+  async getRFQDelaySummary(industry_tenant_id?: number) {
+    if (!industry_tenant_id) {
+      // Return default values if no industry specified
+      return {
+        total_rfq: 0,
+        delayed_rfq: 0,
+        on_time_rfq: 0,
+        on_time_rate: 0.0,
+        delay_rate: 0.0,
+      };
+    }
 
-  //   // Asumsikan kita memiliki beberapa data contoh
-  //   const totalRFQ = 100;
-  //   const delayedRFQ = 25;
+    const delayData = await this.getRFQOnTimeDelayedCount(industry_tenant_id);
 
-  //   return {
-  //     total_rfq: totalRFQ,
-  //     delayed_rfq: delayedRFQ,
-  //     on_time_rfq: totalRFQ - delayedRFQ,
-  //     on_time_rate: parseFloat(
-  //       (((totalRFQ - delayedRFQ) / totalRFQ) * 100).toFixed(2),
-  //     ),
-  //     delay_rate: parseFloat(((delayedRFQ / totalRFQ) * 100).toFixed(2)),
-  //   };
-  // }
-
-  async getRFQDelaySummary(industry_code?: string) {
-    const delayData = await this.getRFQOnTimeDelayedCount(industry_code);
-
-    // Hitung total dari semua tahun
+    // Calculate totals from all years
     let totalOntime = 0;
     let totalDelayed = 0;
 
@@ -166,143 +240,25 @@ export class SRMProcurementService {
       on_time_rate:
         totalRFQ > 0
           ? parseFloat(((totalOntime / totalRFQ) * 100).toFixed(2))
-          : 0,
+          : 0.0,
       delay_rate:
         totalRFQ > 0
           ? parseFloat(((totalDelayed / totalRFQ) * 100).toFixed(2))
-          : 0,
-    };
-  }
-
-  //SUPPLIER
-  //1. Kekalahan pada proses RFQ
-  async getWinLoseCount(supplier_code: string) {
-    const response = await srmProcurementIntegration.getAllSRMProcurement();
-    const data = response.data.data;
-
-    if (!Array.isArray(data)) {
-      throw new Error('Data is not an array');
-    }
-
-    const yearlyWinLose: { [key: string]: { win: number; lose: number } } = {};
-
-    data.forEach(
-      (item: { end_date: string; supplier_code: string; status: string }) => {
-        if (item.supplier_code !== supplier_code) {
-          return;
-        }
-
-        const yearKey = new Date(item.end_date).getFullYear().toString();
-
-        if (!yearlyWinLose[yearKey]) {
-          yearlyWinLose[yearKey] = { win: 0, lose: 0 };
-        }
-
-        if (item.status === 'win') {
-          yearlyWinLose[yearKey].win += 1;
-        } else if (item.status === 'lose') {
-          yearlyWinLose[yearKey].lose += 1;
-        }
-      },
-    );
-
-    const allYearlyWinLose = Object.entries(yearlyWinLose)
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .map(([year, values]) => ({ year, ...values }))
-      .reverse();
-
-    return allYearlyWinLose;
-  }
-
-  async getRFQLossSummary(supplier_code: string) {
-    const loseData = await this.getLoseCount(supplier_code);
-
-    let totalLose = 0;
-
-    loseData.forEach((item) => {
-      totalLose += item.lose;
-    });
-
-    // Untuk data total, kita perlu data keseluruhan
-    const winLoseData = await this.getWinLoseCount(supplier_code);
-
-    let totalRFQ = 0;
-
-    winLoseData.forEach((item) => {
-      totalRFQ += item.win + item.lose;
-    });
-
-    return {
-      total_rfq: totalRFQ > 0 ? totalRFQ : 0,
-      won_rfq: totalRFQ - totalLose > 0 ? totalRFQ - totalLose : 0,
-      lost_rfq: totalLose > 0 ? totalLose : 0,
-      win_rate:
-        totalRFQ > 0
-          ? parseFloat((((totalRFQ - totalLose) / totalRFQ) * 100).toFixed(2))
-          : 0.0,
-      loss_rate:
-        totalRFQ > 0
-          ? parseFloat(((totalLose / totalRFQ) * 100).toFixed(2))
           : 0.0,
     };
   }
 
-  async getLoseCount(supplier_code: string) {
-    const response = await srmProcurementIntegration.getAllSRMProcurement();
-    const data = response.data.data;
-
-    if (!Array.isArray(data)) {
-      throw new Error('Data is not an array');
+  /**
+   * Get RFQ delay risk rate trend for industry
+   */
+  async getRFQDelayRiskRateTrend(industry_tenant_id?: number) {
+    if (!industry_tenant_id) {
+      return [];
     }
 
-    const yearlyLoseCount: { [key: string]: { lose: number } } = {};
-    const allYears: Set<string> = new Set();
+    const yearlyData = await this.getRFQOnTimeDelayedCount(industry_tenant_id);
 
-    data.forEach(
-      (item: { end_date: string; supplier_code: string; status: string }) => {
-        const yearKey = new Date(item.end_date).getFullYear().toString();
-        allYears.add(yearKey);
-
-        if (item.supplier_code !== supplier_code || item.status !== 'lose') {
-          return;
-        }
-
-        if (!yearlyLoseCount[yearKey]) {
-          yearlyLoseCount[yearKey] = { lose: 0 };
-        }
-
-        yearlyLoseCount[yearKey].lose += 1;
-      },
-    );
-
-    const allYearlyLoseCount = Array.from(allYears)
-      .map((year) => ({
-        year,
-        lose: yearlyLoseCount[year]?.lose || 0,
-      }))
-      .sort((a, b) => parseInt(b.year) - parseInt(a.year))
-      .slice(0, 5)
-      .reverse();
-
-    return allYearlyLoseCount;
-  }
-
-  // async getRFQDelayRiskRateTrend(industry_code?: string) {
-  //   // Karena belum ada implementasi spesifik yang ada data tahunan,
-  //   // kita buat contoh data sederhana
-  //   return [
-  //     { year: '2019', value: 18.5 },
-  //     { year: '2020', value: 22.3 },
-  //     { year: '2021', value: 25.7 },
-  //     { year: '2022', value: 20.1 },
-  //     { year: '2023', value: 23.6 },
-  //   ];
-  // }
-
-  async getRFQDelayRiskRateTrend(industry_code?: string) {
-    const yearlyData = await this.getRFQOnTimeDelayedCount(industry_code);
-
-    // Transformasi data menjadi format yang diinginkan
+    // Transform data to risk rate trend format
     const riskRateTrend = yearlyData.map((item) => {
       const total = item.ontime + item.delayed;
       const delayRate =
@@ -317,9 +273,236 @@ export class SRMProcurementService {
     return riskRateTrend;
   }
 
-  // Risk Rate Trend untuk Kekalahan pada proses RFQ
-  async getRFQLossRiskRateTrend(supplier_code: string) {
-    const yearlyData = await this.getWinLoseCount(supplier_code);
+  // ============================================================================
+  // INDUSTRY PERSPECTIVE - DIRECT RFQ ACCEPT/REJECT ANALYSIS
+  // ============================================================================
+
+  /**
+   * Analyze accept/reject count for industry using Direct RFQ data
+   */
+  async getDirectRFQAcceptRejectCount(industry_tenant_id: number) {
+    const industry_id = industry_tenant_id; // Direct mapping
+
+    try {
+      // Get data for last 5 years
+      const [acceptedResponse, rejectedResponse] = await Promise.all([
+        srmProcurementIntegration.findAcceptedDirectRFQsByIndustryIDinRange(
+          industry_id,
+          5,
+        ),
+        srmProcurementIntegration.findRejectedDirectRFQsByIndustryIDinRange(
+          industry_id,
+          5,
+        ),
+      ]);
+
+      const acceptedData = acceptedResponse.data.data || [];
+      const rejectedData = rejectedResponse.data.data || [];
+
+      const yearlyAcceptReject: {
+        [key: string]: { accept: number; reject: number };
+      } = {};
+
+      // Process accepted data
+      acceptedData.forEach((yearData: YearlyAcceptRejectData) => {
+        const year = yearData.year.toString();
+        if (!yearlyAcceptReject[year]) {
+          yearlyAcceptReject[year] = { accept: 0, reject: 0 };
+        }
+        yearlyAcceptReject[year].accept = yearData.total || 0;
+      });
+
+      // Process rejected data
+      rejectedData.forEach((yearData: YearlyAcceptRejectData) => {
+        const year = yearData.year.toString();
+        if (!yearlyAcceptReject[year]) {
+          yearlyAcceptReject[year] = { accept: 0, reject: 0 };
+        }
+        yearlyAcceptReject[year].reject = yearData.total || 0;
+      });
+
+      // Convert to array format (with win/lose naming for compatibility)
+      const allYearlyWinLose = Object.entries(yearlyAcceptReject)
+        .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+        .map(([year, values]) => ({
+          year,
+          win: values.accept, // accept = win for industry
+          lose: values.reject, // reject = lose for industry
+        }))
+        .reverse();
+
+      return allYearlyWinLose;
+    } catch (error) {
+      console.error('Error in getDirectRFQAcceptRejectCount:', error);
+      throw error;
+    }
+  }
+
+  // ============================================================================
+  // SUPPLIER PERSPECTIVE - RFQ WIN/LOSS RISK ANALYSIS
+  // ============================================================================
+
+  /**
+   * Analyze win/loss count for supplier using new date-based approach
+   */
+  async getSupplierRFQWinLoseCount(supplier_tenant_id: number) {
+    // Resolve supplier tenant ID to supplier ID
+    const supplier_id = await this.resolveSupplierTenantId(supplier_tenant_id);
+    if (!supplier_id) {
+      throw new Error('Invalid supplier_tenant_id or supplier not found');
+    }
+
+    try {
+      // Get data for last 5 years
+      const currentYear = new Date().getFullYear();
+      const startYear = currentYear - 4;
+      const start_date = `${startYear}-01-01`;
+      const end_date = `${currentYear}-12-31`;
+
+      const [winningResponse, lostResponse] = await Promise.all([
+        srmProcurementIntegration.findWinningRFQsBySupplierInDateRange(
+          supplier_id,
+          start_date,
+          end_date,
+        ),
+        srmProcurementIntegration.findLostRFQsBySupplierInDateRange(
+          supplier_id,
+          start_date,
+          end_date,
+        ),
+      ]);
+
+      const winningData = winningResponse.data.data || [];
+      const lostData = lostResponse.data.data || [];
+
+      const yearlyWinLose: { [key: string]: { win: number; lose: number } } =
+        {};
+
+      // Process winning data
+      winningData.forEach((yearData: YearlyWinLossData) => {
+        const year = yearData.year.toString();
+        if (!yearlyWinLose[year]) {
+          yearlyWinLose[year] = { win: 0, lose: 0 };
+        }
+        yearlyWinLose[year].win = yearData.total || 0;
+      });
+
+      // Process lost data
+      lostData.forEach((yearData: YearlyWinLossData) => {
+        const year = yearData.year.toString();
+        if (!yearlyWinLose[year]) {
+          yearlyWinLose[year] = { win: 0, lose: 0 };
+        }
+        yearlyWinLose[year].lose = yearData.total || 0;
+      });
+
+      // Convert to array format
+      const allYearlyWinLose = Object.entries(yearlyWinLose)
+        .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
+        .map(([year, values]) => ({ year, ...values }))
+        .reverse();
+
+      return allYearlyWinLose;
+    } catch (error) {
+      console.error('Error in getSupplierRFQWinLoseCount:', error);
+      throw error;
+    }
+  }
+
+  // ============================================================================
+  // UNIFIED WIN/LOSE METHODS (Support both Industry and Supplier)
+  // ============================================================================
+
+  /**
+   * Get RFQ win vs lose count - Unified method for both industry and supplier
+   */
+  async getWinLoseCount(
+    industry_tenant_id?: number,
+    supplier_tenant_id?: number,
+  ) {
+    if (industry_tenant_id) {
+      // Industry perspective: Use Direct RFQ Accept/Reject
+      return await this.getDirectRFQAcceptRejectCount(industry_tenant_id);
+    } else if (supplier_tenant_id) {
+      // Supplier perspective: Use Open & Invitation RFQ Win/Lose
+      return await this.getSupplierRFQWinLoseCount(supplier_tenant_id);
+    } else {
+      throw new Error(
+        'Either industry_tenant_id or supplier_tenant_id is required',
+      );
+    }
+  }
+
+  /**
+   * Get RFQ lose count - Unified method for both industry and supplier
+   */
+  async getLoseCount(industry_tenant_id?: number, supplier_tenant_id?: number) {
+    const winLoseData = await this.getWinLoseCount(
+      industry_tenant_id,
+      supplier_tenant_id,
+    );
+
+    // Extract only lose count
+    const allYearlyLoseCount = winLoseData
+      .map((item) => ({
+        year: item.year,
+        lose: item.lose,
+      }))
+      .sort((a, b) => parseInt(b.year) - parseInt(a.year))
+      .slice(0, 5)
+      .reverse();
+
+    return allYearlyLoseCount;
+  }
+
+  /**
+   * Get RFQ loss summary - Unified method for both industry and supplier
+   */
+  async getRFQLossSummary(
+    industry_tenant_id?: number,
+    supplier_tenant_id?: number,
+  ) {
+    const winLoseData = await this.getWinLoseCount(
+      industry_tenant_id,
+      supplier_tenant_id,
+    );
+
+    let totalWin = 0;
+    let totalLose = 0;
+
+    winLoseData.forEach((item) => {
+      totalWin += item.win;
+      totalLose += item.lose;
+    });
+
+    const totalRFQ = totalWin + totalLose;
+
+    return {
+      total_rfq: totalRFQ > 0 ? totalRFQ : 0,
+      won_rfq: totalWin > 0 ? totalWin : 0,
+      lost_rfq: totalLose > 0 ? totalLose : 0,
+      win_rate:
+        totalRFQ > 0
+          ? parseFloat(((totalWin / totalRFQ) * 100).toFixed(2))
+          : 0.0,
+      loss_rate:
+        totalRFQ > 0
+          ? parseFloat(((totalLose / totalRFQ) * 100).toFixed(2))
+          : 0.0,
+    };
+  }
+
+  /**
+   * Get RFQ loss risk rate trend - Unified method for both industry and supplier
+   */
+  async getRFQLossRiskRateTrend(
+    industry_tenant_id?: number,
+    supplier_tenant_id?: number,
+  ) {
+    const yearlyData = await this.getWinLoseCount(
+      industry_tenant_id,
+      supplier_tenant_id,
+    );
 
     const riskRateTrend = yearlyData.map((item) => {
       const total = item.win + item.lose;
@@ -333,5 +516,67 @@ export class SRMProcurementService {
     });
 
     return riskRateTrend;
+  }
+
+  // ============================================================================
+  // ADDITIONAL HELPER METHODS
+  // ============================================================================
+
+  /**
+   * Get comprehensive RFQ statistics for industry
+   * Combines Open/Invitation and Direct RFQ data
+   */
+  async getComprehensiveRFQStats(industry_tenant_id: number): Promise<{
+    openRFQByStatus: RFQStatusData[];
+    directRFQByStatus: RFQStatusData[];
+  }> {
+    const industry_id = industry_tenant_id;
+
+    try {
+      const [statusResponse, directStatusResponse] = await Promise.all([
+        srmProcurementIntegration.findTotalRFQByStatusByIndustryID(industry_id),
+        srmProcurementIntegration.findTotalDirectRFQByStatusAndIndustryID(
+          industry_id,
+        ),
+      ]);
+
+      return {
+        openRFQByStatus: statusResponse.data.data || [],
+        directRFQByStatus: directStatusResponse.data.data || [],
+      };
+    } catch (error) {
+      console.error('Error in getComprehensiveRFQStats:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get comprehensive RFQ statistics for supplier
+   */
+  async getSupplierRFQStats(supplier_tenant_id: number): Promise<{
+    openRFQByStatus: RFQStatusData[];
+    directRFQByStatus: RFQStatusData[];
+  }> {
+    const supplier_id = await this.resolveSupplierTenantId(supplier_tenant_id);
+    if (!supplier_id) {
+      throw new Error('Invalid supplier_tenant_id');
+    }
+
+    try {
+      const [statusResponse, directStatusResponse] = await Promise.all([
+        srmProcurementIntegration.findTotalRFQByStatusBySupplierID(supplier_id),
+        srmProcurementIntegration.findTotalDirectRFQByStatusAndSupplierID(
+          supplier_id,
+        ),
+      ]);
+
+      return {
+        openRFQByStatus: statusResponse.data.data || [],
+        directRFQByStatus: directStatusResponse.data.data || [],
+      };
+    } catch (error) {
+      console.error('Error in getSupplierRFQStats:', error);
+      throw error;
+    }
   }
 }
