@@ -52,7 +52,7 @@ interface ContractDeclineSummary {
 }
 
 /**
- * SRM Contract Service for Risk Management
+ * SRM Contract Service for Risk Management - CORRECTED WITH STRICT LOGIC
  * Updated to work with new SRM integration system
  * Maintains same function names and response structures for compatibility
  */
@@ -103,12 +103,12 @@ export class SRMContractService {
   }
 
   // ============================================================================
-  // DELIVERY PERFORMANCE ANALYSIS
+  // DELIVERY PERFORMANCE ANALYSIS - CORRECTED WITH STRICT LOGIC
   // ============================================================================
 
   /**
-   * Analyze on-time vs late delivery trend
-   * Uses actual shipment data from new system
+   * Analyze on-time vs late delivery trend - CORRECTED STRICT LOGIC
+   * Only analyzes shipments with status "Arrived" and complete delivery data
    */
   async getAllOnTimeVsLateTrend(
     industry_tenant_id?: number,
@@ -145,7 +145,7 @@ export class SRMContractService {
         shipmentData = response.data.data || [];
       }
 
-      // Process shipment data
+      // Process shipment data with CORRECTED STRICT LOGIC
       shipmentData.forEach((yearData: YearlyShipmentData) => {
         const year = yearData.year.toString();
         if (!yearlyTrend[year]) {
@@ -153,15 +153,41 @@ export class SRMContractService {
         }
 
         yearData.historyShipments.forEach((shipment: HistoryShipment) => {
-          // STRICT: Only process complete data
-          if (shipment.target_deadline_date && shipment.actual_deadline_date) {
+          // ================================
+          // CORRECTED STRICT LOGIC: Only process "Arrived" shipments with complete delivery data
+          // ================================
+          if (
+            shipment.status === 'Arrived' &&
+            shipment.target_deadline_date &&
+            shipment.actual_deadline_date
+          ) {
             const targetDate = new Date(shipment.target_deadline_date);
             const actualDate = new Date(shipment.actual_deadline_date);
 
             if (actualDate <= targetDate) {
               yearlyTrend[year].on_time += 1;
+              console.log(
+                `✅ DELIVERY: ON-TIME - Shipment ${shipment.pkid} (Year ${year})`,
+              );
             } else {
               yearlyTrend[year].late += 1;
+              console.log(
+                `❌ DELIVERY: LATE - Shipment ${shipment.pkid} (Year ${year})`,
+              );
+            }
+          } else {
+            // Log skipped shipments for transparency
+            if (shipment.status !== 'Arrived') {
+              console.log(
+                `⚪ SKIPPED: Shipment ${shipment.pkid} (status: ${shipment.status} - not 'Arrived')`,
+              );
+            } else if (
+              !shipment.target_deadline_date ||
+              !shipment.actual_deadline_date
+            ) {
+              console.log(
+                `⚪ SKIPPED: Shipment ${shipment.pkid} (incomplete delivery data)`,
+              );
             }
           }
         });
@@ -173,6 +199,10 @@ export class SRMContractService {
         .map(([year, values]) => ({ year, ...values }))
         .reverse();
 
+      console.log(
+        '📊 On-time vs late trend calculated with CORRECTED STRICT logic:',
+        allYearlyTrend,
+      );
       return allYearlyTrend;
     } catch (error) {
       console.error('Error in getAllOnTimeVsLateTrend:', error);
@@ -181,7 +211,7 @@ export class SRMContractService {
   }
 
   /**
-   * Get late delivery trend (only late deliveries)
+   * Get late delivery trend (only late deliveries) - CORRECTED STRICT LOGIC
    */
   async getLateTrend(industry_tenant_id?: number, supplier_tenant_id?: number) {
     const onTimeVsLateData = await this.getAllOnTimeVsLateTrend(
@@ -198,15 +228,20 @@ export class SRMContractService {
       .slice(0, 5)
       .reverse();
 
+    console.log(
+      '📊 Late trend calculated with CORRECTED STRICT logic:',
+      top5LateTrend,
+    );
     return top5LateTrend;
   }
 
   // ============================================================================
-  // QUANTITY COMPLIANCE ANALYSIS
+  // QUANTITY COMPLIANCE ANALYSIS - CORRECTED WITH STRICT LOGIC
   // ============================================================================
 
   /**
-   * Analyze quantity compliance (target vs actual quantity)
+   * Analyze quantity compliance (target vs actual quantity) - CORRECTED STRICT LOGIC
+   * Only analyzes shipments with status "Arrived" and complete quantity data
    */
   async getQuantityCompliance(
     industry_tenant_id?: number,
@@ -244,7 +279,7 @@ export class SRMContractService {
         shipmentData = response.data.data || [];
       }
 
-      // Process quantity compliance
+      // Process quantity compliance with CORRECTED STRICT LOGIC
       shipmentData.forEach((yearData: YearlyShipmentData) => {
         const year = yearData.year.toString();
         if (!yearlyCompliance[year]) {
@@ -252,15 +287,38 @@ export class SRMContractService {
         }
 
         yearData.historyShipments.forEach((shipment: HistoryShipment) => {
-          // STRICT: Only process complete data
-          if (shipment.target_quantity && shipment.actual_quantity) {
+          // ================================
+          // CORRECTED STRICT LOGIC: Only process "Arrived" shipments with complete quantity data
+          // ================================
+          if (
+            shipment.status === 'Arrived' &&
+            shipment.target_quantity &&
+            shipment.actual_quantity
+          ) {
             const targetQuantity = parseFloat(shipment.target_quantity);
             const actualQuantity = parseFloat(shipment.actual_quantity);
 
             if (actualQuantity >= targetQuantity) {
               yearlyCompliance[year].compliant += 1;
+              console.log(
+                `✅ QUANTITY: COMPLIANT - Shipment ${shipment.pkid} (${actualQuantity} >= ${targetQuantity}) (Year ${year})`,
+              );
             } else {
               yearlyCompliance[year].noncompliant += 1;
+              console.log(
+                `❌ QUANTITY: NON-COMPLIANT - Shipment ${shipment.pkid} (${actualQuantity} < ${targetQuantity}) (Year ${year})`,
+              );
+            }
+          } else {
+            // Log skipped shipments for transparency
+            if (shipment.status !== 'Arrived') {
+              console.log(
+                `⚪ SKIPPED: Shipment ${shipment.pkid} (status: ${shipment.status} - not 'Arrived')`,
+              );
+            } else if (!shipment.target_quantity || !shipment.actual_quantity) {
+              console.log(
+                `⚪ SKIPPED: Shipment ${shipment.pkid} (incomplete quantity data)`,
+              );
             }
           }
         });
@@ -271,6 +329,10 @@ export class SRMContractService {
         .map(([year, values]) => ({ year, ...values }))
         .reverse();
 
+      console.log(
+        '📊 Quantity compliance calculated with CORRECTED STRICT logic:',
+        allYearlyCompliance,
+      );
       return allYearlyCompliance;
     } catch (error) {
       console.error('Error in getQuantityCompliance:', error);
@@ -279,7 +341,7 @@ export class SRMContractService {
   }
 
   /**
-   * Get non-compliant quantity trend
+   * Get non-compliant quantity trend - CORRECTED STRICT LOGIC
    */
   async getNonCompliantQuantity(
     industry_tenant_id?: number,
@@ -299,22 +361,27 @@ export class SRMContractService {
       .slice(0, 5)
       .reverse();
 
+    console.log(
+      '📊 Non-compliant quantity trend calculated with CORRECTED STRICT logic:',
+      top5NonCompliantQuantity,
+    );
     return top5NonCompliantQuantity;
   }
 
   // ============================================================================
-  // CONTRACT VOLUME ANALYSIS
+  // CONTRACT VOLUME ANALYSIS - CORRECTED WITH STRICT LOGIC
   // ============================================================================
 
   /**
-   * Get total contract count by year
+   * Get total contract count by year - CORRECTED STRICT LOGIC
+   * Uses contract-level counting (unique contracts per year)
    */
   async getContractTotal(
     industry_tenant_id?: number,
     supplier_tenant_id?: number,
   ) {
     const dateRange = this.getDateRange(5);
-    const yearlyTotal: { [key: string]: number } = {};
+    const yearlyContracts: { [key: string]: Set<number> } = {};
 
     try {
       let shipmentData: YearlyShipmentData[] = [];
@@ -343,20 +410,34 @@ export class SRMContractService {
         shipmentData = response.data.data || [];
       }
 
-      // Count contracts by year
+      // ================================
+      // CORRECTED LOGIC: Count unique contracts per year (contract-level analysis)
+      // ================================
       shipmentData.forEach((yearData: YearlyShipmentData) => {
         const year = yearData.year.toString();
-        if (!yearlyTotal[year]) {
-          yearlyTotal[year] = 0;
+        if (!yearlyContracts[year]) {
+          yearlyContracts[year] = new Set<number>();
         }
-        yearlyTotal[year] = yearData.total;
+
+        yearData.historyShipments.forEach((shipment: HistoryShipment) => {
+          // Add contract to set (automatically handles uniqueness)
+          yearlyContracts[year].add(shipment.detail_contract_pkid);
+        });
       });
 
-      const allYearlyTotal = Object.entries(yearlyTotal)
+      // Convert to array format with unique contract counts
+      const allYearlyTotal = Object.entries(yearlyContracts)
         .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-        .map(([year, total]) => ({ year, total }))
+        .map(([year, contractSet]) => ({
+          year,
+          total: contractSet.size, // Use Set size for unique contract count
+        }))
         .reverse();
 
+      console.log(
+        '📊 Contract total calculated with CORRECTED contract-level logic:',
+        allYearlyTotal,
+      );
       return allYearlyTotal;
     } catch (error) {
       console.error('Error in getContractTotal:', error);
@@ -365,11 +446,11 @@ export class SRMContractService {
   }
 
   // ============================================================================
-  // SUMMARY METHODS (Risk Analysis)
+  // SUMMARY METHODS (Risk Analysis) - CORRECTED WITH STRICT LOGIC
   // ============================================================================
 
   /**
-   * Get late receipt summary
+   * Get late receipt summary - CORRECTED STRICT LOGIC
    */
   async getLateReceiptSummary(
     supplier_tenant_id?: number,
@@ -390,7 +471,7 @@ export class SRMContractService {
 
     const totalContract = totalOnTime + totalLate;
 
-    return {
+    const summary = {
       total_contract: totalContract > 0 ? totalContract : 0,
       on_time_receipt: totalOnTime > 0 ? totalOnTime : 0,
       late_receipt: totalLate > 0 ? totalLate : 0,
@@ -403,10 +484,16 @@ export class SRMContractService {
           ? parseFloat(((totalLate / totalContract) * 100).toFixed(2))
           : 0.0,
     };
+
+    console.log(
+      '📊 Late receipt summary calculated with CORRECTED STRICT logic:',
+      summary,
+    );
+    return summary;
   }
 
   /**
-   * Get quantity mismatch summary
+   * Get quantity mismatch summary - CORRECTED STRICT LOGIC
    */
   async getQuantityMismatchSummary(
     supplier_tenant_id?: number,
@@ -427,7 +514,7 @@ export class SRMContractService {
 
     const totalContracts = totalCompliant + totalNonCompliant;
 
-    return {
+    const summary = {
       total_contract: totalContracts > 0 ? totalContracts : 0,
       compliant_quantity: totalCompliant > 0 ? totalCompliant : 0,
       mismatch_quantity: totalNonCompliant > 0 ? totalNonCompliant : 0,
@@ -440,10 +527,16 @@ export class SRMContractService {
           ? parseFloat(((totalNonCompliant / totalContracts) * 100).toFixed(2))
           : 0.0,
     };
+
+    console.log(
+      '📊 Quantity mismatch summary calculated with CORRECTED STRICT logic:',
+      summary,
+    );
+    return summary;
   }
 
   /**
-   * Get contract decline summary
+   * Get contract decline summary - CORRECTED STRICT LOGIC
    */
   async getContractDeclineSummary(
     supplier_tenant_id?: number,
@@ -455,7 +548,7 @@ export class SRMContractService {
     );
 
     if (contractData.length < 2) {
-      return {
+      const summary = {
         current_year_contracts:
           contractData.length > 0
             ? contractData[contractData.length - 1].total
@@ -468,6 +561,8 @@ export class SRMContractService {
         growth_rate: 0.0,
         decline_rate: 0.0,
       };
+      console.log('📊 Contract decline summary (insufficient data):', summary);
+      return summary;
     }
 
     const currentYearData = contractData[contractData.length - 1];
@@ -481,39 +576,47 @@ export class SRMContractService {
     let growthRate = 0.0;
     let declineRate = 0.0;
 
-    if (currentYearContracts > previousYearContracts) {
-      growthRate = parseFloat(
-        (
-          ((currentYearContracts - previousYearContracts) /
-            previousYearContracts) *
-          100
-        ).toFixed(2),
-      );
-    } else if (currentYearContracts < previousYearContracts) {
-      declineRate = parseFloat(
-        (
-          ((previousYearContracts - currentYearContracts) /
-            previousYearContracts) *
-          100
-        ).toFixed(2),
-      );
+    if (previousYearContracts > 0) {
+      if (currentYearContracts > previousYearContracts) {
+        growthRate = parseFloat(
+          (
+            ((currentYearContracts - previousYearContracts) /
+              previousYearContracts) *
+            100
+          ).toFixed(2),
+        );
+      } else if (currentYearContracts < previousYearContracts) {
+        declineRate = parseFloat(
+          (
+            ((previousYearContracts - currentYearContracts) /
+              previousYearContracts) *
+            100
+          ).toFixed(2),
+        );
+      }
     }
 
-    return {
+    const summary = {
       current_year_contracts: currentYearContracts,
       previous_year_contracts: previousYearContracts,
       total_contracts: totalContracts,
       growth_rate: growthRate,
       decline_rate: declineRate,
     };
+
+    console.log(
+      '📊 Contract decline summary calculated with CORRECTED contract-level logic:',
+      summary,
+    );
+    return summary;
   }
 
   // ============================================================================
-  // RISK RATE TREND ANALYSIS
+  // RISK RATE TREND ANALYSIS - CORRECTED WITH STRICT LOGIC
   // ============================================================================
 
   /**
-   * Get late receipt risk rate trend
+   * Get late receipt risk rate trend - CORRECTED STRICT LOGIC
    */
   async getLateReceiptRiskRateTrend(
     supplier_tenant_id?: number,
@@ -535,11 +638,15 @@ export class SRMContractService {
       };
     });
 
+    console.log(
+      '📊 Late receipt risk rate trend calculated with CORRECTED STRICT logic:',
+      riskRateTrend,
+    );
     return riskRateTrend;
   }
 
   /**
-   * Get quantity mismatch risk rate trend
+   * Get quantity mismatch risk rate trend - CORRECTED STRICT LOGIC
    */
   async getQuantityMismatchRiskRateTrend(
     supplier_tenant_id?: number,
@@ -563,11 +670,15 @@ export class SRMContractService {
       };
     });
 
+    console.log(
+      '📊 Quantity mismatch risk rate trend calculated with CORRECTED STRICT logic:',
+      riskRateTrend,
+    );
     return riskRateTrend;
   }
 
   /**
-   * Get contract decline risk rate trend
+   * Get contract decline risk rate trend - CORRECTED STRICT LOGIC
    */
   async getContractDeclineRiskRateTrend(
     supplier_tenant_id?: number,
@@ -589,7 +700,7 @@ export class SRMContractService {
 
         // Calculate decline rate if there's a decline
         let declineRate = 0;
-        if (currentYear.total < previousYear.total) {
+        if (previousYear.total > 0 && currentYear.total < previousYear.total) {
           declineRate = parseFloat(
             (
               ((previousYear.total - currentYear.total) / previousYear.total) *
@@ -605,6 +716,10 @@ export class SRMContractService {
       }
     }
 
+    console.log(
+      '📊 Contract decline risk rate trend calculated with CORRECTED contract-level logic:',
+      riskRateTrend,
+    );
     return riskRateTrend;
   }
 
@@ -623,7 +738,9 @@ export class SRMContractService {
     try {
       const response =
         await srmContractIntegration.findTopSuppliersByIndustryID(industry_id);
-      return response.data.data || [];
+      const result = response.data.data || [];
+      console.log('📊 Top suppliers retrieved:', result.length, 'suppliers');
+      return result;
     } catch (error) {
       console.error('Error in getTopSuppliers:', error);
       throw error;
@@ -644,7 +761,9 @@ export class SRMContractService {
     try {
       const response =
         await srmContractIntegration.findTopIndustriesBySupplierID(supplier_id);
-      return response.data.data || [];
+      const result = response.data.data || [];
+      console.log('📊 Top industries retrieved:', result.length, 'industries');
+      return result;
     } catch (error) {
       console.error('Error in getTopIndustries:', error);
       throw error;
