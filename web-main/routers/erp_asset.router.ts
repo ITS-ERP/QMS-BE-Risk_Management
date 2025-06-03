@@ -1,9 +1,14 @@
 import { Router } from 'express';
 import { AssetController } from '../controllers/erp_asset.controller';
+import { SimpleQMSMiddleware } from '../../data-access/utility/middleware';
 
 const router = Router();
 const assetController = new AssetController();
 
+// Apply authentication middleware to all routes
+router.use(SimpleQMSMiddleware.authenticate);
+
+// Basic asset endpoints
 router.get('/', (req, res) => assetController.getAssetController(req, res));
 router.get('/asset-disposal', (req, res) =>
   assetController.getAssetDisposalController(req, res),
@@ -14,6 +19,8 @@ router.get('/asset-maintenance', (req, res) =>
 router.get('/asset-stock-take', (req, res) =>
   assetController.getAssetStockTakeController(req, res),
 );
+
+// Analytics endpoints
 router.get('/total-asset-type', (req, res) =>
   assetController.getAssetTypeController(req, res),
 );

@@ -1,19 +1,35 @@
+import { Request } from 'express';
+import { getQMSContext } from '../../data-access/utility/requestHelper';
+import {
+  ReceiveItem,
+  TransferItem,
+} from '../../data-access/utility/interfaces';
 import * as inventoryIntegration from '../../data-access/integrations/erp_inventory.integration';
 
 export class InventoryService {
-  async fetchAllReceive() {
-    const response = await inventoryIntegration.getAllReceive();
-    return response.data.data;
+  // RECEIVE METHODS
+  async fetchAllReceive(req: Request): Promise<ReceiveItem[]> {
+    const context = getQMSContext(req);
+    const response = await inventoryIntegration.getAllReceiveWithAuth(req);
+
+    // Filter by tenant_id
+    const filteredData = response.data.data.filter(
+      (item: ReceiveItem) => item.tenant_id === context.tenant_id_number,
+    );
+
+    return filteredData;
   }
 
-  async fetchAllTransfer() {
-    const response = await inventoryIntegration.getAllTransfer();
-    return response.data.data;
-  }
+  async getReceiveType(
+    req: Request,
+  ): Promise<{ accept: number; reject: number; total: number }> {
+    const context = getQMSContext(req);
+    const response = await inventoryIntegration.getAllReceiveWithAuth(req);
 
-  async getReceiveType() {
-    const response = await inventoryIntegration.getAllReceive();
-    const data = response.data.data;
+    // Filter by tenant_id
+    const data = response.data.data.filter(
+      (item: ReceiveItem) => item.tenant_id === context.tenant_id_number,
+    );
 
     let accept = 0;
     let reject = 0;
@@ -38,9 +54,16 @@ export class InventoryService {
     return { accept, reject, total };
   }
 
-  async getReceiveByMonth() {
-    const response = await inventoryIntegration.getAllReceive();
-    const data = response.data.data;
+  async getReceiveByMonth(
+    req: Request,
+  ): Promise<Array<{ month: string; accept: number; reject: number }>> {
+    const context = getQMSContext(req);
+    const response = await inventoryIntegration.getAllReceiveWithAuth(req);
+
+    // Filter by tenant_id
+    const data = response.data.data.filter(
+      (item: ReceiveItem) => item.tenant_id === context.tenant_id_number,
+    );
 
     const monthlyData: { [key: string]: { accept: number; reject: number } } =
       {};
@@ -91,9 +114,16 @@ export class InventoryService {
     return top5Monthly;
   }
 
-  async getAllReceiveByYear() {
-    const response = await inventoryIntegration.getAllReceive();
-    const data = response.data.data;
+  async getAllReceiveByYear(
+    req: Request,
+  ): Promise<Array<{ year: string; accept: number; reject: number }>> {
+    const context = getQMSContext(req);
+    const response = await inventoryIntegration.getAllReceiveWithAuth(req);
+
+    // Filter by tenant_id
+    const data = response.data.data.filter(
+      (item: ReceiveItem) => item.tenant_id === context.tenant_id_number,
+    );
 
     const yearlyData: { [key: string]: { accept: number; reject: number } } =
       {};
@@ -130,8 +160,8 @@ export class InventoryService {
     return allYearlyData;
   }
 
-  async getReceiveSummary() {
-    const allYearlyData = await this.getAllReceiveByYear();
+  async getReceiveSummary(req: Request) {
+    const allYearlyData = await this.getAllReceiveByYear(req);
 
     let totalAccept = 0;
     let totalReject = 0;
@@ -158,9 +188,16 @@ export class InventoryService {
     };
   }
 
-  async getRejectReceiveByYear() {
-    const response = await inventoryIntegration.getAllReceive();
-    const data = response.data.data;
+  async getRejectReceiveByYear(
+    req: Request,
+  ): Promise<Array<{ year: string; reject: number }>> {
+    const context = getQMSContext(req);
+    const response = await inventoryIntegration.getAllReceiveWithAuth(req);
+
+    // Filter by tenant_id
+    const data = response.data.data.filter(
+      (item: ReceiveItem) => item.tenant_id === context.tenant_id_number,
+    );
 
     const yearlyData: { [key: string]: { reject: number } } = {};
 
@@ -194,9 +231,65 @@ export class InventoryService {
     return top5Yearly;
   }
 
-  async getAllTransferByYear() {
-    const response = await inventoryIntegration.getAllTransfer();
-    const data = response.data.data;
+  // TRANSFER METHODS
+  async fetchAllTransfer(req: Request): Promise<TransferItem[]> {
+    const context = getQMSContext(req);
+    const response = await inventoryIntegration.getAllTransferWithAuth(req);
+
+    // Filter by tenant_id
+    const filteredData = response.data.data.filter(
+      (item: TransferItem) => item.tenant_id === context.tenant_id_number,
+    );
+
+    return filteredData;
+  }
+
+  async getTransferType(
+    req: Request,
+  ): Promise<{ accept: number; reject: number; total: number }> {
+    const context = getQMSContext(req);
+    const response = await inventoryIntegration.getAllTransferWithAuth(req);
+
+    // Filter by tenant_id
+    const data = response.data.data.filter(
+      (item: TransferItem) => item.tenant_id === context.tenant_id_number,
+    );
+
+    let accept = 0;
+    let reject = 0;
+
+    data.forEach(
+      (item: {
+        transferDetails: {
+          item_accepted_quantity: string;
+          item_rejected_quantity: string;
+        }[];
+      }) => {
+        item.transferDetails.forEach((detail) => {
+          const acceptedQuantity = parseFloat(detail.item_accepted_quantity);
+          const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
+
+          accept += acceptedQuantity;
+          reject += rejectedQuantity;
+        });
+      },
+    );
+
+    const total = accept + reject;
+
+    return { accept, reject, total };
+  }
+
+  async getAllTransferByYear(
+    req: Request,
+  ): Promise<Array<{ year: string; accept: number; reject: number }>> {
+    const context = getQMSContext(req);
+    const response = await inventoryIntegration.getAllTransferWithAuth(req);
+
+    // Filter by tenant_id
+    const data = response.data.data.filter(
+      (item: TransferItem) => item.tenant_id === context.tenant_id_number,
+    );
 
     const yearlyData: { [key: string]: { accept: number; reject: number } } =
       {};
@@ -233,8 +326,8 @@ export class InventoryService {
     return allYearlyData;
   }
 
-  async getTransferSummary() {
-    const allYearlyData = await this.getAllTransferByYear();
+  async getTransferSummary(req: Request) {
+    const allYearlyData = await this.getAllTransferByYear(req);
 
     let totalAccept = 0;
     let totalReject = 0;
@@ -261,9 +354,16 @@ export class InventoryService {
     };
   }
 
-  async getRejectTransferByYear() {
-    const response = await inventoryIntegration.getAllTransfer();
-    const data = response.data.data;
+  async getRejectTransferByYear(
+    req: Request,
+  ): Promise<Array<{ year: string; reject: number }>> {
+    const context = getQMSContext(req);
+    const response = await inventoryIntegration.getAllTransferWithAuth(req);
+
+    // Filter by tenant_id
+    const data = response.data.data.filter(
+      (item: TransferItem) => item.tenant_id === context.tenant_id_number,
+    );
 
     const yearlyData: { [key: string]: { reject: number } } = {};
 
@@ -297,9 +397,11 @@ export class InventoryService {
     return top5Yearly;
   }
 
-  // Risk Rate Trend untuk Ketidaksesuaian Jumlah (Received Items)
-  async getReceiveRiskRateTrend() {
-    const yearlyData = await this.getAllReceiveByYear();
+  // RISK ANALYSIS METHODS
+  async getReceiveRiskRateTrend(
+    req: Request,
+  ): Promise<Array<{ year: string; value: number }>> {
+    const yearlyData = await this.getAllReceiveByYear(req);
 
     const riskRateTrend = yearlyData.map((item) => {
       const total = item.accept + item.reject;
@@ -315,9 +417,10 @@ export class InventoryService {
     return riskRateTrend;
   }
 
-  // Risk Rate Trend untuk Ketidaksesuaian Jumlah (Transferred Items)
-  async getTransferRiskRateTrend() {
-    const yearlyData = await this.getAllTransferByYear();
+  async getTransferRiskRateTrend(
+    req: Request,
+  ): Promise<Array<{ year: string; value: number }>> {
+    const yearlyData = await this.getAllTransferByYear(req);
 
     const riskRateTrend = yearlyData.map((item) => {
       const total = item.accept + item.reject;

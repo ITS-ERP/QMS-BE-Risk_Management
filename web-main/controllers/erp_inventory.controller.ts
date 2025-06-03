@@ -11,12 +11,13 @@ export class InventoryController extends BaseController {
     this.inventoryService = new InventoryService();
   }
 
+  // RECEIVE CONTROLLERS
   public async getAllReceiveController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      const allReceive = await this.inventoryService.fetchAllReceive();
+      const allReceive = await this.inventoryService.fetchAllReceive(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -29,48 +30,12 @@ export class InventoryController extends BaseController {
     }
   }
 
-  public async getAllTransferController(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    try {
-      const allTransfer = await this.inventoryService.fetchAllTransfer();
-      return this.sendSuccessGet(
-        req,
-        res,
-        allTransfer,
-        MessagesKey.SUCCESSGET,
-        200,
-      );
-    } catch (error) {
-      return this.handleError(req, res, error, 500);
-    }
-  }
-
-  // getAllTransferController = async (
-  //   req: Request,
-  //   res: Response,
-  // ): Promise<Response> => {
-  //   try {
-  //     const allTransfer = await this.inventoryService.fetchAllTransfer();
-  //     return this.sendSuccessGet(
-  //       req,
-  //       res,
-  //       allTransfer,
-  //       MessagesKey.SUCCESSGET,
-  //       200,
-  //     );
-  //   } catch (error) {
-  //     return this.handleError(req, res, error, 500);
-  //   }
-  // };
-
   public async getReceiveTypeController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      const receiveType = await this.inventoryService.getReceiveType();
+      const receiveType = await this.inventoryService.getReceiveType(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -88,7 +53,7 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const receiveByMonth = await this.inventoryService.getReceiveByMonth();
+      const receiveByMonth = await this.inventoryService.getReceiveByMonth(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -106,7 +71,8 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const receiveByYear = await this.inventoryService.getAllReceiveByYear();
+      const receiveByYear =
+        await this.inventoryService.getAllReceiveByYear(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -124,7 +90,7 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const receiveSummary = await this.inventoryService.getReceiveSummary();
+      const receiveSummary = await this.inventoryService.getReceiveSummary(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -142,12 +108,49 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const rejectreceiveByYear =
-        await this.inventoryService.getRejectReceiveByYear();
+      const rejectReceiveByYear =
+        await this.inventoryService.getRejectReceiveByYear(req);
       return this.sendSuccessGet(
         req,
         res,
-        rejectreceiveByYear,
+        rejectReceiveByYear,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  // TRANSFER CONTROLLERS
+  public async getAllTransferController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const allTransfer = await this.inventoryService.fetchAllTransfer(req);
+      return this.sendSuccessGet(
+        req,
+        res,
+        allTransfer,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleError(req, res, error, 500);
+    }
+  }
+
+  public async getTransferTypeController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const transferType = await this.inventoryService.getTransferType(req);
+      return this.sendSuccessGet(
+        req,
+        res,
+        transferType,
         MessagesKey.SUCCESSGET,
         200,
       );
@@ -161,7 +164,8 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const transferByYear = await this.inventoryService.getAllTransferByYear();
+      const transferByYear =
+        await this.inventoryService.getAllTransferByYear(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -179,7 +183,8 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const transferSummary = await this.inventoryService.getTransferSummary();
+      const transferSummary =
+        await this.inventoryService.getTransferSummary(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -198,7 +203,7 @@ export class InventoryController extends BaseController {
   ): Promise<Response> {
     try {
       const rejectTransferByYear =
-        await this.inventoryService.getRejectTransferByYear();
+        await this.inventoryService.getRejectTransferByYear(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -211,14 +216,14 @@ export class InventoryController extends BaseController {
     }
   }
 
-  // Controller untuk Risk Rate Trend pada Received Items
+  // RISK ANALYSIS CONTROLLERS
   public async getReceiveRiskRateTrendController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
       const receiveRiskRateTrend =
-        await this.inventoryService.getReceiveRiskRateTrend();
+        await this.inventoryService.getReceiveRiskRateTrend(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -231,14 +236,13 @@ export class InventoryController extends BaseController {
     }
   }
 
-  // Controller untuk Risk Rate Trend pada Transferred Items
   public async getTransferRiskRateTrendController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
       const transferRiskRateTrend =
-        await this.inventoryService.getTransferRiskRateTrend();
+        await this.inventoryService.getTransferRiskRateTrend(req);
       return this.sendSuccessGet(
         req,
         res,

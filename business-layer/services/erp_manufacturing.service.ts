@@ -1,21 +1,54 @@
+import { Request } from 'express';
+import { getQMSContext } from '../../data-access/utility/requestHelper';
+import {
+  ProductionRequestItem,
+  InspectionProductItem,
+} from '../../data-access/utility/interfaces';
 import * as manufacturingIntegration from '../../data-access/integrations/erp_manufacturing.integration';
 
 export class ManufacturingService {
-  async fetchProductionRequestHeader() {
+  async fetchProductionRequestHeader(
+    req: Request,
+  ): Promise<ProductionRequestItem[]> {
+    const context = getQMSContext(req);
     const response =
-      await manufacturingIntegration.getProductionRequestHeader();
-    return response.data.data;
+      await manufacturingIntegration.getProductionRequestHeaderWithAuth(req);
+
+    // Filter by tenant_id (bisa null untuk backward compatibility)
+    const filteredData = response.data.data.filter(
+      (item: ProductionRequestItem) =>
+        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
+    );
+
+    return filteredData;
   }
 
-  async fetchInspectionProduct() {
-    const response = await manufacturingIntegration.getInspectionProduct();
-    return response.data.data;
+  async fetchInspectionProduct(req: Request): Promise<InspectionProductItem[]> {
+    const context = getQMSContext(req);
+    const response =
+      await manufacturingIntegration.getInspectionProductWithAuth(req);
+
+    // Filter by tenant_id
+    const filteredData = response.data.data.filter(
+      (item: InspectionProductItem) =>
+        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
+    );
+
+    return filteredData;
   }
 
-  async getProductionType() {
+  async getProductionType(
+    req: Request,
+  ): Promise<{ make_to_stock: number; make_to_order: number; total: number }> {
+    const context = getQMSContext(req);
     const response =
-      await manufacturingIntegration.getProductionRequestHeader();
-    const data = response.data.data;
+      await manufacturingIntegration.getProductionRequestHeaderWithAuth(req);
+
+    // Filter by tenant_id
+    const data = response.data.data.filter(
+      (item: ProductionRequestItem) =>
+        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
+    );
 
     let make_to_stock = 0;
     let make_to_order = 0;
@@ -35,10 +68,20 @@ export class ManufacturingService {
     return { make_to_stock, make_to_order, total };
   }
 
-  async getProductionByMonth() {
+  async getProductionByMonth(
+    req: Request,
+  ): Promise<
+    Array<{ month: string; make_to_stock: number; make_to_order: number }>
+  > {
+    const context = getQMSContext(req);
     const response =
-      await manufacturingIntegration.getProductionRequestHeader();
-    const data = response.data.data;
+      await manufacturingIntegration.getProductionRequestHeaderWithAuth(req);
+
+    // Filter by tenant_id
+    const data = response.data.data.filter(
+      (item: ProductionRequestItem) =>
+        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
+    );
 
     const monthlyData: {
       [key: string]: { make_to_stock: number; make_to_order: number };
@@ -88,10 +131,20 @@ export class ManufacturingService {
     return top5Monthly;
   }
 
-  async getProductionByYear() {
+  async getProductionByYear(
+    req: Request,
+  ): Promise<
+    Array<{ year: string; make_to_stock: number; make_to_order: number }>
+  > {
+    const context = getQMSContext(req);
     const response =
-      await manufacturingIntegration.getProductionRequestHeader();
-    const data = response.data.data;
+      await manufacturingIntegration.getProductionRequestHeaderWithAuth(req);
+
+    // Filter by tenant_id
+    const data = response.data.data.filter(
+      (item: ProductionRequestItem) =>
+        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
+    );
 
     const yearlyData: {
       [key: string]: { make_to_stock: number; make_to_order: number };
@@ -127,9 +180,18 @@ export class ManufacturingService {
     return top5Yearly;
   }
 
-  async getInspectionProductType() {
-    const response = await manufacturingIntegration.getInspectionProduct();
-    const data = response.data.data;
+  async getInspectionProductType(
+    req: Request,
+  ): Promise<{ good: number; defect: number; total: number }> {
+    const context = getQMSContext(req);
+    const response =
+      await manufacturingIntegration.getInspectionProductWithAuth(req);
+
+    // Filter by tenant_id
+    const data = response.data.data.filter(
+      (item: InspectionProductItem) =>
+        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
+    );
 
     let good = 0;
     let defect = 0;
@@ -146,9 +208,18 @@ export class ManufacturingService {
     return { good, defect, total };
   }
 
-  async getInspectionProductByMonth() {
-    const response = await manufacturingIntegration.getInspectionProduct();
-    const data = response.data.data;
+  async getInspectionProductByMonth(
+    req: Request,
+  ): Promise<Array<{ month: string; good: number; defect: number }>> {
+    const context = getQMSContext(req);
+    const response =
+      await manufacturingIntegration.getInspectionProductWithAuth(req);
+
+    // Filter by tenant_id
+    const data = response.data.data.filter(
+      (item: InspectionProductItem) =>
+        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
+    );
 
     const monthlyData: { [key: string]: { good: number; defect: number } } = {};
     const monthNames = [
@@ -194,9 +265,18 @@ export class ManufacturingService {
     return top5Monthly;
   }
 
-  async getAllInspectionProductByYear() {
-    const response = await manufacturingIntegration.getInspectionProduct();
-    const data = response.data.data;
+  async getAllInspectionProductByYear(
+    req: Request,
+  ): Promise<Array<{ year: string; good: number; defect: number }>> {
+    const context = getQMSContext(req);
+    const response =
+      await manufacturingIntegration.getInspectionProductWithAuth(req);
+
+    // Filter by tenant_id
+    const data = response.data.data.filter(
+      (item: InspectionProductItem) =>
+        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
+    );
 
     const yearlyData: { [key: string]: { good: number; defect: number } } = {};
 
@@ -227,8 +307,8 @@ export class ManufacturingService {
     return allYearlyData;
   }
 
-  async getInspectionProductSummary() {
-    const allYearlyData = await this.getAllInspectionProductByYear();
+  async getInspectionProductSummary(req: Request) {
+    const allYearlyData = await this.getAllInspectionProductByYear(req);
 
     let totalGood = 0;
     let totalDefect = 0;
@@ -255,9 +335,18 @@ export class ManufacturingService {
     };
   }
 
-  async getDefectInspectionProductByYear() {
-    const response = await manufacturingIntegration.getInspectionProduct();
-    const data = response.data.data;
+  async getDefectInspectionProductByYear(
+    req: Request,
+  ): Promise<Array<{ year: string; defect: number }>> {
+    const context = getQMSContext(req);
+    const response =
+      await manufacturingIntegration.getInspectionProductWithAuth(req);
+
+    // Filter by tenant_id
+    const data = response.data.data.filter(
+      (item: InspectionProductItem) =>
+        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
+    );
 
     const yearlyData: { [key: string]: { defect: number } } = {};
 
@@ -287,9 +376,11 @@ export class ManufacturingService {
     return top5Yearly;
   }
 
-  // Risk Rate Trend untuk Produk Cacat
-  async getDefectRiskRateTrend() {
-    const yearlyData = await this.getAllInspectionProductByYear();
+  // RISK ANALYSIS METHOD
+  async getDefectRiskRateTrend(
+    req: Request,
+  ): Promise<Array<{ year: string; value: number }>> {
+    const yearlyData = await this.getAllInspectionProductByYear(req);
 
     const riskRateTrend = yearlyData.map((item) => {
       const total = item.good + item.defect;

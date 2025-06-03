@@ -16,7 +16,7 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const asset = await this.assetService.fetchAsset();
+      const asset = await this.assetService.fetchAsset(req);
       return this.sendSuccessGet(req, res, asset, MessagesKey.SUCCESSGET, 200);
     } catch (error) {
       return this.handleError(req, res, error, 500);
@@ -28,7 +28,7 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const assetDisposal = await this.assetService.fetchAssetDisposal();
+      const assetDisposal = await this.assetService.fetchAssetDisposal(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -46,7 +46,7 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const maintanedAsset = await this.assetService.fetchMaintanedAsset();
+      const maintanedAsset = await this.assetService.fetchMaintanedAsset(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -64,7 +64,7 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const assetStockTake = await this.assetService.fetchAssetStockTake();
+      const assetStockTake = await this.assetService.fetchAssetStockTake(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -82,7 +82,7 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const assetTypes = await this.assetService.getAssetType();
+      const assetTypes = await this.assetService.getAssetType(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -100,7 +100,7 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const result = await this.assetService.getTotalAssetDisposal();
+      const result = await this.assetService.getTotalAssetDisposal(req);
       return this.sendSuccessGet(req, res, result, MessagesKey.SUCCESSGET, 200);
     } catch (error) {
       console.error('Error in getTotalAssetDisposalController:', error);
@@ -113,7 +113,7 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const result = await this.assetService.getTotalMaintanedAsset();
+      const result = await this.assetService.getTotalMaintanedAsset(req);
       return this.sendSuccessGet(req, res, result, MessagesKey.SUCCESSGET, 200);
     } catch (error) {
       console.error('Error in getTotalMaintanedAssetController:', error);
@@ -126,7 +126,7 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const result = await this.assetService.getTotalAssetStockTake();
+      const result = await this.assetService.getTotalAssetStockTake(req);
       return this.sendSuccessGet(req, res, result, MessagesKey.SUCCESSGET, 200);
     } catch (error) {
       console.error('Error in getTotalAssetStockTakeController:', error);
