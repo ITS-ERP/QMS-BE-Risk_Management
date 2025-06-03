@@ -1,294 +1,260 @@
-// import { Request, Response } from 'express';
-// import { RiskIdentificationMitigationService } from '../../business-layer/services/risk_identification_mitigation.service';
-// import { BaseController } from '../common/base.controller';
-// import { MessagesKey } from '../../helpers/messages/messagesKey';
+import { Request, Response } from 'express';
+import { RiskIdentificationMitigationService } from '../../business-layer/services/risk_identification_mitigation.service';
+import { BaseController } from '../common/base.controller';
+import { MessagesKey } from '../../helpers/messages/messagesKey';
 
-// export class RiskIdentificationMitigationController extends BaseController {
-//   private riskIdentificationMitigationService: RiskIdentificationMitigationService;
+export class RiskIdentificationMitigationController extends BaseController {
+  private riskIdentificationMitigationService: RiskIdentificationMitigationService;
 
-//   constructor() {
-//     super();
-//     this.riskIdentificationMitigationService =
-//       new RiskIdentificationMitigationService();
-//   }
+  constructor() {
+    super();
+    this.riskIdentificationMitigationService =
+      new RiskIdentificationMitigationService();
+  }
 
-//   /**
-//    * Controller untuk mendapatkan gabungan identifikasi dan mitigasi risiko berdasarkan jenis pengguna
-//    */
-//   public async getRiskIdentificationMitigationController(
-//     req: Request,
-//     res: Response,
-//   ): Promise<Response> {
-//     try {
-//       // Perbaiki parameter yang salah (typo atau tidak sesuai)
-//       // Misalnya jika user memilih Industry tapi menggunakan retail_code
-//       this.fixUserCodeParameters(req);
+  /**
+   * Validate authentication header
+   */
+  private validateAuthHeader(req: Request): string | null {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return 'Authorization header is required';
+    }
+    if (!authHeader.startsWith('Bearer ')) {
+      return 'Authorization header must be a Bearer token';
+    }
+    return null;
+  }
 
-//       // Extract query parameters
-//       const riskUser = req.query.risk_user as string | undefined;
-//       const tenantId = req.query.tenant_id as string | undefined;
-//       const industryCode = req.query.industry_code as string | undefined;
-//       const supplierCode = req.query.supplier_code as string | undefined;
-//       const retailCode = req.query.retail_code as string | undefined;
+  /**
+   * Controller untuk mendapatkan gabungan identifikasi dan mitigasi risiko berdasarkan jenis pengguna
+   */
+  public async getRiskIdentificationMitigationController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      // Validate authentication
+      const authError = this.validateAuthHeader(req);
+      if (authError) {
+        return this.handleError(req, res, authError, 401);
+      }
 
-//       console.log('Request parameters (fixed):', {
-//         riskUser,
-//         tenantId,
-//         industryCode,
-//         supplierCode,
-//         retailCode,
-//       });
+      // Extract query parameters
+      const riskUser = req.query.risk_user as string | undefined;
+      const tenantId = req.query.tenant_id as string | undefined;
 
-//       // Validate required parameters
-//       if (!riskUser) {
-//         return this.handleError(req, res, 'Risk user is required', 400);
-//       }
+      console.log('Request parameters:', {
+        riskUser,
+        tenantId,
+        hasAuth: !!req.headers.authorization,
+      });
 
-//       // Validasi parameter berdasarkan jenis pengguna jika tenant_id tidak tersedia
-//       if (
-//         !tenantId &&
-//         ((riskUser === 'Industry' && !industryCode) ||
-//           (riskUser === 'Supplier' && !supplierCode) ||
-//           (riskUser === 'Retail' && !retailCode))
-//       ) {
-//         return this.handleError(
-//           req,
-//           res,
-//           `For ${riskUser} user, either tenant_id or ${riskUser.toLowerCase()}_code is required`,
-//           400,
-//         );
-//       }
+      // Validate required parameters
+      if (!riskUser) {
+        return this.handleError(req, res, 'Risk user is required', 400);
+      }
 
-//       try {
-//         // Call service with proper parameters
-//         const riskIdentificationMitigation =
-//           await this.riskIdentificationMitigationService.getRiskIdentificationAndMitigation(
-//             req,
-//             riskUser,
-//             tenantId,
-//             industryCode,
-//             supplierCode,
-//             retailCode,
-//           );
+      if (!tenantId) {
+        return this.handleError(req, res, 'Tenant ID is required', 400);
+      }
 
-//         // Return empty array with standard success message if no data found
-//         if (
-//           !riskIdentificationMitigation ||
-//           riskIdentificationMitigation.length === 0
-//         ) {
-//           console.log(`No data found for ${riskUser} with given parameters`);
-//           return this.sendSuccessGet(req, res, [], MessagesKey.SUCCESSGET, 200);
-//         }
+      const tenantIdNum = parseInt(tenantId, 10);
+      if (isNaN(tenantIdNum)) {
+        return this.handleError(
+          req,
+          res,
+          'Tenant ID must be a valid number',
+          400,
+        );
+      }
 
-//         console.log(
-//           `Found ${riskIdentificationMitigation.length} risk items for ${riskUser}`,
-//         );
-//         return this.sendSuccessGet(
-//           req,
-//           res,
-//           riskIdentificationMitigation,
-//           MessagesKey.SUCCESSGET,
-//           200,
-//         );
-//       } catch (serviceError: unknown) {
-//         console.error('Service error:', serviceError);
-//         const errorMessage =
-//           serviceError instanceof Error
-//             ? serviceError.message
-//             : 'Unknown service error';
-//         return this.handleError(
-//           req,
-//           res,
-//           `Error processing request: ${errorMessage}`,
-//           500,
-//         );
-//       }
-//     } catch (error: unknown) {
-//       console.error('Controller error:', error);
-//       const errorMessage =
-//         error instanceof Error ? error.message : 'Unknown error';
-//       return this.handleError(
-//         req,
-//         res,
-//         `Unexpected error: ${errorMessage}`,
-//         500,
-//       );
-//     }
-//   }
+      try {
+        // Call service with proper parameters (req object contains auth headers)
+        const riskIdentificationMitigation =
+          await this.riskIdentificationMitigationService.getRiskIdentificationAndMitigation(
+            req,
+            riskUser,
+            tenantIdNum,
+          );
 
-//   /**
-//    * Controller untuk mendapatkan identifikasi dan mitigasi risiko spesifik berdasarkan nama risiko
-//    */
-//   public async getSpecificRiskIdentificationMitigationController(
-//     req: Request,
-//     res: Response,
-//   ): Promise<Response> {
-//     try {
-//       // Perbaiki parameter yang salah (typo atau tidak sesuai)
-//       this.fixUserCodeParameters(req);
+        // Return empty array with standard success message if no data found
+        if (
+          !riskIdentificationMitigation ||
+          riskIdentificationMitigation.length === 0
+        ) {
+          console.log(
+            `No data found for ${riskUser} with tenant_id ${tenantIdNum}`,
+          );
+          return this.sendSuccessGet(req, res, [], MessagesKey.SUCCESSGET, 200);
+        }
 
-//       // Extract query parameters
-//       const riskUser = req.query.risk_user as string | undefined;
-//       const riskName = req.query.risk_name as string | undefined;
-//       const tenantId = req.query.tenant_id as string | undefined;
-//       const industryCode = req.query.industry_code as string | undefined;
-//       const supplierCode = req.query.supplier_code as string | undefined;
-//       const retailCode = req.query.retail_code as string | undefined;
+        console.log(
+          `Found ${riskIdentificationMitigation.length} risk items for ${riskUser}`,
+        );
+        return this.sendSuccessGet(
+          req,
+          res,
+          riskIdentificationMitigation,
+          MessagesKey.SUCCESSGET,
+          200,
+        );
+      } catch (serviceError: unknown) {
+        console.error('Service error:', serviceError);
+        const errorMessage =
+          serviceError instanceof Error
+            ? serviceError.message
+            : 'Unknown service error';
 
-//       console.log('Request parameters for specific risk (fixed):', {
-//         riskUser,
-//         riskName,
-//         tenantId,
-//         industryCode,
-//         supplierCode,
-//         retailCode,
-//       });
+        // Check if it's an authentication error from downstream services
+        if (
+          errorMessage.includes('401') ||
+          errorMessage.includes('unauthorized')
+        ) {
+          return this.handleError(
+            req,
+            res,
+            'Authentication failed for external services',
+            401,
+          );
+        }
 
-//       // Validate required parameters
-//       if (!riskUser || !riskName) {
-//         return this.handleError(
-//           req,
-//           res,
-//           'Risk user and risk name are required',
-//           400,
-//         );
-//       }
+        return this.handleError(
+          req,
+          res,
+          `Error processing request: ${errorMessage}`,
+          500,
+        );
+      }
+    } catch (error: unknown) {
+      console.error('Controller error:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      return this.handleError(
+        req,
+        res,
+        `Unexpected error: ${errorMessage}`,
+        500,
+      );
+    }
+  }
 
-//       // Validasi parameter berdasarkan jenis pengguna jika tenant_id tidak tersedia
-//       if (
-//         !tenantId &&
-//         ((riskUser === 'Industry' && !industryCode) ||
-//           (riskUser === 'Supplier' && !supplierCode) ||
-//           (riskUser === 'Retail' && !retailCode))
-//       ) {
-//         return this.handleError(
-//           req,
-//           res,
-//           `For ${riskUser} user, either tenant_id or ${riskUser.toLowerCase()}_code is required`,
-//           400,
-//         );
-//       }
+  /**
+   * Controller untuk mendapatkan identifikasi dan mitigasi risiko spesifik berdasarkan nama risiko
+   */
+  public async getSpecificRiskIdentificationMitigationController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      // Validate authentication
+      const authError = this.validateAuthHeader(req);
+      if (authError) {
+        return this.handleError(req, res, authError, 401);
+      }
 
-//       try {
-//         // Call service with proper parameters
-//         const specificRiskData =
-//           await this.riskIdentificationMitigationService.getSpecificRiskIdentificationAndMitigation(
-//             req,
-//             riskUser,
-//             riskName,
-//             tenantId,
-//             industryCode,
-//             supplierCode,
-//             retailCode,
-//           );
+      // Extract query parameters
+      const riskUser = req.query.risk_user as string | undefined;
+      const riskName = req.query.risk_name as string | undefined;
+      const tenantId = req.query.tenant_id as string | undefined;
 
-//         // Handle not found case
-//         if (!specificRiskData) {
-//           console.log(`Risk with name '${riskName}' not found for ${riskUser}`);
-//           return this.handleError(
-//             req,
-//             res,
-//             `Risk with name '${riskName}' not found for ${riskUser}`,
-//             404,
-//           );
-//         }
+      console.log('Request parameters for specific risk:', {
+        riskUser,
+        riskName,
+        tenantId,
+        hasAuth: !!req.headers.authorization,
+      });
 
-//         console.log(`Found specific risk '${riskName}' for ${riskUser}`);
-//         return this.sendSuccessGet(
-//           req,
-//           res,
-//           specificRiskData,
-//           MessagesKey.SUCCESSGET,
-//           200,
-//         );
-//       } catch (serviceError: unknown) {
-//         console.error('Service error in specific risk:', serviceError);
-//         const errorMessage =
-//           serviceError instanceof Error
-//             ? serviceError.message
-//             : 'Unknown service error';
-//         return this.handleError(
-//           req,
-//           res,
-//           `Error processing request: ${errorMessage}`,
-//           500,
-//         );
-//       }
-//     } catch (error: unknown) {
-//       console.error('Controller error in specific risk:', error);
-//       const errorMessage =
-//         error instanceof Error ? error.message : 'Unknown error';
-//       return this.handleError(
-//         req,
-//         res,
-//         `Unexpected error: ${errorMessage}`,
-//         500,
-//       );
-//     }
-//   }
+      // Validate required parameters
+      if (!riskUser || !riskName) {
+        return this.handleError(
+          req,
+          res,
+          'Risk user and risk name are required',
+          400,
+        );
+      }
 
-//   /**
-//    * Memperbaiki parameter yang tidak sesuai dengan jenis pengguna
-//    * Misalnya jika user adalah Industry tapi kode yang digunakan adalah retail_code
-//    */
-//   private fixUserCodeParameters(req: Request): void {
-//     const riskUser = req.query.risk_user as string | undefined;
-//     if (!riskUser) return;
+      if (!tenantId) {
+        return this.handleError(req, res, 'Tenant ID is required', 400);
+      }
 
-//     // Jika user adalah Industry tetapi menggunakan kode yang salah
-//     if (riskUser === 'Industry') {
-//       // Jika menggunakan retail_code alih-alih industry_code
-//       if (req.query.retail_code && !req.query.industry_code) {
-//         console.log(
-//           'Correcting retail_code to industry_code for Industry user',
-//         );
-//         req.query.industry_code = req.query.retail_code;
-//         delete req.query.retail_code;
-//       }
-//       // Jika menggunakan supplier_code alih-alih industry_code
-//       if (req.query.supplier_code && !req.query.industry_code) {
-//         console.log(
-//           'Correcting supplier_code to industry_code for Industry user',
-//         );
-//         req.query.industry_code = req.query.supplier_code;
-//         delete req.query.supplier_code;
-//       }
-//     }
+      const tenantIdNum = parseInt(tenantId, 10);
+      if (isNaN(tenantIdNum)) {
+        return this.handleError(
+          req,
+          res,
+          'Tenant ID must be a valid number',
+          400,
+        );
+      }
 
-//     // Jika user adalah Supplier tetapi menggunakan kode yang salah
-//     else if (riskUser === 'Supplier') {
-//       // Jika menggunakan retail_code alih-alih supplier_code
-//       if (req.query.retail_code && !req.query.supplier_code) {
-//         console.log(
-//           'Correcting retail_code to supplier_code for Supplier user',
-//         );
-//         req.query.supplier_code = req.query.retail_code;
-//         delete req.query.retail_code;
-//       }
-//       // Jika menggunakan industry_code alih-alih supplier_code
-//       if (req.query.industry_code && !req.query.supplier_code) {
-//         console.log(
-//           'Correcting industry_code to supplier_code for Supplier user',
-//         );
-//         req.query.supplier_code = req.query.industry_code;
-//         delete req.query.industry_code;
-//       }
-//     }
+      try {
+        // Call service with proper parameters (req object contains auth headers)
+        const specificRiskData =
+          await this.riskIdentificationMitigationService.getSpecificRiskIdentificationAndMitigation(
+            req,
+            riskUser,
+            riskName,
+            tenantIdNum,
+          );
 
-//     // Jika user adalah Retail tetapi menggunakan kode yang salah
-//     else if (riskUser === 'Retail') {
-//       // Jika menggunakan industry_code alih-alih retail_code
-//       if (req.query.industry_code && !req.query.retail_code) {
-//         console.log('Correcting industry_code to retail_code for Retail user');
-//         req.query.retail_code = req.query.industry_code;
-//         delete req.query.industry_code;
-//       }
-//       // Jika menggunakan supplier_code alih-alih retail_code
-//       if (req.query.supplier_code && !req.query.retail_code) {
-//         console.log('Correcting supplier_code to retail_code for Retail user');
-//         req.query.retail_code = req.query.supplier_code;
-//         delete req.query.supplier_code;
-//       }
-//     }
-//   }
-// }
+        // Handle not found case
+        if (!specificRiskData) {
+          console.log(`Risk with name '${riskName}' not found for ${riskUser}`);
+          return this.handleError(
+            req,
+            res,
+            `Risk with name '${riskName}' not found for ${riskUser}`,
+            404,
+          );
+        }
+
+        console.log(`Found specific risk '${riskName}' for ${riskUser}`);
+        return this.sendSuccessGet(
+          req,
+          res,
+          specificRiskData,
+          MessagesKey.SUCCESSGET,
+          200,
+        );
+      } catch (serviceError: unknown) {
+        console.error('Service error in specific risk:', serviceError);
+        const errorMessage =
+          serviceError instanceof Error
+            ? serviceError.message
+            : 'Unknown service error';
+
+        // Check if it's an authentication error from downstream services
+        if (
+          errorMessage.includes('401') ||
+          errorMessage.includes('unauthorized')
+        ) {
+          return this.handleError(
+            req,
+            res,
+            'Authentication failed for external services',
+            401,
+          );
+        }
+
+        return this.handleError(
+          req,
+          res,
+          `Error processing request: ${errorMessage}`,
+          500,
+        );
+      }
+    } catch (error: unknown) {
+      console.error('Controller error in specific risk:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      return this.handleError(
+        req,
+        res,
+        `Unexpected error: ${errorMessage}`,
+        500,
+      );
+    }
+  }
+}

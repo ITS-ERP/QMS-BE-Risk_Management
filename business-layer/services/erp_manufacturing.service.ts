@@ -9,12 +9,22 @@ import * as manufacturingIntegration from '../../data-access/integrations/erp_ma
 export class ManufacturingService {
   async fetchProductionRequestHeader(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<ProductionRequestItem[]> {
-    const context = getQMSContext(req);
     const response =
       await manufacturingIntegration.getProductionRequestHeaderWithAuth(req);
 
-    // Filter by tenant_id (bisa null untuk backward compatibility)
+    // Filter logic: use industry_tenant_id parameter if provided
+    if (industry_tenant_id !== undefined) {
+      const filteredData = response.data.data.filter(
+        (item: ProductionRequestItem) =>
+          item.tenant_id === industry_tenant_id || item.tenant_id === null,
+      );
+      return filteredData;
+    }
+
+    // Fallback: use authenticated user's tenant (backward compatibility)
+    const context = getQMSContext(req);
     const filteredData = response.data.data.filter(
       (item: ProductionRequestItem) =>
         item.tenant_id === context.tenant_id_number || item.tenant_id === null,
@@ -23,12 +33,24 @@ export class ManufacturingService {
     return filteredData;
   }
 
-  async fetchInspectionProduct(req: Request): Promise<InspectionProductItem[]> {
-    const context = getQMSContext(req);
+  async fetchInspectionProduct(
+    req: Request,
+    industry_tenant_id?: number,
+  ): Promise<InspectionProductItem[]> {
     const response =
       await manufacturingIntegration.getInspectionProductWithAuth(req);
 
-    // Filter by tenant_id
+    // Filter logic: use industry_tenant_id parameter if provided
+    if (industry_tenant_id !== undefined) {
+      const filteredData = response.data.data.filter(
+        (item: InspectionProductItem) =>
+          item.tenant_id === industry_tenant_id || item.tenant_id === null,
+      );
+      return filteredData;
+    }
+
+    // Fallback: use authenticated user's tenant (backward compatibility)
+    const context = getQMSContext(req);
     const filteredData = response.data.data.filter(
       (item: InspectionProductItem) =>
         item.tenant_id === context.tenant_id_number || item.tenant_id === null,
@@ -39,15 +61,11 @@ export class ManufacturingService {
 
   async getProductionType(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<{ make_to_stock: number; make_to_order: number; total: number }> {
-    const context = getQMSContext(req);
-    const response =
-      await manufacturingIntegration.getProductionRequestHeaderWithAuth(req);
-
-    // Filter by tenant_id
-    const data = response.data.data.filter(
-      (item: ProductionRequestItem) =>
-        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
+    const data = await this.fetchProductionRequestHeader(
+      req,
+      industry_tenant_id,
     );
 
     let make_to_stock = 0;
@@ -70,17 +88,13 @@ export class ManufacturingService {
 
   async getProductionByMonth(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<
     Array<{ month: string; make_to_stock: number; make_to_order: number }>
   > {
-    const context = getQMSContext(req);
-    const response =
-      await manufacturingIntegration.getProductionRequestHeaderWithAuth(req);
-
-    // Filter by tenant_id
-    const data = response.data.data.filter(
-      (item: ProductionRequestItem) =>
-        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
+    const data = await this.fetchProductionRequestHeader(
+      req,
+      industry_tenant_id,
     );
 
     const monthlyData: {
@@ -133,17 +147,13 @@ export class ManufacturingService {
 
   async getProductionByYear(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<
     Array<{ year: string; make_to_stock: number; make_to_order: number }>
   > {
-    const context = getQMSContext(req);
-    const response =
-      await manufacturingIntegration.getProductionRequestHeaderWithAuth(req);
-
-    // Filter by tenant_id
-    const data = response.data.data.filter(
-      (item: ProductionRequestItem) =>
-        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
+    const data = await this.fetchProductionRequestHeader(
+      req,
+      industry_tenant_id,
     );
 
     const yearlyData: {
@@ -182,16 +192,9 @@ export class ManufacturingService {
 
   async getInspectionProductType(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<{ good: number; defect: number; total: number }> {
-    const context = getQMSContext(req);
-    const response =
-      await manufacturingIntegration.getInspectionProductWithAuth(req);
-
-    // Filter by tenant_id
-    const data = response.data.data.filter(
-      (item: InspectionProductItem) =>
-        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
-    );
+    const data = await this.fetchInspectionProduct(req, industry_tenant_id);
 
     let good = 0;
     let defect = 0;
@@ -210,16 +213,9 @@ export class ManufacturingService {
 
   async getInspectionProductByMonth(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<Array<{ month: string; good: number; defect: number }>> {
-    const context = getQMSContext(req);
-    const response =
-      await manufacturingIntegration.getInspectionProductWithAuth(req);
-
-    // Filter by tenant_id
-    const data = response.data.data.filter(
-      (item: InspectionProductItem) =>
-        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
-    );
+    const data = await this.fetchInspectionProduct(req, industry_tenant_id);
 
     const monthlyData: { [key: string]: { good: number; defect: number } } = {};
     const monthNames = [
@@ -267,16 +263,9 @@ export class ManufacturingService {
 
   async getAllInspectionProductByYear(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<Array<{ year: string; good: number; defect: number }>> {
-    const context = getQMSContext(req);
-    const response =
-      await manufacturingIntegration.getInspectionProductWithAuth(req);
-
-    // Filter by tenant_id
-    const data = response.data.data.filter(
-      (item: InspectionProductItem) =>
-        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
-    );
+    const data = await this.fetchInspectionProduct(req, industry_tenant_id);
 
     const yearlyData: { [key: string]: { good: number; defect: number } } = {};
 
@@ -307,8 +296,11 @@ export class ManufacturingService {
     return allYearlyData;
   }
 
-  async getInspectionProductSummary(req: Request) {
-    const allYearlyData = await this.getAllInspectionProductByYear(req);
+  async getInspectionProductSummary(req: Request, industry_tenant_id?: number) {
+    const allYearlyData = await this.getAllInspectionProductByYear(
+      req,
+      industry_tenant_id,
+    );
 
     let totalGood = 0;
     let totalDefect = 0;
@@ -337,16 +329,9 @@ export class ManufacturingService {
 
   async getDefectInspectionProductByYear(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<Array<{ year: string; defect: number }>> {
-    const context = getQMSContext(req);
-    const response =
-      await manufacturingIntegration.getInspectionProductWithAuth(req);
-
-    // Filter by tenant_id
-    const data = response.data.data.filter(
-      (item: InspectionProductItem) =>
-        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
-    );
+    const data = await this.fetchInspectionProduct(req, industry_tenant_id);
 
     const yearlyData: { [key: string]: { defect: number } } = {};
 
@@ -379,8 +364,12 @@ export class ManufacturingService {
   // RISK ANALYSIS METHOD
   async getDefectRiskRateTrend(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<Array<{ year: string; value: number }>> {
-    const yearlyData = await this.getAllInspectionProductByYear(req);
+    const yearlyData = await this.getAllInspectionProductByYear(
+      req,
+      industry_tenant_id,
+    );
 
     const riskRateTrend = yearlyData.map((item) => {
       const total = item.good + item.defect;

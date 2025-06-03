@@ -8,11 +8,22 @@ import * as inventoryIntegration from '../../data-access/integrations/erp_invent
 
 export class InventoryService {
   // RECEIVE METHODS
-  async fetchAllReceive(req: Request): Promise<ReceiveItem[]> {
-    const context = getQMSContext(req);
+  async fetchAllReceive(
+    req: Request,
+    industry_tenant_id?: number,
+  ): Promise<ReceiveItem[]> {
     const response = await inventoryIntegration.getAllReceiveWithAuth(req);
 
-    // Filter by tenant_id
+    // Filter logic: use industry_tenant_id parameter if provided
+    if (industry_tenant_id !== undefined) {
+      const filteredData = response.data.data.filter(
+        (item: ReceiveItem) => item.tenant_id === industry_tenant_id,
+      );
+      return filteredData;
+    }
+
+    // Fallback: use authenticated user's tenant (backward compatibility)
+    const context = getQMSContext(req);
     const filteredData = response.data.data.filter(
       (item: ReceiveItem) => item.tenant_id === context.tenant_id_number,
     );
@@ -22,14 +33,9 @@ export class InventoryService {
 
   async getReceiveType(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<{ accept: number; reject: number; total: number }> {
-    const context = getQMSContext(req);
-    const response = await inventoryIntegration.getAllReceiveWithAuth(req);
-
-    // Filter by tenant_id
-    const data = response.data.data.filter(
-      (item: ReceiveItem) => item.tenant_id === context.tenant_id_number,
-    );
+    const data = await this.fetchAllReceive(req, industry_tenant_id);
 
     let accept = 0;
     let reject = 0;
@@ -56,14 +62,9 @@ export class InventoryService {
 
   async getReceiveByMonth(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<Array<{ month: string; accept: number; reject: number }>> {
-    const context = getQMSContext(req);
-    const response = await inventoryIntegration.getAllReceiveWithAuth(req);
-
-    // Filter by tenant_id
-    const data = response.data.data.filter(
-      (item: ReceiveItem) => item.tenant_id === context.tenant_id_number,
-    );
+    const data = await this.fetchAllReceive(req, industry_tenant_id);
 
     const monthlyData: { [key: string]: { accept: number; reject: number } } =
       {};
@@ -116,14 +117,9 @@ export class InventoryService {
 
   async getAllReceiveByYear(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<Array<{ year: string; accept: number; reject: number }>> {
-    const context = getQMSContext(req);
-    const response = await inventoryIntegration.getAllReceiveWithAuth(req);
-
-    // Filter by tenant_id
-    const data = response.data.data.filter(
-      (item: ReceiveItem) => item.tenant_id === context.tenant_id_number,
-    );
+    const data = await this.fetchAllReceive(req, industry_tenant_id);
 
     const yearlyData: { [key: string]: { accept: number; reject: number } } =
       {};
@@ -160,8 +156,11 @@ export class InventoryService {
     return allYearlyData;
   }
 
-  async getReceiveSummary(req: Request) {
-    const allYearlyData = await this.getAllReceiveByYear(req);
+  async getReceiveSummary(req: Request, industry_tenant_id?: number) {
+    const allYearlyData = await this.getAllReceiveByYear(
+      req,
+      industry_tenant_id,
+    );
 
     let totalAccept = 0;
     let totalReject = 0;
@@ -190,14 +189,9 @@ export class InventoryService {
 
   async getRejectReceiveByYear(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<Array<{ year: string; reject: number }>> {
-    const context = getQMSContext(req);
-    const response = await inventoryIntegration.getAllReceiveWithAuth(req);
-
-    // Filter by tenant_id
-    const data = response.data.data.filter(
-      (item: ReceiveItem) => item.tenant_id === context.tenant_id_number,
-    );
+    const data = await this.fetchAllReceive(req, industry_tenant_id);
 
     const yearlyData: { [key: string]: { reject: number } } = {};
 
@@ -232,11 +226,22 @@ export class InventoryService {
   }
 
   // TRANSFER METHODS
-  async fetchAllTransfer(req: Request): Promise<TransferItem[]> {
-    const context = getQMSContext(req);
+  async fetchAllTransfer(
+    req: Request,
+    industry_tenant_id?: number,
+  ): Promise<TransferItem[]> {
     const response = await inventoryIntegration.getAllTransferWithAuth(req);
 
-    // Filter by tenant_id
+    // Filter logic: use industry_tenant_id parameter if provided
+    if (industry_tenant_id !== undefined) {
+      const filteredData = response.data.data.filter(
+        (item: TransferItem) => item.tenant_id === industry_tenant_id,
+      );
+      return filteredData;
+    }
+
+    // Fallback: use authenticated user's tenant (backward compatibility)
+    const context = getQMSContext(req);
     const filteredData = response.data.data.filter(
       (item: TransferItem) => item.tenant_id === context.tenant_id_number,
     );
@@ -246,14 +251,9 @@ export class InventoryService {
 
   async getTransferType(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<{ accept: number; reject: number; total: number }> {
-    const context = getQMSContext(req);
-    const response = await inventoryIntegration.getAllTransferWithAuth(req);
-
-    // Filter by tenant_id
-    const data = response.data.data.filter(
-      (item: TransferItem) => item.tenant_id === context.tenant_id_number,
-    );
+    const data = await this.fetchAllTransfer(req, industry_tenant_id);
 
     let accept = 0;
     let reject = 0;
@@ -276,20 +276,14 @@ export class InventoryService {
     );
 
     const total = accept + reject;
-
     return { accept, reject, total };
   }
 
   async getAllTransferByYear(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<Array<{ year: string; accept: number; reject: number }>> {
-    const context = getQMSContext(req);
-    const response = await inventoryIntegration.getAllTransferWithAuth(req);
-
-    // Filter by tenant_id
-    const data = response.data.data.filter(
-      (item: TransferItem) => item.tenant_id === context.tenant_id_number,
-    );
+    const data = await this.fetchAllTransfer(req, industry_tenant_id);
 
     const yearlyData: { [key: string]: { accept: number; reject: number } } =
       {};
@@ -326,8 +320,11 @@ export class InventoryService {
     return allYearlyData;
   }
 
-  async getTransferSummary(req: Request) {
-    const allYearlyData = await this.getAllTransferByYear(req);
+  async getTransferSummary(req: Request, industry_tenant_id?: number) {
+    const allYearlyData = await this.getAllTransferByYear(
+      req,
+      industry_tenant_id,
+    );
 
     let totalAccept = 0;
     let totalReject = 0;
@@ -356,14 +353,9 @@ export class InventoryService {
 
   async getRejectTransferByYear(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<Array<{ year: string; reject: number }>> {
-    const context = getQMSContext(req);
-    const response = await inventoryIntegration.getAllTransferWithAuth(req);
-
-    // Filter by tenant_id
-    const data = response.data.data.filter(
-      (item: TransferItem) => item.tenant_id === context.tenant_id_number,
-    );
+    const data = await this.fetchAllTransfer(req, industry_tenant_id);
 
     const yearlyData: { [key: string]: { reject: number } } = {};
 
@@ -400,8 +392,9 @@ export class InventoryService {
   // RISK ANALYSIS METHODS
   async getReceiveRiskRateTrend(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<Array<{ year: string; value: number }>> {
-    const yearlyData = await this.getAllReceiveByYear(req);
+    const yearlyData = await this.getAllReceiveByYear(req, industry_tenant_id);
 
     const riskRateTrend = yearlyData.map((item) => {
       const total = item.accept + item.reject;
@@ -419,8 +412,9 @@ export class InventoryService {
 
   async getTransferRiskRateTrend(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<Array<{ year: string; value: number }>> {
-    const yearlyData = await this.getAllTransferByYear(req);
+    const yearlyData = await this.getAllTransferByYear(req, industry_tenant_id);
 
     const riskRateTrend = yearlyData.map((item) => {
       const total = item.accept + item.reject;

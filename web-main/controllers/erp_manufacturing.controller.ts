@@ -17,8 +17,23 @@ export class ManufacturingController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
       const allProductionRequestHeader =
-        await this.manufacturingService.fetchProductionRequestHeader(req);
+        await this.manufacturingService.fetchProductionRequestHeader(
+          req,
+          industry_tenant_id,
+        );
       return this.sendSuccessGet(
         req,
         res,
@@ -36,8 +51,22 @@ export class ManufacturingController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const productionType =
-        await this.manufacturingService.getProductionType(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const productionType = await this.manufacturingService.getProductionType(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(
         req,
         res,
@@ -55,8 +84,23 @@ export class ManufacturingController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
       const productionByMonth =
-        await this.manufacturingService.getProductionByMonth(req);
+        await this.manufacturingService.getProductionByMonth(
+          req,
+          industry_tenant_id,
+        );
       return this.sendSuccessGet(
         req,
         res,
@@ -74,8 +118,23 @@ export class ManufacturingController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
       const productionByYear =
-        await this.manufacturingService.getProductionByYear(req);
+        await this.manufacturingService.getProductionByYear(
+          req,
+          industry_tenant_id,
+        );
       return this.sendSuccessGet(
         req,
         res,
@@ -94,8 +153,23 @@ export class ManufacturingController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
       const allInspectionProduct =
-        await this.manufacturingService.fetchInspectionProduct(req);
+        await this.manufacturingService.fetchInspectionProduct(
+          req,
+          industry_tenant_id,
+        );
       return this.sendSuccessGet(
         req,
         res,
@@ -113,8 +187,23 @@ export class ManufacturingController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
       const inspectionProductType =
-        await this.manufacturingService.getInspectionProductType(req);
+        await this.manufacturingService.getInspectionProductType(
+          req,
+          industry_tenant_id,
+        );
       return this.sendSuccessGet(
         req,
         res,
@@ -132,8 +221,23 @@ export class ManufacturingController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
       const inspectionProductByMonth =
-        await this.manufacturingService.getInspectionProductByMonth(req);
+        await this.manufacturingService.getInspectionProductByMonth(
+          req,
+          industry_tenant_id,
+        );
       return this.sendSuccessGet(
         req,
         res,
@@ -151,8 +255,23 @@ export class ManufacturingController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
       const inspectionProductByYear =
-        await this.manufacturingService.getAllInspectionProductByYear(req);
+        await this.manufacturingService.getAllInspectionProductByYear(
+          req,
+          industry_tenant_id,
+        );
       return this.sendSuccessGet(
         req,
         res,
@@ -170,8 +289,23 @@ export class ManufacturingController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
       const inspectionProductSummary =
-        await this.manufacturingService.getInspectionProductSummary(req);
+        await this.manufacturingService.getInspectionProductSummary(
+          req,
+          industry_tenant_id,
+        );
       return this.sendSuccessGet(
         req,
         res,
@@ -189,8 +323,23 @@ export class ManufacturingController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
       const defectInspectionProductByYear =
-        await this.manufacturingService.getDefectInspectionProductByYear(req);
+        await this.manufacturingService.getDefectInspectionProductByYear(
+          req,
+          industry_tenant_id,
+        );
       return this.sendSuccessGet(
         req,
         res,
@@ -209,8 +358,23 @@ export class ManufacturingController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
       const defectRiskRateTrend =
-        await this.manufacturingService.getDefectRiskRateTrend(req);
+        await this.manufacturingService.getDefectRiskRateTrend(
+          req,
+          industry_tenant_id,
+        );
       return this.sendSuccessGet(
         req,
         res,

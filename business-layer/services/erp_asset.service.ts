@@ -9,11 +9,23 @@ import {
 import * as assetIntegration from '../../data-access/integrations/erp_asset.integration';
 
 export class AssetService {
-  async fetchAsset(req: Request): Promise<AssetItem[]> {
-    const context = getQMSContext(req);
+  async fetchAsset(
+    req: Request,
+    industry_tenant_id?: number,
+  ): Promise<AssetItem[]> {
     const response = await assetIntegration.getAssetWithAuth(req);
 
-    // Filter by tenant_id (jika null, tetap include untuk backward compatibility)
+    // Filter logic: use industry_tenant_id parameter if provided
+    if (industry_tenant_id !== undefined) {
+      const filteredData = response.data.data.filter(
+        (item: AssetItem) =>
+          item.tenant_id === industry_tenant_id || item.tenant_id === null,
+      );
+      return filteredData;
+    }
+
+    // Fallback: use authenticated user's tenant (backward compatibility)
+    const context = getQMSContext(req);
     const filteredData = response.data.data.filter(
       (item: AssetItem) =>
         item.tenant_id === context.tenant_id_number || item.tenant_id === null,
@@ -22,11 +34,23 @@ export class AssetService {
     return filteredData;
   }
 
-  async fetchAssetDisposal(req: Request): Promise<AssetDisposalItem[]> {
-    const context = getQMSContext(req);
+  async fetchAssetDisposal(
+    req: Request,
+    industry_tenant_id?: number,
+  ): Promise<AssetDisposalItem[]> {
     const response = await assetIntegration.getAssetDisposalWithAuth(req);
 
-    // Filter by tenant_id
+    // Filter logic: use industry_tenant_id parameter if provided
+    if (industry_tenant_id !== undefined) {
+      const filteredData = response.data.data.filter(
+        (item: AssetDisposalItem) =>
+          item.tenant_id === industry_tenant_id || item.tenant_id === null,
+      );
+      return filteredData;
+    }
+
+    // Fallback: use authenticated user's tenant (backward compatibility)
+    const context = getQMSContext(req);
     const filteredData = response.data.data.filter(
       (item: AssetDisposalItem) =>
         item.tenant_id === context.tenant_id_number || item.tenant_id === null,
@@ -35,11 +59,23 @@ export class AssetService {
     return filteredData;
   }
 
-  async fetchMaintanedAsset(req: Request): Promise<AssetMaintenanceItem[]> {
-    const context = getQMSContext(req);
+  async fetchMaintanedAsset(
+    req: Request,
+    industry_tenant_id?: number,
+  ): Promise<AssetMaintenanceItem[]> {
     const response = await assetIntegration.getMaintanedAssetWithAuth(req);
 
-    // Filter by tenant_id
+    // Filter logic: use industry_tenant_id parameter if provided
+    if (industry_tenant_id !== undefined) {
+      const filteredData = response.data.data.filter(
+        (item: AssetMaintenanceItem) =>
+          item.tenant_id === industry_tenant_id || item.tenant_id === null,
+      );
+      return filteredData;
+    }
+
+    // Fallback: use authenticated user's tenant (backward compatibility)
+    const context = getQMSContext(req);
     const filteredData = response.data.data.filter(
       (item: AssetMaintenanceItem) =>
         item.tenant_id === context.tenant_id_number || item.tenant_id === null,
@@ -48,11 +84,23 @@ export class AssetService {
     return filteredData;
   }
 
-  async fetchAssetStockTake(req: Request): Promise<AssetStockTakeItem[]> {
-    const context = getQMSContext(req);
+  async fetchAssetStockTake(
+    req: Request,
+    industry_tenant_id?: number,
+  ): Promise<AssetStockTakeItem[]> {
     const response = await assetIntegration.getAssetStockTakeWithAuth(req);
 
-    // Filter by tenant_id
+    // Filter logic: use industry_tenant_id parameter if provided
+    if (industry_tenant_id !== undefined) {
+      const filteredData = response.data.data.filter(
+        (item: AssetStockTakeItem) =>
+          item.tenant_id === industry_tenant_id || item.tenant_id === null,
+      );
+      return filteredData;
+    }
+
+    // Fallback: use authenticated user's tenant (backward compatibility)
+    const context = getQMSContext(req);
     const filteredData = response.data.data.filter(
       (item: AssetStockTakeItem) =>
         item.tenant_id === context.tenant_id_number || item.tenant_id === null,
@@ -63,15 +111,9 @@ export class AssetService {
 
   async getAssetType(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<{ berwujud: number; tidak_berwujud: number; total: number }> {
-    const context = getQMSContext(req);
-    const response = await assetIntegration.getAssetWithAuth(req);
-
-    // Filter by tenant_id
-    const assets = response.data.data.filter(
-      (item: AssetItem) =>
-        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
-    );
+    const assets = await this.fetchAsset(req, industry_tenant_id);
 
     let tangibleCount = 0;
     let intangibleCount = 0;
@@ -94,46 +136,25 @@ export class AssetService {
 
   async getTotalAssetDisposal(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<{ total_asset_disposal: number }> {
-    const context = getQMSContext(req);
-    const response = await assetIntegration.getAssetDisposalWithAuth(req);
-
-    // Filter by tenant_id
-    const assets = response.data.data.filter(
-      (item: AssetDisposalItem) =>
-        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
-    );
-
+    const assets = await this.fetchAssetDisposal(req, industry_tenant_id);
     return { total_asset_disposal: assets.length };
   }
 
   async getTotalMaintanedAsset(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<{ total_maintained_asset: number }> {
-    const context = getQMSContext(req);
-    const response = await assetIntegration.getMaintanedAssetWithAuth(req);
-
-    // Filter by tenant_id
-    const assets = response.data.data.filter(
-      (item: AssetMaintenanceItem) =>
-        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
-    );
-
+    const assets = await this.fetchMaintanedAsset(req, industry_tenant_id);
     return { total_maintained_asset: assets.length };
   }
 
   async getTotalAssetStockTake(
     req: Request,
+    industry_tenant_id?: number,
   ): Promise<{ total_asset_stock_take: number }> {
-    const context = getQMSContext(req);
-    const response = await assetIntegration.getAssetStockTakeWithAuth(req);
-
-    // Filter by tenant_id
-    const assets = response.data.data.filter(
-      (item: AssetStockTakeItem) =>
-        item.tenant_id === context.tenant_id_number || item.tenant_id === null,
-    );
-
+    const assets = await this.fetchAssetStockTake(req, industry_tenant_id);
     return { total_asset_stock_take: assets.length };
   }
 }

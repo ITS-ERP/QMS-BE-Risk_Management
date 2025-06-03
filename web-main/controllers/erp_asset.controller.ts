@@ -16,7 +16,19 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const asset = await this.assetService.fetchAsset(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const asset = await this.assetService.fetchAsset(req, industry_tenant_id);
       return this.sendSuccessGet(req, res, asset, MessagesKey.SUCCESSGET, 200);
     } catch (error) {
       return this.handleError(req, res, error, 500);
@@ -28,7 +40,22 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const assetDisposal = await this.assetService.fetchAssetDisposal(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const assetDisposal = await this.assetService.fetchAssetDisposal(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(
         req,
         res,
@@ -46,7 +73,22 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const maintanedAsset = await this.assetService.fetchMaintanedAsset(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const maintanedAsset = await this.assetService.fetchMaintanedAsset(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(
         req,
         res,
@@ -64,7 +106,22 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const assetStockTake = await this.assetService.fetchAssetStockTake(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const assetStockTake = await this.assetService.fetchAssetStockTake(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(
         req,
         res,
@@ -82,7 +139,22 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const assetTypes = await this.assetService.getAssetType(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const assetTypes = await this.assetService.getAssetType(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(
         req,
         res,
@@ -100,7 +172,22 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const result = await this.assetService.getTotalAssetDisposal(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const result = await this.assetService.getTotalAssetDisposal(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(req, res, result, MessagesKey.SUCCESSGET, 200);
     } catch (error) {
       console.error('Error in getTotalAssetDisposalController:', error);
@@ -113,7 +200,22 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const result = await this.assetService.getTotalMaintanedAsset(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const result = await this.assetService.getTotalMaintanedAsset(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(req, res, result, MessagesKey.SUCCESSGET, 200);
     } catch (error) {
       console.error('Error in getTotalMaintanedAssetController:', error);
@@ -126,7 +228,22 @@ export class AssetController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const result = await this.assetService.getTotalAssetStockTake(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const result = await this.assetService.getTotalAssetStockTake(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(req, res, result, MessagesKey.SUCCESSGET, 200);
     } catch (error) {
       console.error('Error in getTotalAssetStockTakeController:', error);

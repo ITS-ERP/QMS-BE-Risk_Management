@@ -17,7 +17,22 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const allReceive = await this.inventoryService.fetchAllReceive(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const allReceive = await this.inventoryService.fetchAllReceive(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(
         req,
         res,
@@ -35,7 +50,22 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const receiveType = await this.inventoryService.getReceiveType(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const receiveType = await this.inventoryService.getReceiveType(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(
         req,
         res,
@@ -53,7 +83,22 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const receiveByMonth = await this.inventoryService.getReceiveByMonth(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const receiveByMonth = await this.inventoryService.getReceiveByMonth(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(
         req,
         res,
@@ -71,8 +116,22 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const receiveByYear =
-        await this.inventoryService.getAllReceiveByYear(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const receiveByYear = await this.inventoryService.getAllReceiveByYear(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(
         req,
         res,
@@ -90,7 +149,22 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const receiveSummary = await this.inventoryService.getReceiveSummary(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const receiveSummary = await this.inventoryService.getReceiveSummary(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(
         req,
         res,
@@ -108,8 +182,23 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
       const rejectReceiveByYear =
-        await this.inventoryService.getRejectReceiveByYear(req);
+        await this.inventoryService.getRejectReceiveByYear(
+          req,
+          industry_tenant_id,
+        );
       return this.sendSuccessGet(
         req,
         res,
@@ -128,7 +217,22 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const allTransfer = await this.inventoryService.fetchAllTransfer(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const allTransfer = await this.inventoryService.fetchAllTransfer(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(
         req,
         res,
@@ -146,7 +250,22 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const transferType = await this.inventoryService.getTransferType(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const transferType = await this.inventoryService.getTransferType(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(
         req,
         res,
@@ -164,8 +283,22 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const transferByYear =
-        await this.inventoryService.getAllTransferByYear(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const transferByYear = await this.inventoryService.getAllTransferByYear(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(
         req,
         res,
@@ -183,8 +316,22 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const transferSummary =
-        await this.inventoryService.getTransferSummary(req);
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
+      const transferSummary = await this.inventoryService.getTransferSummary(
+        req,
+        industry_tenant_id,
+      );
       return this.sendSuccessGet(
         req,
         res,
@@ -202,8 +349,23 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
       const rejectTransferByYear =
-        await this.inventoryService.getRejectTransferByYear(req);
+        await this.inventoryService.getRejectTransferByYear(
+          req,
+          industry_tenant_id,
+        );
       return this.sendSuccessGet(
         req,
         res,
@@ -222,8 +384,23 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
       const receiveRiskRateTrend =
-        await this.inventoryService.getReceiveRiskRateTrend(req);
+        await this.inventoryService.getReceiveRiskRateTrend(
+          req,
+          industry_tenant_id,
+        );
       return this.sendSuccessGet(
         req,
         res,
@@ -241,8 +418,23 @@ export class InventoryController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
+      const industry_tenant_id = req.query.industry_tenant_id
+        ? Number(req.query.industry_tenant_id)
+        : undefined;
+
+      // Validate parameter
+      if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
+        return res.status(400).json({
+          message: 'industry_tenant_id must be a valid number',
+          error: 'Invalid parameter type: industry_tenant_id',
+        });
+      }
+
       const transferRiskRateTrend =
-        await this.inventoryService.getTransferRiskRateTrend(req);
+        await this.inventoryService.getTransferRiskRateTrend(
+          req,
+          industry_tenant_id,
+        );
       return this.sendSuccessGet(
         req,
         res,
