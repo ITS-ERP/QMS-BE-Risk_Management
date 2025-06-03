@@ -42,19 +42,19 @@ export class RiskMonitoringService {
 
   /**
    * Mendapatkan data monitoring risiko berdasarkan user
-   * @param req Request object
+   * @param req Request object dengan authentication
    * @param riskUser Tipe user (Industry, SUPPLIER, RETAIL)
-   * @param industryCode Kode industri (opsional)
-   * @param supplierCode Kode supplier (opsional)
-   * @param retailCode Kode retail (opsional)
+   * @param industryTenantId Tenant ID industri (opsional)
+   * @param supplierTenantId Tenant ID supplier (opsional)
+   * @param retailTenantId Tenant ID retail (opsional)
    * @returns Data monitoring risiko
    */
   async getRiskMonitoring(
     req: Request,
     riskUser: string,
-    industryCode?: string,
-    supplierCode?: string,
-    retailCode?: string,
+    industryTenantId?: number,
+    supplierTenantId?: number,
+    retailTenantId?: number,
   ): Promise<RiskMonitoringResult[]> {
     try {
       // Dapatkan daftar risk base berdasarkan risk_user
@@ -82,23 +82,32 @@ export class RiskMonitoringService {
               if (risk_group === 'Inventory') {
                 if (risk_name === 'Ketidaksesuaian Jumlah (Received Items)') {
                   riskRateTrend =
-                    await this.inventoryService.getReceiveRiskRateTrend();
+                    await this.inventoryService.getReceiveRiskRateTrend(
+                      req,
+                      industryTenantId,
+                    );
                 } else if (
                   risk_name === 'Ketidaksesuaian Jumlah (Transferred Items)'
                 ) {
                   riskRateTrend =
-                    await this.inventoryService.getTransferRiskRateTrend();
+                    await this.inventoryService.getTransferRiskRateTrend(
+                      req,
+                      industryTenantId,
+                    );
                 }
               } else if (risk_group === 'Manufacturing') {
                 if (risk_name === 'Produk Cacat') {
                   riskRateTrend =
-                    await this.manufacturingService.getDefectRiskRateTrend();
+                    await this.manufacturingService.getDefectRiskRateTrend(
+                      req,
+                      industryTenantId,
+                    );
                 }
               } else if (risk_group === 'SRM Procurement') {
                 if (risk_name === 'Keterlambatan RFQ') {
                   riskRateTrend =
                     await this.srmProcurementService.getRFQDelayRiskRateTrend(
-                      industryCode,
+                      industryTenantId,
                     );
                 }
               } else if (risk_group === 'SRM Contract') {
@@ -106,58 +115,47 @@ export class RiskMonitoringService {
                   riskRateTrend =
                     await this.srmContractService.getLateReceiptRiskRateTrend(
                       undefined,
-                      industryCode,
+                      industryTenantId,
                     );
                 } else if (risk_name === 'Jumlah diterima tidak sesuai') {
                   riskRateTrend =
                     await this.srmContractService.getQuantityMismatchRiskRateTrend(
                       undefined,
-                      industryCode,
-                    );
-                }
-              } else if (risk_group === 'SRM Inspection') {
-                if (risk_name === 'Tidak lolos cek kebersihan') {
-                  riskRateTrend =
-                    await this.srmContractService.getCleanlinessCheckRiskRateTrend(
-                      undefined,
-                      industryCode,
-                    );
-                } else if (risk_name === 'Tidak lolos cek brix') {
-                  riskRateTrend =
-                    await this.srmContractService.getBrixCheckRiskRateTrend(
-                      undefined,
-                      industryCode,
+                      industryTenantId,
                     );
                 }
               } else if (risk_group === 'CRM Requisition') {
                 if (risk_name === 'Penolakan LoR') {
                   riskRateTrend =
                     await this.crmRequisitionService.getLoRRejectionRiskRateTrend(
+                      industryTenantId,
                       undefined,
-                      industryCode,
                     );
                 } else if (risk_name === 'Penolakan LoA') {
                   riskRateTrend =
                     await this.crmRequisitionService.getLoARejectionRiskRateTrend(
+                      industryTenantId,
                       undefined,
-                      industryCode,
                     );
                 }
               } else if (risk_group === 'CRM Contract') {
                 if (risk_name === 'Penurunan jumlah kontrak') {
                   riskRateTrend =
                     await this.crmContractService.getContractDeclineRiskRateTrend(
-                      industryCode,
+                      industryTenantId,
+                      undefined,
                     );
                 } else if (risk_name === 'Pengiriman terlambat') {
                   riskRateTrend =
                     await this.crmContractService.getLateDeliveryRiskRateTrend(
-                      industryCode,
+                      industryTenantId,
+                      undefined,
                     );
                 } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
                   riskRateTrend =
                     await this.crmContractService.getQuantityMismatchRiskRateTrend(
-                      industryCode,
+                      industryTenantId,
+                      undefined,
                     );
                 }
               }
@@ -167,36 +165,28 @@ export class RiskMonitoringService {
                 if (risk_name === 'Kekalahan pada proses RFQ') {
                   riskRateTrend =
                     await this.srmProcurementService.getRFQLossRiskRateTrend(
-                      supplierCode || '',
+                      undefined,
+                      supplierTenantId,
                     );
                 }
               } else if (risk_group === 'Contract') {
                 if (risk_name === 'Penurunan jumlah kontrak') {
                   riskRateTrend =
                     await this.srmContractService.getContractDeclineRiskRateTrend(
-                      supplierCode,
+                      supplierTenantId,
+                      undefined,
                     );
                 } else if (risk_name === 'Pengiriman terlambat') {
                   riskRateTrend =
                     await this.srmContractService.getLateReceiptRiskRateTrend(
-                      supplierCode,
+                      supplierTenantId,
+                      undefined,
                     );
                 } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
                   riskRateTrend =
                     await this.srmContractService.getQuantityMismatchRiskRateTrend(
-                      supplierCode,
-                    );
-                }
-              } else if (risk_group === 'Inspection') {
-                if (risk_name === 'Tidak lolos cek kebersihan') {
-                  riskRateTrend =
-                    await this.srmContractService.getCleanlinessCheckRiskRateTrend(
-                      supplierCode,
-                    );
-                } else if (risk_name === 'Tidak lolos cek brix') {
-                  riskRateTrend =
-                    await this.srmContractService.getBrixCheckRiskRateTrend(
-                      supplierCode,
+                      supplierTenantId,
+                      undefined,
                     );
                 }
               }
@@ -206,12 +196,14 @@ export class RiskMonitoringService {
                 if (risk_name === 'Penolakan LoR') {
                   riskRateTrend =
                     await this.crmRequisitionService.getLoRRejectionRiskRateTrend(
-                      retailCode,
+                      undefined,
+                      retailTenantId,
                     );
                 } else if (risk_name === 'Penolakan LoA') {
                   riskRateTrend =
                     await this.crmRequisitionService.getLoARejectionRiskRateTrend(
-                      retailCode,
+                      undefined,
+                      retailTenantId,
                     );
                 }
               } else if (risk_group === 'Contract') {
@@ -219,13 +211,13 @@ export class RiskMonitoringService {
                   riskRateTrend =
                     await this.crmContractService.getLateDeliveryRiskRateTrend(
                       undefined,
-                      retailCode,
+                      retailTenantId,
                     );
                 } else if (risk_name === 'Jumlah diterima tidak sesuai') {
                   riskRateTrend =
                     await this.crmContractService.getQuantityMismatchRiskRateTrend(
                       undefined,
-                      retailCode,
+                      retailTenantId,
                     );
                 }
               }
@@ -275,21 +267,21 @@ export class RiskMonitoringService {
 
   /**
    * Mendapatkan data monitoring untuk satu risiko spesifik
-   * @param req Request object
+   * @param req Request object dengan authentication
    * @param riskUser Tipe user (Industry, SUPPLIER, RETAIL)
    * @param riskName Nama risiko
-   * @param industryCode Kode industri (opsional)
-   * @param supplierCode Kode supplier (opsional)
-   * @param retailCode Kode retail (opsional)
+   * @param industryTenantId Tenant ID industri (opsional)
+   * @param supplierTenantId Tenant ID supplier (opsional)
+   * @param retailTenantId Tenant ID retail (opsional)
    * @returns Data monitoring untuk risiko spesifik
    */
   async getSpecificRiskMonitoring(
     req: Request,
     riskUser: string,
     riskName: string,
-    industryCode?: string,
-    supplierCode?: string,
-    retailCode?: string,
+    industryTenantId?: number,
+    supplierTenantId?: number,
+    retailTenantId?: number,
   ): Promise<RiskMonitoringResult | null> {
     try {
       // Dapatkan daftar risk base berdasarkan risk_user dan risk_name
@@ -317,23 +309,32 @@ export class RiskMonitoringService {
           if (risk_group === 'Inventory') {
             if (risk_name === 'Ketidaksesuaian Jumlah (Received Items)') {
               riskRateTrend =
-                await this.inventoryService.getReceiveRiskRateTrend();
+                await this.inventoryService.getReceiveRiskRateTrend(
+                  req,
+                  industryTenantId,
+                );
             } else if (
               risk_name === 'Ketidaksesuaian Jumlah (Transferred Items)'
             ) {
               riskRateTrend =
-                await this.inventoryService.getTransferRiskRateTrend();
+                await this.inventoryService.getTransferRiskRateTrend(
+                  req,
+                  industryTenantId,
+                );
             }
           } else if (risk_group === 'Manufacturing') {
             if (risk_name === 'Produk Cacat') {
               riskRateTrend =
-                await this.manufacturingService.getDefectRiskRateTrend();
+                await this.manufacturingService.getDefectRiskRateTrend(
+                  req,
+                  industryTenantId,
+                );
             }
           } else if (risk_group === 'SRM Procurement') {
             if (risk_name === 'Keterlambatan RFQ') {
               riskRateTrend =
                 await this.srmProcurementService.getRFQDelayRiskRateTrend(
-                  industryCode,
+                  industryTenantId,
                 );
             }
           } else if (risk_group === 'SRM Contract') {
@@ -341,58 +342,47 @@ export class RiskMonitoringService {
               riskRateTrend =
                 await this.srmContractService.getLateReceiptRiskRateTrend(
                   undefined,
-                  industryCode,
+                  industryTenantId,
                 );
             } else if (risk_name === 'Jumlah diterima tidak sesuai') {
               riskRateTrend =
                 await this.srmContractService.getQuantityMismatchRiskRateTrend(
                   undefined,
-                  industryCode,
-                );
-            }
-          } else if (risk_group === 'SRM Inspection') {
-            if (risk_name === 'Tidak lolos cek kebersihan') {
-              riskRateTrend =
-                await this.srmContractService.getCleanlinessCheckRiskRateTrend(
-                  undefined,
-                  industryCode,
-                );
-            } else if (risk_name === 'Tidak lolos cek brix') {
-              riskRateTrend =
-                await this.srmContractService.getBrixCheckRiskRateTrend(
-                  undefined,
-                  industryCode,
+                  industryTenantId,
                 );
             }
           } else if (risk_group === 'CRM Requisition') {
             if (risk_name === 'Penolakan LoR') {
               riskRateTrend =
                 await this.crmRequisitionService.getLoRRejectionRiskRateTrend(
+                  industryTenantId,
                   undefined,
-                  industryCode,
                 );
             } else if (risk_name === 'Penolakan LoA') {
               riskRateTrend =
                 await this.crmRequisitionService.getLoARejectionRiskRateTrend(
+                  industryTenantId,
                   undefined,
-                  industryCode,
                 );
             }
           } else if (risk_group === 'CRM Contract') {
             if (risk_name === 'Penurunan jumlah kontrak') {
               riskRateTrend =
                 await this.crmContractService.getContractDeclineRiskRateTrend(
-                  industryCode,
+                  industryTenantId,
+                  undefined,
                 );
             } else if (risk_name === 'Pengiriman terlambat') {
               riskRateTrend =
                 await this.crmContractService.getLateDeliveryRiskRateTrend(
-                  industryCode,
+                  industryTenantId,
+                  undefined,
                 );
             } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
               riskRateTrend =
                 await this.crmContractService.getQuantityMismatchRiskRateTrend(
-                  industryCode,
+                  industryTenantId,
+                  undefined,
                 );
             }
           }
@@ -402,36 +392,28 @@ export class RiskMonitoringService {
             if (risk_name === 'Kekalahan pada proses RFQ') {
               riskRateTrend =
                 await this.srmProcurementService.getRFQLossRiskRateTrend(
-                  supplierCode || '',
+                  undefined,
+                  supplierTenantId,
                 );
             }
           } else if (risk_group === 'Contract') {
             if (risk_name === 'Penurunan jumlah kontrak') {
               riskRateTrend =
                 await this.srmContractService.getContractDeclineRiskRateTrend(
-                  supplierCode,
+                  supplierTenantId,
+                  undefined,
                 );
             } else if (risk_name === 'Pengiriman terlambat') {
               riskRateTrend =
                 await this.srmContractService.getLateReceiptRiskRateTrend(
-                  supplierCode,
+                  supplierTenantId,
+                  undefined,
                 );
             } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
               riskRateTrend =
                 await this.srmContractService.getQuantityMismatchRiskRateTrend(
-                  supplierCode,
-                );
-            }
-          } else if (risk_group === 'Inspection') {
-            if (risk_name === 'Tidak lolos cek kebersihan') {
-              riskRateTrend =
-                await this.srmContractService.getCleanlinessCheckRiskRateTrend(
-                  supplierCode,
-                );
-            } else if (risk_name === 'Tidak lolos cek brix') {
-              riskRateTrend =
-                await this.srmContractService.getBrixCheckRiskRateTrend(
-                  supplierCode,
+                  supplierTenantId,
+                  undefined,
                 );
             }
           }
@@ -441,12 +423,14 @@ export class RiskMonitoringService {
             if (risk_name === 'Penolakan LoR') {
               riskRateTrend =
                 await this.crmRequisitionService.getLoRRejectionRiskRateTrend(
-                  retailCode,
+                  undefined,
+                  retailTenantId,
                 );
             } else if (risk_name === 'Penolakan LoA') {
               riskRateTrend =
                 await this.crmRequisitionService.getLoARejectionRiskRateTrend(
-                  retailCode,
+                  undefined,
+                  retailTenantId,
                 );
             }
           } else if (risk_group === 'Contract') {
@@ -454,13 +438,13 @@ export class RiskMonitoringService {
               riskRateTrend =
                 await this.crmContractService.getLateDeliveryRiskRateTrend(
                   undefined,
-                  retailCode,
+                  retailTenantId,
                 );
             } else if (risk_name === 'Jumlah diterima tidak sesuai') {
               riskRateTrend =
                 await this.crmContractService.getQuantityMismatchRiskRateTrend(
                   undefined,
-                  retailCode,
+                  retailTenantId,
                 );
             }
           }
