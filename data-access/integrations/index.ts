@@ -91,3 +91,12 @@ export const forecastAPI = (req: Request) => {
     },
   });
 };
+
+// User Management
+export const userManagementAPI = (req: Request) =>
+  axios.create({
+    baseURL: process.env.BASE_URL_USER_MANAGEMENT,
+    headers: {
+      Authorization: req.headers.authorization,
+    },
+  });
