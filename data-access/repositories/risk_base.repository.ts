@@ -57,11 +57,11 @@ export class RiskBaseRepository extends BaseRepository<
     riskUser: string,
   ): Promise<boolean> {
     try {
+      // ✅ Tanpa check is_deleted - ambil semua yang ada di database
       const count = await this.model.count({
         where: {
           tenant_id: tenantId,
           risk_user: riskUser,
-          is_deleted: false, // Only check non-deleted records
         },
       });
 
@@ -89,11 +89,11 @@ export class RiskBaseRepository extends BaseRepository<
     riskUser: string,
   ): Promise<number> {
     try {
+      // ✅ Tanpa check is_deleted - ambil semua yang ada di database
       const count = await this.model.count({
         where: {
           tenant_id: tenantId,
           risk_user: riskUser,
-          is_deleted: false,
         },
       });
 
@@ -117,11 +117,11 @@ export class RiskBaseRepository extends BaseRepository<
     riskUser: string,
   ): Promise<Model<RiskBaseAttributes>[]> {
     try {
+      // ✅ Tanpa check is_deleted - ambil semua yang ada di database
       const riskBases = await this.model.findAll({
         where: {
           tenant_id: tenantId,
           risk_user: riskUser,
-          is_deleted: false,
         },
         order: [
           ['risk_group', 'ASC'],
@@ -263,7 +263,7 @@ export class RiskBaseRepository extends BaseRepository<
         where: {
           tenant_id: tenantId,
           risk_user: riskUser,
-          is_deleted: true,
+          is_deleted: true, // Restore hanya yang sudah di-delete (true/1)
         },
       });
 
@@ -321,6 +321,59 @@ export class RiskBaseRepository extends BaseRepository<
   }
 
   /**
+   * Update single risk mitigation for specific tenant and risk_user by risk_name
+   * @param req Request object
+   * @param tenantId Tenant ID
+   * @param riskUser Risk user type
+   * @param riskName Risk name to update
+   * @param riskMitigation New risk mitigation
+   * @returns Promise<number> Number of affected rows
+   */
+  async updateSingleMitigationByTenantAndRiskUser(
+    req: Request,
+    tenantId: number,
+    riskUser: string,
+    riskName: string,
+    riskMitigation: string,
+  ): Promise<number> {
+    try {
+      const updateValues: Partial<RiskBaseAttributes> = {
+        risk_mitigation: riskMitigation,
+        updated_by: req.body.updated_by || 'system',
+        updated_date: new Date(),
+        updated_host: req.ip || 'unknown',
+      };
+
+      const [affectedRows] = await this.model.update(updateValues, {
+        where: {
+          tenant_id: tenantId,
+          risk_user: riskUser,
+          risk_name: riskName,
+          is_deleted: false,
+        },
+      });
+
+      console.log(
+        `📝 Updated single risk mitigation for tenant ${tenantId}, risk_user ${riskUser}, risk_name: ${riskName}`,
+      );
+
+      return affectedRows;
+    } catch (error) {
+      console.error('Error in update single mitigation:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Update single risk mitigation by PKID (alternative approach)
+   * @param req Request object
+   * @param tenantId Tenant ID
+   * @param riskUser Risk user type
+   * @param pkid Risk base PKID
+   * @param riskMitigation New risk mitigation
+   * @returns Promise<number> Number of affected rows
+   */
+  /**
    * Update risk_mitigation for multiple risk bases by tenant and risk_user
    * @param req Request object
    * @param tenantId Tenant ID
@@ -369,6 +422,53 @@ export class RiskBaseRepository extends BaseRepository<
     } catch (error) {
       console.error('Error in bulk update mitigation:', error);
       return 0;
+    }
+  }
+
+  /**
+   * Find risk base by PKID and validate ownership by tenant
+   * @param req Request object
+   * @param pkid Risk base PKID
+   * @param tenantId Tenant ID
+   * @param riskUser Risk user type
+   * @returns Promise<Model<RiskBaseAttributes> | null>
+   */
+  async findByPkidAndTenant(
+    req: Request,
+    pkid: number,
+    tenantId: number,
+    riskUser: string,
+  ): Promise<Model<RiskBaseAttributes> | null> {
+    try {
+      console.log(
+        `🔍 DEBUG: Looking for PKID ${pkid}, tenant_id ${tenantId}, risk_user ${riskUser}`,
+      );
+
+      // ✅ Sederhana: tanpa check is_deleted dulu untuk debug
+      const riskBase = await this.model.findOne({
+        where: {
+          pkid: pkid,
+          tenant_id: tenantId,
+          risk_user: riskUser,
+          // Hapus is_deleted check dulu untuk debug
+        },
+      });
+
+      console.log(`🔍 DEBUG: Query result:`, riskBase ? 'FOUND' : 'NOT FOUND');
+      if (riskBase) {
+        console.log(`🔍 DEBUG: Found data:`, {
+          pkid: riskBase.get('pkid'),
+          tenant_id: riskBase.get('tenant_id'),
+          risk_user: riskBase.get('risk_user'),
+          is_deleted: riskBase.get('is_deleted'),
+          risk_name: riskBase.get('risk_name'),
+        });
+      }
+
+      return riskBase;
+    } catch (error) {
+      console.error('❌ Error finding risk base by PKID and tenant:', error);
+      return null;
     }
   }
 

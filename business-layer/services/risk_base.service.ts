@@ -327,7 +327,50 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     pkid: number,
     entity: Partial<RiskBaseAttributes>,
   ): Promise<[number, Model<RiskBaseAttributes>[]]> {
-    return await super.update(req, pkid, entity);
+    try {
+      console.log(`🔒 DEBUG: Starting update for PKID ${pkid}`);
+
+      // ✅ Get tenant info
+      const tenantCheck = await this.checkTenantRiskBases(req);
+      console.log(
+        `🔒 DEBUG: Tenant info - ID: ${tenantCheck.tenantId}, User: ${tenantCheck.riskUser}`,
+      );
+
+      // ✅ Check ownership
+      const existingRiskBase =
+        await this.riskBaseRepository.findByPkidAndTenant(
+          req,
+          pkid,
+          tenantCheck.tenantId,
+          tenantCheck.riskUser,
+        );
+
+      if (!existingRiskBase) {
+        console.warn(
+          `❌ DEBUG: PKID ${pkid} not found for tenant ${tenantCheck.tenantId}`,
+        );
+        return [0, []];
+      }
+
+      console.log(`✅ DEBUG: Ownership validated. Proceeding with update...`);
+
+      // ✅ Simple sanitization - hanya hapus yang critical
+      const sanitizedEntity = { ...entity };
+      delete sanitizedEntity.pkid;
+      delete sanitizedEntity.tenant_id;
+      delete sanitizedEntity.risk_user;
+
+      console.log(`🔄 DEBUG: Sanitized entity:`, sanitizedEntity);
+
+      // ✅ Call original update
+      const result = await super.update(req, pkid, sanitizedEntity);
+      console.log(`✅ DEBUG: Update result:`, result);
+
+      return result;
+    } catch (error) {
+      console.error(`❌ DEBUG: Error in update:`, error);
+      return [0, []];
+    }
   }
 
   public async bulkUpdateRiskBases(

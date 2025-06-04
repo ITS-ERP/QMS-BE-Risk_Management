@@ -166,12 +166,28 @@ export class RiskBaseController extends BaseController {
       if (isNaN(pkid)) {
         return this.sendErrorBadRequest(req, res);
       }
+
       const updateResult = await this.riskBaseService.updateRiskBase(
         req,
         pkid,
         req.body,
       );
-      return this.sendSuccessUpdate(req, res, updateResult);
+
+      if (updateResult[0] === 0) {
+        return res.status(403).json({
+          isSuccess: false,
+          message: `Risk base with PKID ${pkid} not found or access denied. You can only update risk bases owned by your tenant.`,
+          data: null,
+        });
+      }
+      return res.status(200).json({
+        isSuccess: true,
+        message: 'Risk base updated successfully',
+        data: {
+          updated_count: updateResult[0],
+          updated_record: updateResult[1][0] || null,
+        },
+      });
     } catch (error) {
       return this.handleError(req, res, error, 500);
     }
