@@ -1,166 +1,387 @@
-// import { Request, Response } from 'express';
-// import { RiskMitigationService } from '../../business-layer/services/risk_mitigation.service';
-// import { BaseController } from '../common/base.controller';
-// import { MessagesKey } from '../../helpers/messages/messagesKey';
+// web-main\controllers\risk_mitigation.controller.ts
 
-// export class RiskMitigationController extends BaseController {
-//   private riskMitigationService: RiskMitigationService;
+import { Request, Response } from 'express';
+import { RiskMitigationService } from '../../business-layer/services/risk_mitigation.service';
+import { BaseController } from '../common/base.controller';
+import { MessagesKey } from '../../helpers/messages/messagesKey';
 
-//   constructor() {
-//     super();
-//     this.riskMitigationService = new RiskMitigationService();
-//   }
+export class RiskMitigationController extends BaseController {
+  private riskMitigationService: RiskMitigationService;
 
-//   // Controller untuk mendapatkan mitigasi risiko berdasarkan jenis pengguna
-//   public async getRiskMitigationController(
-//     req: Request,
-//     res: Response,
-//   ): Promise<Response> {
-//     try {
-//       const riskUser = req.query.risk_user as string | undefined;
-//       const industryCode = req.query.industry_code as string | undefined;
-//       const supplierCode = req.query.supplier_code as string | undefined;
-//       const retailCode = req.query.retail_code as string | undefined;
+  constructor() {
+    super();
+    this.riskMitigationService = new RiskMitigationService();
+  }
 
-//       // Ambil PKID dari parameter path jika ada
-//       const pkidParam = req.params.pkid;
+  /**
+   * Validate authentication header
+   */
+  private validateAuthHeader(req: Request): string | null {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return 'Authorization header is required';
+    }
+    if (!authHeader.startsWith('Bearer ')) {
+      return 'Authorization header must be a Bearer token';
+    }
+    return null;
+  }
 
-//       // Parse PKID jika disediakan
-//       let pkid: number | undefined = undefined;
-//       if (pkidParam) {
-//         pkid = parseInt(pkidParam, 10);
-//         if (isNaN(pkid)) {
-//           return this.handleError(
-//             req,
-//             res,
-//             'Invalid PKID. PKID must be a number',
-//             400,
-//           );
-//         }
-//       }
+  /**
+   * Controller untuk mendapatkan mitigasi risiko berdasarkan jenis pengguna
+   */
+  public async getRiskMitigationController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      // Validate authentication
+      const authError = this.validateAuthHeader(req);
+      if (authError) {
+        return this.handleError(req, res, authError, 401);
+      }
 
-//       if (!riskUser) {
-//         return this.handleError(req, res, 'Risk user is required', 400);
-//       }
+      // Extract query parameters
+      const riskUser = req.query.risk_user as string | undefined;
+      const tenantId = req.query.tenant_id as string | undefined;
 
-//       // Normalisasi riskUser untuk perbandingan case-insensitive
-//       const normalizedRiskUser = riskUser.toLowerCase();
+      console.log('Request parameters:', {
+        riskUser,
+        tenantId,
+        hasAuth: !!req.headers.authorization,
+      });
 
-//       // Validasi bahwa kode yang sesuai disediakan berdasarkan riskUser
-//       if (
-//         (normalizedRiskUser === 'industry' && !industryCode) ||
-//         (normalizedRiskUser === 'supplier' && !supplierCode) ||
-//         (normalizedRiskUser === 'retail' && !retailCode)
-//       ) {
-//         return this.handleError(
-//           req,
-//           res,
-//           `Parameter ${normalizedRiskUser === 'industry' ? 'industry_code' : normalizedRiskUser === 'supplier' ? 'supplier_code' : 'retail_code'} is required for risk_user ${riskUser}`,
-//           400,
-//         );
-//       }
+      // Validate required parameters
+      if (!riskUser) {
+        return this.handleError(req, res, 'Risk user is required', 400);
+      }
 
-//       const riskMitigation = await this.riskMitigationService.getRiskMitigation(
-//         req,
-//         riskUser,
-//         industryCode,
-//         supplierCode,
-//         retailCode,
-//         pkid,
-//       );
+      if (!tenantId) {
+        return this.handleError(req, res, 'Tenant ID is required', 400);
+      }
 
-//       // Jika menggunakan PKID dan hasilnya adalah objek kosong (array kosong), berarti PKID tidak ditemukan
-//       if (
-//         pkid &&
-//         Array.isArray(riskMitigation) &&
-//         riskMitigation.length === 0
-//       ) {
-//         return this.handleError(
-//           req,
-//           res,
-//           `Risk with PKID ${pkid} not found`,
-//           404,
-//         );
-//       }
+      const tenantIdNum = parseInt(tenantId, 10);
+      if (isNaN(tenantIdNum)) {
+        return this.handleError(
+          req,
+          res,
+          'Tenant ID must be a valid number',
+          400,
+        );
+      }
 
-//       return this.sendSuccessGet(
-//         req,
-//         res,
-//         riskMitigation,
-//         MessagesKey.SUCCESSGET,
-//         200,
-//       );
-//     } catch (error) {
-//       return this.handleError(req, res, error, 500);
-//     }
-//   }
+      try {
+        // Call service with proper parameters (req object contains auth headers)
+        const riskMitigation =
+          await this.riskMitigationService.getRiskMitigation(
+            req,
+            riskUser,
+            tenantIdNum,
+          );
 
-//   // Controller untuk mendapatkan mitigasi risiko spesifik
-//   public async getSpecificRiskMitigationController(
-//     req: Request,
-//     res: Response,
-//   ): Promise<Response> {
-//     try {
-//       const riskUser = req.query.risk_user as string | undefined;
-//       const riskName = req.query.risk_name as string | undefined;
-//       const industryCode = req.query.industry_code as string | undefined;
-//       const supplierCode = req.query.supplier_code as string | undefined;
-//       const retailCode = req.query.retail_code as string | undefined;
+        // Return empty array with standard success message if no data found
+        if (!riskMitigation || riskMitigation.length === 0) {
+          console.log(
+            `No data found for ${riskUser} with tenant_id ${tenantIdNum}`,
+          );
+          return this.sendSuccessGet(req, res, [], MessagesKey.SUCCESSGET, 200);
+        }
 
-//       if (!riskUser || !riskName) {
-//         return this.handleError(
-//           req,
-//           res,
-//           'Risk user and risk name are required',
-//           400,
-//         );
-//       }
+        console.log(
+          `Found ${riskMitigation.length} risk mitigation items for ${riskUser}`,
+        );
+        return this.sendSuccessGet(
+          req,
+          res,
+          riskMitigation,
+          MessagesKey.SUCCESSGET,
+          200,
+        );
+      } catch (serviceError: unknown) {
+        console.error('Service error:', serviceError);
+        const errorMessage =
+          serviceError instanceof Error
+            ? serviceError.message
+            : 'Unknown service error';
 
-//       // Normalisasi riskUser untuk perbandingan case-insensitive
-//       const normalizedRiskUser = riskUser.toLowerCase();
+        // Check if it's an authentication error from downstream services
+        if (
+          errorMessage.includes('401') ||
+          errorMessage.includes('unauthorized')
+        ) {
+          return this.handleError(
+            req,
+            res,
+            'Authentication failed for external services',
+            401,
+          );
+        }
 
-//       // Validasi bahwa kode yang sesuai disediakan berdasarkan riskUser
-//       if (
-//         (normalizedRiskUser === 'industry' && !industryCode) ||
-//         (normalizedRiskUser === 'supplier' && !supplierCode) ||
-//         (normalizedRiskUser === 'retail' && !retailCode)
-//       ) {
-//         return this.handleError(
-//           req,
-//           res,
-//           `Parameter ${normalizedRiskUser === 'industry' ? 'industry_code' : normalizedRiskUser === 'supplier' ? 'supplier_code' : 'retail_code'} is required for risk_user ${riskUser}`,
-//           400,
-//         );
-//       }
+        return this.handleError(
+          req,
+          res,
+          `Error processing request: ${errorMessage}`,
+          500,
+        );
+      }
+    } catch (error: unknown) {
+      console.error('Controller error:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      return this.handleError(
+        req,
+        res,
+        `Unexpected error: ${errorMessage}`,
+        500,
+      );
+    }
+  }
 
-//       const specificRiskMitigation =
-//         await this.riskMitigationService.getSpecificRiskMitigation(
-//           req,
-//           riskUser,
-//           riskName,
-//           industryCode,
-//           supplierCode,
-//           retailCode,
-//         );
+  /**
+   * Controller untuk mendapatkan mitigasi risiko berdasarkan PKID
+   */
+  public async getRiskMitigationByPkidController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      // Validate authentication
+      const authError = this.validateAuthHeader(req);
+      if (authError) {
+        return this.handleError(req, res, authError, 401);
+      }
 
-//       if (!specificRiskMitigation) {
-//         return this.handleError(
-//           req,
-//           res,
-//           `Risk with name "${riskName}" not found for ${riskUser}`,
-//           404,
-//         );
-//       }
+      // Extract path and query parameters
+      const pkidParam = req.params.pkid;
+      const riskUser = req.query.risk_user as string | undefined;
+      const tenantId = req.query.tenant_id as string | undefined;
 
-//       return this.sendSuccessGet(
-//         req,
-//         res,
-//         specificRiskMitigation,
-//         MessagesKey.SUCCESSGET,
-//         200,
-//       );
-//     } catch (error) {
-//       return this.handleError(req, res, error, 500);
-//     }
-//   }
-// }
+      console.log('Request parameters for PKID risk mitigation:', {
+        pkid: pkidParam,
+        riskUser,
+        tenantId,
+        hasAuth: !!req.headers.authorization,
+      });
+
+      // Validate PKID parameter
+      if (!pkidParam) {
+        return this.handleError(req, res, 'PKID is required', 400);
+      }
+
+      const pkid = parseInt(pkidParam, 10);
+      if (isNaN(pkid)) {
+        return this.handleError(req, res, 'PKID must be a valid number', 400);
+      }
+
+      // Validate tenant_id if provided
+      let tenantIdNum: number | undefined = undefined;
+      if (tenantId) {
+        tenantIdNum = parseInt(tenantId, 10);
+        if (isNaN(tenantIdNum)) {
+          return this.handleError(
+            req,
+            res,
+            'Tenant ID must be a valid number',
+            400,
+          );
+        }
+      }
+
+      try {
+        // Call service with proper parameters
+        const riskMitigation =
+          await this.riskMitigationService.getRiskMitigationByPkid(
+            req,
+            pkid,
+            riskUser,
+            tenantIdNum,
+          );
+
+        // Handle not found case
+        if (!riskMitigation) {
+          let notFoundMessage = `Risk mitigation with PKID ${pkid} not found`;
+          if (riskUser) {
+            notFoundMessage += ` for ${riskUser}`;
+          }
+          if (tenantIdNum) {
+            notFoundMessage += ` with tenant_id ${tenantIdNum}`;
+          }
+
+          console.log(notFoundMessage);
+          return this.handleError(req, res, notFoundMessage, 404);
+        }
+
+        console.log(`Found risk mitigation with PKID ${pkid}`);
+        return this.sendSuccessGet(
+          req,
+          res,
+          riskMitigation,
+          MessagesKey.SUCCESSGET,
+          200,
+        );
+      } catch (serviceError: unknown) {
+        console.error('Service error in PKID risk mitigation:', serviceError);
+        const errorMessage =
+          serviceError instanceof Error
+            ? serviceError.message
+            : 'Unknown service error';
+
+        // Check if it's an authentication error from downstream services
+        if (
+          errorMessage.includes('401') ||
+          errorMessage.includes('unauthorized')
+        ) {
+          return this.handleError(
+            req,
+            res,
+            'Authentication failed for external services',
+            401,
+          );
+        }
+
+        return this.handleError(
+          req,
+          res,
+          `Error processing request: ${errorMessage}`,
+          500,
+        );
+      }
+    } catch (error: unknown) {
+      console.error('Controller error in PKID risk mitigation:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      return this.handleError(
+        req,
+        res,
+        `Unexpected error: ${errorMessage}`,
+        500,
+      );
+    }
+  }
+
+  /**
+   * Controller untuk mendapatkan mitigasi risiko spesifik berdasarkan nama risiko
+   */
+  public async getSpecificRiskMitigationController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      // Validate authentication
+      const authError = this.validateAuthHeader(req);
+      if (authError) {
+        return this.handleError(req, res, authError, 401);
+      }
+
+      // Extract query parameters
+      const riskUser = req.query.risk_user as string | undefined;
+      const riskName = req.query.risk_name as string | undefined;
+      const tenantId = req.query.tenant_id as string | undefined;
+
+      console.log('Request parameters for specific risk mitigation:', {
+        riskUser,
+        riskName,
+        tenantId,
+        hasAuth: !!req.headers.authorization,
+      });
+
+      // Validate required parameters
+      if (!riskUser || !riskName) {
+        return this.handleError(
+          req,
+          res,
+          'Risk user and risk name are required',
+          400,
+        );
+      }
+
+      if (!tenantId) {
+        return this.handleError(req, res, 'Tenant ID is required', 400);
+      }
+
+      const tenantIdNum = parseInt(tenantId, 10);
+      if (isNaN(tenantIdNum)) {
+        return this.handleError(
+          req,
+          res,
+          'Tenant ID must be a valid number',
+          400,
+        );
+      }
+
+      try {
+        // Call service with proper parameters (req object contains auth headers)
+        const specificRiskMitigation =
+          await this.riskMitigationService.getSpecificRiskMitigation(
+            req,
+            riskUser,
+            riskName,
+            tenantIdNum,
+          );
+
+        // Handle not found case
+        if (!specificRiskMitigation) {
+          console.log(
+            `Risk mitigation with name '${riskName}' not found for ${riskUser}`,
+          );
+          return this.handleError(
+            req,
+            res,
+            `Risk mitigation with name '${riskName}' not found for ${riskUser}`,
+            404,
+          );
+        }
+
+        console.log(
+          `Found specific risk mitigation '${riskName}' for ${riskUser}`,
+        );
+        return this.sendSuccessGet(
+          req,
+          res,
+          specificRiskMitigation,
+          MessagesKey.SUCCESSGET,
+          200,
+        );
+      } catch (serviceError: unknown) {
+        console.error(
+          'Service error in specific risk mitigation:',
+          serviceError,
+        );
+        const errorMessage =
+          serviceError instanceof Error
+            ? serviceError.message
+            : 'Unknown service error';
+
+        // Check if it's an authentication error from downstream services
+        if (
+          errorMessage.includes('401') ||
+          errorMessage.includes('unauthorized')
+        ) {
+          return this.handleError(
+            req,
+            res,
+            'Authentication failed for external services',
+            401,
+          );
+        }
+
+        return this.handleError(
+          req,
+          res,
+          `Error processing request: ${errorMessage}`,
+          500,
+        );
+      }
+    } catch (error: unknown) {
+      console.error('Controller error in specific risk mitigation:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      return this.handleError(
+        req,
+        res,
+        `Unexpected error: ${errorMessage}`,
+        500,
+      );
+    }
+  }
+}

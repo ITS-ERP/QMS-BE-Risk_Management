@@ -12,7 +12,7 @@ import crmContractRouter from './routers/crm_contract.router';
 import riskBaseRouter from './routers/risk_base.router';
 // import riskIdentificationRouter from './routers/risk_identification.router';
 import riskMonitoringRouter from './routers/risk_monitoring.router';
-// import riskMitigationRouter from './routers/risk_mitigation.router';
+import riskMitigationRouter from './routers/risk_mitigation.router';
 import riskIdentificationMitigationRouter from './routers/risk_identification_mitigation.router';
 
 dotenv.config();
@@ -39,6 +39,7 @@ app.use(
   riskIdentificationMitigationRouter,
 );
 app.use('/rm/api/risk-monitoring', riskMonitoringRouter);
+app.use('/rm/api/risk-mitigation', riskMitigationRouter);
 app.use('/rm/api/in', inventoryRouter);
 app.use('/rm/api/mf', manufacturingRouter);
 app.use('/rm/api/fa', assetRouter);
@@ -47,7 +48,6 @@ app.use('/rm/api/srm-contract', srmContractRouter);
 app.use('/rm/api/crm-requisition', crmRequisitionApi);
 app.use('/rm/api/crm-contract', crmContractRouter);
 // app.use('/rm/api/risk-identification', riskIdentificationRouter);
-// app.use('/rm/api/risk-mitigation', riskMitigationRouter);
 
 // Set the port
 const PORT = process.env.PORT;
