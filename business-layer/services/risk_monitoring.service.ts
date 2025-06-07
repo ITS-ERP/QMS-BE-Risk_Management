@@ -42,11 +42,12 @@ export class RiskMonitoringService {
 
   /**
    * Mendapatkan data monitoring risiko berdasarkan user
+   * PERBAIKAN: Menggunakan getTenantRiskBases untuk automatic tenant filtering
    * @param req Request object dengan authentication
    * @param riskUser Tipe user (Industry, SUPPLIER, RETAIL)
-   * @param industryTenantId Tenant ID industri (opsional)
-   * @param supplierTenantId Tenant ID supplier (opsional)
-   * @param retailTenantId Tenant ID retail (opsional)
+   * @param industryTenantId Tenant ID industri (opsional - untuk backward compatibility)
+   * @param supplierTenantId Tenant ID supplier (opsional - untuk backward compatibility)
+   * @param retailTenantId Tenant ID retail (opsional - untuk backward compatibility)
    * @returns Data monitoring risiko
    */
   async getRiskMonitoring(
@@ -57,18 +58,47 @@ export class RiskMonitoringService {
     retailTenantId?: number,
   ): Promise<RiskMonitoringResult[]> {
     try {
-      // Dapatkan daftar risk base berdasarkan risk_user
-      const riskBaseList = await this.riskBaseService.findRiskBasesByCriteria(
-        req,
-        { risk_user: riskUser },
+      console.log(`[RiskMonitoring] Getting risk monitoring for:`, {
+        riskUser,
+        industryTenantId,
+        supplierTenantId,
+        retailTenantId,
+      });
+
+      // PERBAIKAN: Gunakan getTenantRiskBases untuk automatic tenant filtering
+      const riskBaseList = await this.riskBaseService.getTenantRiskBases(req);
+
+      console.log(
+        `[RiskMonitoring] Found ${riskBaseList.length} risk bases for authenticated tenant`,
       );
+
+      // Filter berdasarkan risk_user yang diminta
+      const filteredRiskBaseList = riskBaseList.filter(
+        (riskBase) =>
+          riskBase.risk_user.toLowerCase() === riskUser.toLowerCase(),
+      );
+
+      console.log(
+        `[RiskMonitoring] Filtered to ${filteredRiskBaseList.length} risk bases for ${riskUser}`,
+      );
+
+      if (filteredRiskBaseList.length === 0) {
+        console.log(
+          `[RiskMonitoring] No risk bases found for ${riskUser} in current tenant`,
+        );
+        return [];
+      }
 
       const riskMonitoringList: RiskMonitoringResult[] = [];
 
       // Loop untuk setiap risiko dan dapatkan data trend
-      for (const riskBase of riskBaseList) {
+      for (const riskBase of filteredRiskBaseList) {
         try {
           const { risk_name, risk_desc, risk_group } = riskBase;
+
+          console.log(
+            `[RiskMonitoring] Processing risk: ${risk_name} (${risk_group}) - Tenant: ${riskBase.tenant_id}`,
+          );
 
           // Inisialisasi dengan array kosong
           let riskRateTrend: RiskRateTrendData[] = [];
@@ -77,150 +107,27 @@ export class RiskMonitoringService {
           const normalizedRiskUser = riskUser.toLowerCase();
 
           try {
-            if (normalizedRiskUser === 'industry') {
-              // Proses berdasarkan risk_group Industry
-              if (risk_group === 'Inventory') {
-                if (risk_name === 'Ketidaksesuaian Jumlah (Received Items)') {
-                  riskRateTrend =
-                    await this.inventoryService.getReceiveRiskRateTrend(
-                      req,
-                      industryTenantId,
-                    );
-                } else if (
-                  risk_name === 'Ketidaksesuaian Jumlah (Transferred Items)'
-                ) {
-                  riskRateTrend =
-                    await this.inventoryService.getTransferRiskRateTrend(
-                      req,
-                      industryTenantId,
-                    );
-                }
-              } else if (risk_group === 'Manufacturing') {
-                if (risk_name === 'Produk Cacat') {
-                  riskRateTrend =
-                    await this.manufacturingService.getDefectRiskRateTrend(
-                      req,
-                      industryTenantId,
-                    );
-                }
-              } else if (risk_group === 'SRM Procurement') {
-                if (risk_name === 'Keterlambatan RFQ') {
-                  riskRateTrend =
-                    await this.srmProcurementService.getRFQDelayRiskRateTrend(
-                      industryTenantId,
-                    );
-                }
-              } else if (risk_group === 'SRM Contract') {
-                if (risk_name === 'Penerimaan terlambat') {
-                  riskRateTrend =
-                    await this.srmContractService.getLateReceiptRiskRateTrend(
-                      undefined,
-                      industryTenantId,
-                    );
-                } else if (risk_name === 'Jumlah diterima tidak sesuai') {
-                  riskRateTrend =
-                    await this.srmContractService.getQuantityMismatchRiskRateTrend(
-                      undefined,
-                      industryTenantId,
-                    );
-                }
-              } else if (risk_group === 'CRM Requisition') {
-                if (risk_name === 'Penolakan LoR') {
-                  riskRateTrend =
-                    await this.crmRequisitionService.getLoRRejectionRiskRateTrend(
-                      industryTenantId,
-                      undefined,
-                    );
-                } else if (risk_name === 'Penolakan LoA') {
-                  riskRateTrend =
-                    await this.crmRequisitionService.getLoARejectionRiskRateTrend(
-                      industryTenantId,
-                      undefined,
-                    );
-                }
-              } else if (risk_group === 'CRM Contract') {
-                if (risk_name === 'Penurunan jumlah kontrak') {
-                  riskRateTrend =
-                    await this.crmContractService.getContractDeclineRiskRateTrend(
-                      industryTenantId,
-                      undefined,
-                    );
-                } else if (risk_name === 'Pengiriman terlambat') {
-                  riskRateTrend =
-                    await this.crmContractService.getLateDeliveryRiskRateTrend(
-                      industryTenantId,
-                      undefined,
-                    );
-                } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
-                  riskRateTrend =
-                    await this.crmContractService.getQuantityMismatchRiskRateTrend(
-                      industryTenantId,
-                      undefined,
-                    );
-                }
-              }
-            } else if (normalizedRiskUser === 'supplier') {
-              // Logika untuk SUPPLIER
-              if (risk_group === 'Procurement') {
-                if (risk_name === 'Kekalahan pada proses RFQ') {
-                  riskRateTrend =
-                    await this.srmProcurementService.getRFQLossRiskRateTrend(
-                      undefined,
-                      supplierTenantId,
-                    );
-                }
-              } else if (risk_group === 'Contract') {
-                if (risk_name === 'Penurunan jumlah kontrak') {
-                  riskRateTrend =
-                    await this.srmContractService.getContractDeclineRiskRateTrend(
-                      supplierTenantId,
-                      undefined,
-                    );
-                } else if (risk_name === 'Pengiriman terlambat') {
-                  riskRateTrend =
-                    await this.srmContractService.getLateReceiptRiskRateTrend(
-                      supplierTenantId,
-                      undefined,
-                    );
-                } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
-                  riskRateTrend =
-                    await this.srmContractService.getQuantityMismatchRiskRateTrend(
-                      supplierTenantId,
-                      undefined,
-                    );
-                }
-              }
-            } else if (normalizedRiskUser === 'retail') {
-              // Logika untuk RETAIL
-              if (risk_group === 'Requisition') {
-                if (risk_name === 'Penolakan LoR') {
-                  riskRateTrend =
-                    await this.crmRequisitionService.getLoRRejectionRiskRateTrend(
-                      undefined,
-                      retailTenantId,
-                    );
-                } else if (risk_name === 'Penolakan LoA') {
-                  riskRateTrend =
-                    await this.crmRequisitionService.getLoARejectionRiskRateTrend(
-                      undefined,
-                      retailTenantId,
-                    );
-                }
-              } else if (risk_group === 'Contract') {
-                if (risk_name === 'Penerimaan terlambat') {
-                  riskRateTrend =
-                    await this.crmContractService.getLateDeliveryRiskRateTrend(
-                      undefined,
-                      retailTenantId,
-                    );
-                } else if (risk_name === 'Jumlah diterima tidak sesuai') {
-                  riskRateTrend =
-                    await this.crmContractService.getQuantityMismatchRiskRateTrend(
-                      undefined,
-                      retailTenantId,
-                    );
-                }
-              }
+            // Gunakan helper method untuk mendapatkan trend data
+            riskRateTrend = await this.getTrendDataByRiskType(
+              req,
+              normalizedRiskUser,
+              risk_group,
+              risk_name,
+              industryTenantId,
+              supplierTenantId,
+              retailTenantId,
+            );
+
+            console.log(
+              `[RiskMonitoring] Got ${riskRateTrend.length} trend data points for ${risk_name}`,
+            );
+
+            // Log sample data untuk debugging
+            if (riskRateTrend.length > 0) {
+              console.log(
+                `[RiskMonitoring] Sample trend data for ${risk_name}:`,
+                riskRateTrend.slice(0, 2),
+              );
             }
           } catch (trendError) {
             console.error(
@@ -257,6 +164,9 @@ export class RiskMonitoringService {
         }
       }
 
+      console.log(
+        `[RiskMonitoring] Returning ${riskMonitoringList.length} risk monitoring results`,
+      );
       return riskMonitoringList;
     } catch (error) {
       console.error('Error in getRiskMonitoring:', error);
@@ -266,13 +176,267 @@ export class RiskMonitoringService {
   }
 
   /**
+   * ALTERNATIF: Jika ingin menggunakan manual criteria dengan tenant_id
+   * Uncomment method ini dan comment method getRiskMonitoring di atas jika ingin menggunakan approach manual
+   */
+  /*
+  async getRiskMonitoringManual(
+    req: Request,
+    riskUser: string,
+    industryTenantId?: number,
+    supplierTenantId?: number,
+    retailTenantId?: number,
+  ): Promise<RiskMonitoringResult[]> {
+    try {
+      console.log(`[RiskMonitoring] Getting risk monitoring for:`, {
+        riskUser, industryTenantId, supplierTenantId, retailTenantId
+      });
+
+      // PERBAIKAN: Tambahkan tenant_id ke criteria
+      const criteria: any = { risk_user: riskUser };
+      
+      // Tambahkan tenant_id filter berdasarkan risk_user
+      if (riskUser.toLowerCase() === 'industry' && industryTenantId) {
+        criteria.tenant_id = industryTenantId;
+      } else if (riskUser.toLowerCase() === 'supplier' && supplierTenantId) {
+        criteria.tenant_id = supplierTenantId;
+      } else if (riskUser.toLowerCase() === 'retail' && retailTenantId) {
+        criteria.tenant_id = retailTenantId;
+      }
+
+      console.log(`[RiskMonitoring] Query criteria:`, criteria);
+
+      const riskBaseList = await this.riskBaseService.findRiskBasesByCriteria(req, criteria);
+      
+      console.log(`[RiskMonitoring] Found ${riskBaseList.length} risk bases for ${riskUser} with tenant filter`);
+
+      // ... rest of the processing logic sama seperti method di atas
+    } catch (error) {
+      console.error('Error in getRiskMonitoring:', error);
+      return [];
+    }
+  }
+  */
+
+  /**
+   * Helper method untuk mendapatkan trend data berdasarkan risk type
+   * PERBAIKAN: Extract logic ke method terpisah untuk lebih mudah maintenance
+   */
+  private async getTrendDataByRiskType(
+    req: Request,
+    normalizedRiskUser: string,
+    risk_group: string,
+    risk_name: string,
+    industryTenantId?: number,
+    supplierTenantId?: number,
+    retailTenantId?: number,
+  ): Promise<RiskRateTrendData[]> {
+    console.log(
+      `[TrendData] Getting trend for: ${normalizedRiskUser} - ${risk_group} - ${risk_name}`,
+    );
+    console.log(
+      `[TrendData] Tenant IDs: industry=${industryTenantId}, supplier=${supplierTenantId}, retail=${retailTenantId}`,
+    );
+
+    if (normalizedRiskUser === 'industry') {
+      return await this.getIndustryTrendData(
+        req,
+        risk_group,
+        risk_name,
+        industryTenantId,
+      );
+    } else if (normalizedRiskUser === 'supplier') {
+      return await this.getSupplierTrendData(
+        risk_group,
+        risk_name,
+        supplierTenantId,
+      );
+    } else if (normalizedRiskUser === 'retail') {
+      return await this.getRetailTrendData(
+        risk_group,
+        risk_name,
+        retailTenantId,
+      );
+    }
+
+    return [];
+  }
+
+  /**
+   * Helper method untuk mendapatkan trend data Industry
+   */
+  private async getIndustryTrendData(
+    req: Request,
+    risk_group: string,
+    risk_name: string,
+    industryTenantId?: number,
+  ): Promise<RiskRateTrendData[]> {
+    console.log(
+      `[IndustryTrend] Processing ${risk_group} - ${risk_name} for tenant ${industryTenantId}`,
+    );
+
+    if (risk_group === 'Inventory') {
+      if (risk_name === 'Ketidaksesuaian Jumlah (Received Items)') {
+        return await this.inventoryService.getReceiveRiskRateTrend(
+          req,
+          industryTenantId,
+        );
+      } else if (risk_name === 'Ketidaksesuaian Jumlah (Transferred Items)') {
+        return await this.inventoryService.getTransferRiskRateTrend(
+          req,
+          industryTenantId,
+        );
+      }
+    } else if (risk_group === 'Manufacturing') {
+      if (risk_name === 'Produk Cacat') {
+        return await this.manufacturingService.getDefectRiskRateTrend(
+          req,
+          industryTenantId,
+        );
+      }
+    } else if (risk_group === 'SRM Procurement') {
+      if (risk_name === 'Keterlambatan RFQ') {
+        return await this.srmProcurementService.getRFQDelayRiskRateTrend(
+          industryTenantId,
+        );
+      }
+    } else if (risk_group === 'SRM Contract') {
+      if (risk_name === 'Penerimaan terlambat') {
+        return await this.srmContractService.getLateReceiptRiskRateTrend(
+          undefined,
+          industryTenantId,
+        );
+      } else if (risk_name === 'Jumlah diterima tidak sesuai') {
+        return await this.srmContractService.getQuantityMismatchRiskRateTrend(
+          undefined,
+          industryTenantId,
+        );
+      }
+    } else if (risk_group === 'CRM Requisition') {
+      if (risk_name === 'Penolakan LoR') {
+        return await this.crmRequisitionService.getLoRRejectionRiskRateTrend(
+          industryTenantId,
+          undefined,
+        );
+      } else if (risk_name === 'Penolakan LoA') {
+        return await this.crmRequisitionService.getLoARejectionRiskRateTrend(
+          industryTenantId,
+          undefined,
+        );
+      }
+    } else if (risk_group === 'CRM Contract') {
+      if (risk_name === 'Penurunan jumlah kontrak') {
+        return await this.crmContractService.getContractDeclineRiskRateTrend(
+          industryTenantId,
+          undefined,
+        );
+      } else if (risk_name === 'Pengiriman terlambat') {
+        return await this.crmContractService.getLateDeliveryRiskRateTrend(
+          industryTenantId,
+          undefined,
+        );
+      } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
+        return await this.crmContractService.getQuantityMismatchRiskRateTrend(
+          industryTenantId,
+          undefined,
+        );
+      }
+    }
+
+    return [];
+  }
+
+  /**
+   * Helper method untuk mendapatkan trend data Supplier
+   */
+  private async getSupplierTrendData(
+    risk_group: string,
+    risk_name: string,
+    supplierTenantId?: number,
+  ): Promise<RiskRateTrendData[]> {
+    console.log(
+      `[SupplierTrend] Processing ${risk_group} - ${risk_name} for tenant ${supplierTenantId}`,
+    );
+
+    if (risk_group === 'Procurement') {
+      if (risk_name === 'Kekalahan pada proses RFQ') {
+        return await this.srmProcurementService.getRFQLossRiskRateTrend(
+          undefined,
+          supplierTenantId,
+        );
+      }
+    } else if (risk_group === 'Contract') {
+      if (risk_name === 'Penurunan jumlah kontrak') {
+        return await this.srmContractService.getContractDeclineRiskRateTrend(
+          supplierTenantId,
+          undefined,
+        );
+      } else if (risk_name === 'Pengiriman terlambat') {
+        return await this.srmContractService.getLateReceiptRiskRateTrend(
+          supplierTenantId,
+          undefined,
+        );
+      } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
+        return await this.srmContractService.getQuantityMismatchRiskRateTrend(
+          supplierTenantId,
+          undefined,
+        );
+      }
+    }
+
+    return [];
+  }
+
+  /**
+   * Helper method untuk mendapatkan trend data Retail
+   */
+  private async getRetailTrendData(
+    risk_group: string,
+    risk_name: string,
+    retailTenantId?: number,
+  ): Promise<RiskRateTrendData[]> {
+    console.log(
+      `[RetailTrend] Processing ${risk_group} - ${risk_name} for tenant ${retailTenantId}`,
+    );
+
+    if (risk_group === 'Requisition') {
+      if (risk_name === 'Penolakan LoR') {
+        return await this.crmRequisitionService.getLoRRejectionRiskRateTrend(
+          undefined,
+          retailTenantId,
+        );
+      } else if (risk_name === 'Penolakan LoA') {
+        return await this.crmRequisitionService.getLoARejectionRiskRateTrend(
+          undefined,
+          retailTenantId,
+        );
+      }
+    } else if (risk_group === 'Contract') {
+      if (risk_name === 'Penerimaan terlambat') {
+        return await this.crmContractService.getLateDeliveryRiskRateTrend(
+          undefined,
+          retailTenantId,
+        );
+      } else if (risk_name === 'Jumlah diterima tidak sesuai') {
+        return await this.crmContractService.getQuantityMismatchRiskRateTrend(
+          undefined,
+          retailTenantId,
+        );
+      }
+    }
+
+    return [];
+  }
+
+  /**
    * Mendapatkan data monitoring untuk satu risiko spesifik
+   * PERBAIKAN: Menggunakan getTenantRiskBases untuk consistency
    * @param req Request object dengan authentication
    * @param riskUser Tipe user (Industry, SUPPLIER, RETAIL)
    * @param riskName Nama risiko
-   * @param industryTenantId Tenant ID industri (opsional)
-   * @param supplierTenantId Tenant ID supplier (opsional)
-   * @param retailTenantId Tenant ID retail (opsional)
+   * @param industryTenantId Tenant ID industri (opsional - untuk backward compatibility)
+   * @param supplierTenantId Tenant ID supplier (opsional - untuk backward compatibility)
+   * @param retailTenantId Tenant ID retail (opsional - untuk backward compatibility)
    * @returns Data monitoring untuk risiko spesifik
    */
   async getSpecificRiskMonitoring(
@@ -284,171 +448,61 @@ export class RiskMonitoringService {
     retailTenantId?: number,
   ): Promise<RiskMonitoringResult | null> {
     try {
-      // Dapatkan daftar risk base berdasarkan risk_user dan risk_name
-      const riskBaseList = await this.riskBaseService.findRiskBasesByCriteria(
-        req,
-        { risk_user: riskUser, risk_name: riskName },
+      console.log(`[SpecificRisk] Getting specific risk monitoring:`, {
+        riskUser,
+        riskName,
+        industryTenantId,
+        supplierTenantId,
+        retailTenantId,
+      });
+
+      // PERBAIKAN: Gunakan getTenantRiskBases untuk automatic tenant filtering
+      const riskBaseList = await this.riskBaseService.getTenantRiskBases(req);
+
+      console.log(
+        `[SpecificRisk] Found ${riskBaseList.length} risk bases for authenticated tenant`,
       );
 
-      if (riskBaseList.length === 0) {
+      // Filter berdasarkan risk_user dan risk_name
+      const specificRiskBase = riskBaseList.find(
+        (riskBase) =>
+          riskBase.risk_user.toLowerCase() === riskUser.toLowerCase() &&
+          riskBase.risk_name === riskName,
+      );
+
+      if (!specificRiskBase) {
+        console.log(
+          `[SpecificRisk] No risk base found for ${riskUser} - ${riskName} in current tenant`,
+        );
         return null;
       }
 
-      const riskBase = riskBaseList[0];
-      const { risk_name, risk_desc, risk_group } = riskBase;
+      const { risk_name, risk_desc, risk_group } = specificRiskBase;
 
-      // Inisialisasi dengan array kosong
-      let riskRateTrend: RiskRateTrendData[] = [];
+      console.log(
+        `[SpecificRisk] Found risk: ${risk_name} (${risk_group}) - Tenant: ${specificRiskBase.tenant_id}`,
+      );
 
       // Normalisasi riskUser untuk pencocokan yang tidak case-sensitive
       const normalizedRiskUser = riskUser.toLowerCase();
 
+      // Gunakan helper method yang sama
+      let riskRateTrend: RiskRateTrendData[] = [];
+
       try {
-        if (normalizedRiskUser === 'industry') {
-          // Proses berdasarkan risk_group Industry
-          if (risk_group === 'Inventory') {
-            if (risk_name === 'Ketidaksesuaian Jumlah (Received Items)') {
-              riskRateTrend =
-                await this.inventoryService.getReceiveRiskRateTrend(
-                  req,
-                  industryTenantId,
-                );
-            } else if (
-              risk_name === 'Ketidaksesuaian Jumlah (Transferred Items)'
-            ) {
-              riskRateTrend =
-                await this.inventoryService.getTransferRiskRateTrend(
-                  req,
-                  industryTenantId,
-                );
-            }
-          } else if (risk_group === 'Manufacturing') {
-            if (risk_name === 'Produk Cacat') {
-              riskRateTrend =
-                await this.manufacturingService.getDefectRiskRateTrend(
-                  req,
-                  industryTenantId,
-                );
-            }
-          } else if (risk_group === 'SRM Procurement') {
-            if (risk_name === 'Keterlambatan RFQ') {
-              riskRateTrend =
-                await this.srmProcurementService.getRFQDelayRiskRateTrend(
-                  industryTenantId,
-                );
-            }
-          } else if (risk_group === 'SRM Contract') {
-            if (risk_name === 'Penerimaan terlambat') {
-              riskRateTrend =
-                await this.srmContractService.getLateReceiptRiskRateTrend(
-                  undefined,
-                  industryTenantId,
-                );
-            } else if (risk_name === 'Jumlah diterima tidak sesuai') {
-              riskRateTrend =
-                await this.srmContractService.getQuantityMismatchRiskRateTrend(
-                  undefined,
-                  industryTenantId,
-                );
-            }
-          } else if (risk_group === 'CRM Requisition') {
-            if (risk_name === 'Penolakan LoR') {
-              riskRateTrend =
-                await this.crmRequisitionService.getLoRRejectionRiskRateTrend(
-                  industryTenantId,
-                  undefined,
-                );
-            } else if (risk_name === 'Penolakan LoA') {
-              riskRateTrend =
-                await this.crmRequisitionService.getLoARejectionRiskRateTrend(
-                  industryTenantId,
-                  undefined,
-                );
-            }
-          } else if (risk_group === 'CRM Contract') {
-            if (risk_name === 'Penurunan jumlah kontrak') {
-              riskRateTrend =
-                await this.crmContractService.getContractDeclineRiskRateTrend(
-                  industryTenantId,
-                  undefined,
-                );
-            } else if (risk_name === 'Pengiriman terlambat') {
-              riskRateTrend =
-                await this.crmContractService.getLateDeliveryRiskRateTrend(
-                  industryTenantId,
-                  undefined,
-                );
-            } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
-              riskRateTrend =
-                await this.crmContractService.getQuantityMismatchRiskRateTrend(
-                  industryTenantId,
-                  undefined,
-                );
-            }
-          }
-        } else if (normalizedRiskUser === 'supplier') {
-          // Logika untuk SUPPLIER
-          if (risk_group === 'Procurement') {
-            if (risk_name === 'Kekalahan pada proses RFQ') {
-              riskRateTrend =
-                await this.srmProcurementService.getRFQLossRiskRateTrend(
-                  undefined,
-                  supplierTenantId,
-                );
-            }
-          } else if (risk_group === 'Contract') {
-            if (risk_name === 'Penurunan jumlah kontrak') {
-              riskRateTrend =
-                await this.srmContractService.getContractDeclineRiskRateTrend(
-                  supplierTenantId,
-                  undefined,
-                );
-            } else if (risk_name === 'Pengiriman terlambat') {
-              riskRateTrend =
-                await this.srmContractService.getLateReceiptRiskRateTrend(
-                  supplierTenantId,
-                  undefined,
-                );
-            } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
-              riskRateTrend =
-                await this.srmContractService.getQuantityMismatchRiskRateTrend(
-                  supplierTenantId,
-                  undefined,
-                );
-            }
-          }
-        } else if (normalizedRiskUser === 'retail') {
-          // Logika untuk RETAIL
-          if (risk_group === 'Requisition') {
-            if (risk_name === 'Penolakan LoR') {
-              riskRateTrend =
-                await this.crmRequisitionService.getLoRRejectionRiskRateTrend(
-                  undefined,
-                  retailTenantId,
-                );
-            } else if (risk_name === 'Penolakan LoA') {
-              riskRateTrend =
-                await this.crmRequisitionService.getLoARejectionRiskRateTrend(
-                  undefined,
-                  retailTenantId,
-                );
-            }
-          } else if (risk_group === 'Contract') {
-            if (risk_name === 'Penerimaan terlambat') {
-              riskRateTrend =
-                await this.crmContractService.getLateDeliveryRiskRateTrend(
-                  undefined,
-                  retailTenantId,
-                );
-            } else if (risk_name === 'Jumlah diterima tidak sesuai') {
-              riskRateTrend =
-                await this.crmContractService.getQuantityMismatchRiskRateTrend(
-                  undefined,
-                  retailTenantId,
-                );
-            }
-          }
-        }
+        riskRateTrend = await this.getTrendDataByRiskType(
+          req,
+          normalizedRiskUser,
+          risk_group,
+          risk_name,
+          industryTenantId,
+          supplierTenantId,
+          retailTenantId,
+        );
+
+        console.log(
+          `[SpecificRisk] Got ${riskRateTrend.length} trend data points for specific risk ${risk_name}`,
+        );
       } catch (trendError) {
         console.error(
           `Error fetching trend data for specific risk ${risk_name}:`,
