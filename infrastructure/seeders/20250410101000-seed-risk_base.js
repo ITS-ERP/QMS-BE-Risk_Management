@@ -52,22 +52,6 @@ module.exports = {
           risk_mitigation: 'Peningkatan inspeksi',
         },
         {
-          risk_name: 'Tidak lolos cek kebersihan',
-          risk_desc:
-            'Bahan baku yang diterima dari Supplier dalam kondisi kotor',
-          risk_user: 'Industry',
-          risk_group: 'SRM Inspection',
-          risk_mitigation: 'Pengetatan proses inspeksi',
-        },
-        {
-          risk_name: 'Tidak lolos cek brix',
-          risk_desc:
-            'Bahan baku yang diterima dari Supplier memiliki nilai brix kurang dari 13',
-          risk_user: 'Industry',
-          risk_group: 'SRM Inspection',
-          risk_mitigation: 'Pengetatan proses inspeksi',
-        },
-        {
           risk_name: 'Penolakan LoR',
           risk_desc: 'Penolakan Letter of Requests oleh Industri',
           risk_user: 'Industry',
@@ -132,22 +116,6 @@ module.exports = {
           risk_user: 'Supplier',
           risk_group: 'Contract',
           risk_mitigation: 'Peningkatan inspeksi',
-        },
-        {
-          risk_name: 'Tidak lolos cek kebersihan',
-          risk_desc:
-            'Bahan baku yang dikirim oleh Supplier dalam kondisi kotor',
-          risk_user: 'Supplier',
-          risk_group: 'Inspection',
-          risk_mitigation: 'Pengetatan proses inspeksi',
-        },
-        {
-          risk_name: 'Tidak lolos cek brix',
-          risk_desc:
-            'Bahan baku yang dikirim oleh Supplier memiliki nilai brix kurang dari 13',
-          risk_user: 'Supplier',
-          risk_group: 'Inspection',
-          risk_mitigation: 'Pengetatan proses inspeksi',
         },
         // RETAIL
         {

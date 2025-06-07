@@ -7,7 +7,6 @@ import { MessagesKey } from '../../helpers/messages/messagesKey';
  * SRM Contract Controller for Risk Management
  * Updated to work with new SRM integration system
  * Maintains same endpoint names for compatibility but uses tenant-based parameters
- * Note: Quality control endpoints (cleanliness, brix) removed as not available in new system
  */
 export class SRMContractController extends BaseController {
   private srmContractService: SRMContractService;

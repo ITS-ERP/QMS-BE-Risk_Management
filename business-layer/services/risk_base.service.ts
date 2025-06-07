@@ -123,19 +123,6 @@ const DEFAULT_RISK_TEMPLATES = {
       risk_group: 'Contract',
       risk_mitigation: 'Peningkatan inspeksi',
     },
-    {
-      risk_name: 'Tidak lolos cek kebersihan',
-      risk_desc: 'Bahan baku yang dikirim oleh Supplier dalam kondisi kotor',
-      risk_group: 'Inspection',
-      risk_mitigation: 'Pengetatan proses inspeksi',
-    },
-    {
-      risk_name: 'Tidak lolos cek brix',
-      risk_desc:
-        'Bahan baku yang dikirim oleh Supplier memiliki nilai brix kurang dari 13',
-      risk_group: 'Inspection',
-      risk_mitigation: 'Pengetatan proses inspeksi',
-    },
   ],
   Retail: [
     {
