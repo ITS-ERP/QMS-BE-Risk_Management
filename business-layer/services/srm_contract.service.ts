@@ -693,12 +693,18 @@ export class SRMContractService {
     const riskRateTrend = [];
 
     // Need at least 2 years of data to calculate decline
-    if (yearlyData.length >= 2) {
+    if (yearlyData.length === 1) {
+      // Hanya satu tahun data — tidak bisa hitung tren tapi kita return saja dengan nilai 0
+      const currentYear = yearlyData[0];
+      riskRateTrend.push({
+        year: currentYear.year,
+        value: 0,
+      });
+    } else if (yearlyData.length >= 2) {
       for (let i = 1; i < yearlyData.length; i++) {
         const currentYear = yearlyData[i];
         const previousYear = yearlyData[i - 1];
 
-        // Calculate decline rate if there's a decline
         let declineRate = 0;
         if (previousYear.total > 0 && currentYear.total < previousYear.total) {
           declineRate = parseFloat(

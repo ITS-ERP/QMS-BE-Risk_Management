@@ -78,6 +78,47 @@ export class RiskMonitoringService {
           riskBase.risk_user.toLowerCase() === riskUser.toLowerCase(),
       );
 
+      // Normalisasi riskUser
+      const normalizedRiskUser = riskUser.toLowerCase();
+
+      // Urutan risk_name yang diharapkan berdasarkan tipe user
+      const desiredOrders: Record<string, string[]> = {
+        industry: [
+          'Ketidaksesuaian Jumlah (Received Items)',
+          'Ketidaksesuaian Jumlah (Transferred Items)',
+          'Produk Cacat',
+          'Keterlambatan RFQ',
+          'Penerimaan terlambat',
+          'Jumlah diterima tidak sesuai',
+          'Penolakan LoR',
+          'Penolakan LoA',
+          'Penurunan jumlah kontrak',
+          'Pengiriman terlambat',
+          'Jumlah dikirim tidak sesuai',
+        ],
+        supplier: [
+          'Kekalahan pada proses RFQ',
+          'Penurunan jumlah kontrak',
+          'Pengiriman terlambat',
+          'Jumlah dikirim tidak sesuai',
+        ],
+        retail: [
+          'Penolakan LoR',
+          'Penolakan LoA',
+          'Penerimaan terlambat',
+          'Jumlah diterima tidak sesuai',
+        ],
+      };
+
+      const desiredOrder = desiredOrders[normalizedRiskUser] || [];
+
+      const sortedRiskBaseList = filteredRiskBaseList.sort((a, b) => {
+        const indexA = desiredOrder.indexOf(a.risk_name);
+        const indexB = desiredOrder.indexOf(b.risk_name);
+
+        return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+      });
+
       console.log(
         `[RiskMonitoring] Filtered to ${filteredRiskBaseList.length} risk bases for ${riskUser}`,
       );
@@ -92,7 +133,7 @@ export class RiskMonitoringService {
       const riskMonitoringList: RiskMonitoringResult[] = [];
 
       // Loop untuk setiap risiko dan dapatkan data trend
-      for (const riskBase of filteredRiskBaseList) {
+      for (const riskBase of sortedRiskBaseList) {
         try {
           const { risk_name, risk_desc, risk_group } = riskBase;
 
