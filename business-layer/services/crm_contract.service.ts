@@ -19,8 +19,11 @@ interface ContractDetail {
   currency_code: string;
   target_date: string;
   delivered_date: string | null;
-  actual_quantity: number;
-  delivered_quantity: number | null;
+  target_quantity: number;
+  total_quantity: number | null;
+  total_accepted_quantity: number | null;
+  total_rejected_quantity: number | null;
+  is_rejected: boolean;
   price_per_item: number;
   total_price: number;
   description: string;
@@ -250,17 +253,17 @@ export class CRMContractService {
       if (includeItem && contract.details.length > 0) {
         contract.details.forEach((detail: ContractDetail) => {
           const yearKey = new Date(detail.target_date).getFullYear().toString();
-          const targetQuantity = detail.actual_quantity;
-          const deliveredQuantity = detail.delivered_quantity || 0;
 
-          if (!yearlyCompliance[yearKey]) {
-            yearlyCompliance[yearKey] = { compliant: 0, noncompliant: 0 };
-          }
+          if (detail.total_quantity !== null && detail.target_quantity) {
+            if (!yearlyCompliance[yearKey]) {
+              yearlyCompliance[yearKey] = { compliant: 0, noncompliant: 0 };
+            }
 
-          if (deliveredQuantity >= targetQuantity) {
-            yearlyCompliance[yearKey].compliant += 1;
-          } else {
-            yearlyCompliance[yearKey].noncompliant += 1;
+            if (detail.total_quantity >= detail.target_quantity) {
+              yearlyCompliance[yearKey].compliant += 1;
+            } else {
+              yearlyCompliance[yearKey].noncompliant += 1;
+            }
           }
         });
       }

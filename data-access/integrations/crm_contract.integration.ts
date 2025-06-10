@@ -5,11 +5,11 @@ export const getAllContracts = () => crmContractApi.get(`/contract/`);
 export const getContractByID = (pkid: number) =>
   crmContractApi.get(`/contract/${pkid}`);
 
-export const getAllContractDetails = () =>
+export const getAllContractDetail = () =>
   crmContractApi.get(`/contractDetails/`);
 
 export const getAllContractDetailsByID = (pkid: number) =>
-  crmContractApi.get(`/contractDetails/${pkid}`);
+  crmContractApi.get(`/contractDetail/${pkid}`);
 
 export const getContractDetailsByContractID = (pkid: number) =>
-  crmContractApi.get(`/contractDetails/contract/${pkid}`);
+  crmContractApi.get(`/contractDetail/contract/${pkid}`);
