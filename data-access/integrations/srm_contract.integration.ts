@@ -2,6 +2,12 @@ import { srmContractApi } from '.';
 
 export const getAllSRMContract = () => srmContractApi.get(`/contract_srm/`);
 
+export const findAllContractByIndustryID = (pkid: number) =>
+  srmContractApi.get(`/qms/allContract/industry/${pkid}`);
+
+export const findAllContractBySupplierID = (pkid: number) =>
+  srmContractApi.get(`/qms/allContract/supplier/${pkid}`);
+
 export const findTopSuppliersByIndustryID = (pkid: number) =>
   srmContractApi.get(`/qms/topSuppliers/industry/${pkid}`);
 
@@ -19,6 +25,12 @@ export const findTopIndustryItemsBySupplierID = (pkid: number) =>
 
 export const findTopSupplierItemsBySupplierID = (pkid: number) =>
   srmContractApi.get(`/qms/topSupplierItems/supplier/${pkid}`);
+
+export const findAllHistoryShipmentByIndustryForAllYears = (pkid: number) =>
+  srmContractApi.get(`/qms/historyShipmentAllYears/industry/${pkid}`);
+
+export const findAllHistoryShipmentBySupplierForAllYears = (pkid: number) =>
+  srmContractApi.get(`/qms/historyShipmentAllYears/supplier/${pkid}`);
 
 export const findTotalHistoryShipmentByIndustryAndYear = (
   pkid: number,

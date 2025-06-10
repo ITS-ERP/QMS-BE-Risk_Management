@@ -114,7 +114,6 @@ export class SRMContractService {
     industry_tenant_id?: number,
     supplier_tenant_id?: number,
   ) {
-    const dateRange = this.getDateRange(5);
     const yearlyTrend: { [key: string]: { on_time: number; late: number } } =
       {};
 
@@ -123,11 +122,10 @@ export class SRMContractService {
 
       if (industry_tenant_id) {
         const industry_id = industry_tenant_id; // Direct mapping
+        // ✅ GANTI: Pakai endpoint AllYears (lebih simple)
         const response =
-          await srmContractIntegration.findTotalHistoryShipmentByIndustryAndYear(
+          await srmContractIntegration.findAllHistoryShipmentByIndustryForAllYears(
             industry_id,
-            dateRange.start_date,
-            dateRange.end_date,
           );
         shipmentData = response.data.data || [];
       } else if (supplier_tenant_id) {
@@ -136,16 +134,15 @@ export class SRMContractService {
         if (!supplier_id) {
           throw new Error('Invalid supplier_tenant_id');
         }
+        // ✅ GANTI: Pakai endpoint AllYears (lebih simple)
         const response =
-          await srmContractIntegration.findTotalHistoryShipmentBySupplierAndYear(
+          await srmContractIntegration.findAllHistoryShipmentBySupplierForAllYears(
             supplier_id,
-            dateRange.start_date,
-            dateRange.end_date,
           );
         shipmentData = response.data.data || [];
       }
 
-      // Process shipment data with CORRECTED STRICT LOGIC
+      // ✅ LOGIC TETAP SAMA - hanya data source yang berubah
       shipmentData.forEach((yearData: YearlyShipmentData) => {
         const year = yearData.year.toString();
         if (!yearlyTrend[year]) {
@@ -153,9 +150,7 @@ export class SRMContractService {
         }
 
         yearData.historyShipments.forEach((shipment: HistoryShipment) => {
-          // ================================
-          // CORRECTED STRICT LOGIC: Only process "Arrived" shipments with complete delivery data
-          // ================================
+          // STRICT LOGIC tetap sama
           if (
             shipment.status === 'Arrived' &&
             shipment.target_deadline_date &&
@@ -193,14 +188,14 @@ export class SRMContractService {
         });
       });
 
-      // Convert to array format
+      // Convert to array format - TETAP SAMA
       const allYearlyTrend = Object.entries(yearlyTrend)
         .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
         .map(([year, values]) => ({ year, ...values }))
         .reverse();
 
       console.log(
-        '📊 On-time vs late trend calculated with CORRECTED STRICT logic:',
+        '📊 On-time vs late trend calculated with NEW ENDPOINT:',
         allYearlyTrend,
       );
       return allYearlyTrend;
@@ -247,7 +242,6 @@ export class SRMContractService {
     industry_tenant_id?: number,
     supplier_tenant_id?: number,
   ) {
-    const dateRange = this.getDateRange(5);
     const yearlyCompliance: {
       [key: string]: { compliant: number; noncompliant: number };
     } = {};
@@ -257,11 +251,10 @@ export class SRMContractService {
 
       if (industry_tenant_id) {
         const industry_id = industry_tenant_id;
+        // ✅ GANTI: Pakai endpoint AllYears
         const response =
-          await srmContractIntegration.findTotalHistoryShipmentByIndustryAndYear(
+          await srmContractIntegration.findAllHistoryShipmentByIndustryForAllYears(
             industry_id,
-            dateRange.start_date,
-            dateRange.end_date,
           );
         shipmentData = response.data.data || [];
       } else if (supplier_tenant_id) {
@@ -270,16 +263,15 @@ export class SRMContractService {
         if (!supplier_id) {
           throw new Error('Invalid supplier_tenant_id');
         }
+        // ✅ GANTI: Pakai endpoint AllYears
         const response =
-          await srmContractIntegration.findTotalHistoryShipmentBySupplierAndYear(
+          await srmContractIntegration.findAllHistoryShipmentBySupplierForAllYears(
             supplier_id,
-            dateRange.start_date,
-            dateRange.end_date,
           );
         shipmentData = response.data.data || [];
       }
 
-      // Process quantity compliance with CORRECTED STRICT LOGIC
+      // ✅ LOGIC TETAP SAMA - hanya data source yang berubah
       shipmentData.forEach((yearData: YearlyShipmentData) => {
         const year = yearData.year.toString();
         if (!yearlyCompliance[year]) {
@@ -287,9 +279,7 @@ export class SRMContractService {
         }
 
         yearData.historyShipments.forEach((shipment: HistoryShipment) => {
-          // ================================
-          // CORRECTED STRICT LOGIC: Only process "Arrived" shipments with complete quantity data
-          // ================================
+          // STRICT LOGIC tetap sama
           if (
             shipment.status === 'Arrived' &&
             shipment.target_quantity &&
@@ -324,13 +314,14 @@ export class SRMContractService {
         });
       });
 
+      // Convert to array format - TETAP SAMA
       const allYearlyCompliance = Object.entries(yearlyCompliance)
         .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
         .map(([year, values]) => ({ year, ...values }))
         .reverse();
 
       console.log(
-        '📊 Quantity compliance calculated with CORRECTED STRICT logic:',
+        '📊 Quantity compliance calculated with NEW ENDPOINT:',
         allYearlyCompliance,
       );
       return allYearlyCompliance;
@@ -380,62 +371,75 @@ export class SRMContractService {
     industry_tenant_id?: number,
     supplier_tenant_id?: number,
   ) {
-    const dateRange = this.getDateRange(5);
     const yearlyContracts: { [key: string]: Set<number> } = {};
 
     try {
-      let shipmentData: YearlyShipmentData[] = [];
+      // ✅ GANTI: Gunakan interface yang sama seperti main service
+      interface MasterContractData {
+        pkid: number;
+        supplier_pkid: number;
+        industry_pkid: number;
+        code: string;
+        name: string;
+        status: string;
+        detailContracts: Array<{
+          pkid: number;
+          master_contract_pkid: number;
+          historyShipments: HistoryShipment[];
+        }>;
+      }
+
+      let allContractsData: MasterContractData[] = [];
 
       if (industry_tenant_id) {
         const industry_id = industry_tenant_id;
+        // ✅ GUNAKAN: allContract endpoint seperti main service
         const response =
-          await srmContractIntegration.findTotalHistoryShipmentByIndustryAndYear(
-            industry_id,
-            dateRange.start_date,
-            dateRange.end_date,
-          );
-        shipmentData = response.data.data || [];
+          await srmContractIntegration.findAllContractByIndustryID(industry_id);
+        allContractsData = response.data.data || [];
       } else if (supplier_tenant_id) {
         const supplier_id =
           await this.resolveSupplierTenantId(supplier_tenant_id);
         if (!supplier_id) {
           throw new Error('Invalid supplier_tenant_id');
         }
+        // ✅ GUNAKAN: allContract endpoint seperti main service
         const response =
-          await srmContractIntegration.findTotalHistoryShipmentBySupplierAndYear(
-            supplier_id,
-            dateRange.start_date,
-            dateRange.end_date,
-          );
-        shipmentData = response.data.data || [];
+          await srmContractIntegration.findAllContractBySupplierID(supplier_id);
+        allContractsData = response.data.data || [];
       }
 
-      // ================================
-      // CORRECTED LOGIC: Count unique contracts per year (contract-level analysis)
-      // ================================
-      shipmentData.forEach((yearData: YearlyShipmentData) => {
-        const year = yearData.year.toString();
-        if (!yearlyContracts[year]) {
-          yearlyContracts[year] = new Set<number>();
-        }
+      // ✅ LOGIC SAMA SEPERTI MAIN SERVICE: Count unique MASTER contracts per year
+      allContractsData.forEach((contract) => {
+        contract.detailContracts.forEach((detail) => {
+          detail.historyShipments.forEach((shipment) => {
+            if (shipment.target_deadline_date) {
+              const year = new Date(shipment.target_deadline_date)
+                .getFullYear()
+                .toString();
 
-        yearData.historyShipments.forEach((shipment: HistoryShipment) => {
-          // Add contract to set (automatically handles uniqueness)
-          yearlyContracts[year].add(shipment.detail_contract_pkid);
+              if (!yearlyContracts[year]) {
+                yearlyContracts[year] = new Set<number>();
+              }
+
+              // ✅ COUNT MASTER CONTRACT ID (bukan detail_contract_pkid)
+              yearlyContracts[year].add(contract.pkid);
+            }
+          });
         });
       });
 
-      // Convert to array format with unique contract counts
+      // Convert to array format - TETAP SAMA
       const allYearlyTotal = Object.entries(yearlyContracts)
         .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
         .map(([year, contractSet]) => ({
           year,
-          total: contractSet.size, // Use Set size for unique contract count
+          total: contractSet.size, // ✅ Count unique MASTER contracts
         }))
         .reverse();
 
       console.log(
-        '📊 Contract total calculated with CORRECTED contract-level logic:',
+        '📊 Contract total calculated with MASTER CONTRACT logic (same as main service):',
         allYearlyTotal,
       );
       return allYearlyTotal;
