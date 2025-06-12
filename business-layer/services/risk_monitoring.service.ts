@@ -87,7 +87,7 @@ export class RiskMonitoringService {
           'Ketidaksesuaian Jumlah (Received Items)',
           'Ketidaksesuaian Jumlah (Transferred Items)',
           'Produk Cacat',
-          'Keterlambatan RFQ',
+          'Penolakan Direct RFQ',
           'Penerimaan terlambat',
           'Jumlah diterima tidak sesuai',
           'Penolakan LoR',
@@ -336,9 +336,10 @@ export class RiskMonitoringService {
         );
       }
     } else if (risk_group === 'SRM Procurement') {
-      if (risk_name === 'Keterlambatan RFQ') {
-        return await this.srmProcurementService.getRFQDelayRiskRateTrend(
+      if (risk_name === 'Penolakan Direct RFQ') {
+        return await this.srmProcurementService.getRFQLossRiskRateTrend(
           industryTenantId,
+          undefined,
         );
       }
     } else if (risk_group === 'SRM Contract') {

@@ -29,12 +29,13 @@ module.exports = {
           risk_mitigation: 'Peningkatan pengawasan kualitas produksi',
         },
         {
-          risk_name: 'Keterlambatan RFQ',
+          risk_name: 'Penolakan Direct RFQ',
           risk_desc:
-            'Keterlambatan proses RFQ dalam rentang waktu purchase request ke pembuatan RFQ',
+            'Penolakan Direct RFQ oleh Supplier dalam proses procurement',
           risk_user: 'Industry',
           risk_group: 'SRM Procurement',
-          risk_mitigation: 'Peningkatan komunikasi dengan supplier',
+          risk_mitigation:
+            'Evaluasi kriteria Direct RFQ dan komunikasi dengan supplier',
         },
         {
           risk_name: 'Penerimaan terlambat',

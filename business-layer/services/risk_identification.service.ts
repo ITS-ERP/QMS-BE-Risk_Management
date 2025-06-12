@@ -123,18 +123,23 @@
 //                   }
 //                 }
 //               } else if (risk_group === 'SRM Procurement') {
-//                 if (risk_name === 'Keterlambatan RFQ') {
+//                 if (risk_name === 'Penolakan Direct RFQ') {
+//                   // ← INI YANG BARU
 //                   const procurementSummary =
-//                     await this.srmProcurementService.getRFQDelaySummary(
-//                       industryCode,
+//                     await this.srmProcurementService.getRFQLossSummary(
+//                       industryCode, // ← industry parameter
+//                       undefined, // ← no supplier needed
 //                     );
-//                   riskRate = procurementSummary.delay_rate;
-//                   console.log(`Risk Rate (Keterlambatan RFQ): ${riskRate}`);
+//                   riskRate = procurementSummary.loss_rate; // ← PROPERTY BARU (reject rate)
+//                   console.log(`Risk Rate (Penolakan Direct RFQ): ${riskRate}`);
 
 //                   try {
+//                     // CATATAN: Forecast integration mungkin perlu disesuaikan
+//                     // Tergantung apakah ada endpoint baru untuk Direct RFQ rejection
 //                     const forecastData =
-//                       await forecastIntegration.getDelayedSRMIndustry(
-//                         industryCode || '',
+//                       await forecastIntegration.getDirectRFQRejectIndustry(
+//                         req, // ← PARAMETER 1: Request object
+//                         industryCode || 0, // ← PARAMETER 2: industry_tenant_id (number)
 //                       );
 //                     forecastPrediction = this.calculateForecastPrediction(
 //                       forecastData.data,

@@ -16,6 +16,7 @@ router.get('/rfq-ontime-delayed-count', (req, res) =>
 router.get('/rfq-delayed-count', (req, res) =>
   srmProcurementController.getRFQDelayCountController(req, res),
 );
+
 router.get('/rfq-win-lose-count', (req, res) =>
   srmProcurementController.getWinLoseCountController(req, res),
 );
@@ -24,7 +25,7 @@ router.get('/rfq-lose-count', (req, res) =>
   srmProcurementController.getLoseCountController(req, res),
 );
 
-// TAMBAHAN:
+// TAMBAHAN EXISTING:
 router.get('/rfq-delay-summary', (req, res) =>
   srmProcurementController.getRFQDelaySummaryController(req, res),
 );
@@ -47,6 +48,15 @@ router.get('/comprehensive-rfq-stats', (req, res) =>
 
 router.get('/supplier-rfq-stats', (req, res) =>
   srmProcurementController.getSupplierRFQStatsController(req, res),
+);
+
+// NEW - Direct RFQ Reject endpoints
+router.get('/direct-rfq-reject-count', (req, res) =>
+  srmProcurementController.getDirectRFQRejectCountController(req, res),
+);
+
+router.get('/rfq-reject-summary', (req, res) =>
+  srmProcurementController.getRFQRejectSummaryController(req, res),
 );
 
 export default router;

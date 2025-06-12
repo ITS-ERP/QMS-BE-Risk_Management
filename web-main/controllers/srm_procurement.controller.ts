@@ -39,6 +39,176 @@ export class SRMProcurementController extends BaseController {
   }
 
   // ============================================================================
+  // NEW - DIRECT RFQ REJECT ENDPOINTS (untuk menggantikan delay endpoints)
+  // ============================================================================
+
+  /**
+   * Get Direct RFQ reject count (untuk forecast)
+   * Supports both industry_tenant_id and supplier_tenant_id
+   */
+  public async getDirectRFQRejectCountController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_tenant_id = req.query.industry_tenant_id as
+        | string
+        | undefined;
+      const supplier_tenant_id = req.query.supplier_tenant_id as
+        | string
+        | undefined;
+
+      // Validate that one of the parameters is provided
+      if (!industry_tenant_id && !supplier_tenant_id) {
+        return res.status(400).json({
+          message:
+            'Either industry_tenant_id or supplier_tenant_id is required',
+          error:
+            'Missing required parameter: industry_tenant_id OR supplier_tenant_id',
+        });
+      }
+
+      // Validate that only one parameter is provided
+      if (industry_tenant_id && supplier_tenant_id) {
+        return res.status(400).json({
+          message:
+            'Please provide either industry_tenant_id or supplier_tenant_id, not both',
+          error:
+            'Too many parameters: industry_tenant_id AND supplier_tenant_id',
+        });
+      }
+
+      let industryTenantIdNum: number | undefined;
+      let supplierTenantIdNum: number | undefined;
+
+      // Parse industry_tenant_id if provided
+      if (industry_tenant_id) {
+        industryTenantIdNum = parseInt(industry_tenant_id, 10);
+        if (isNaN(industryTenantIdNum)) {
+          return res.status(400).json({
+            message: 'industry_tenant_id must be a valid number',
+            error: 'Invalid parameter type: industry_tenant_id',
+          });
+        }
+      }
+
+      // Parse supplier_tenant_id if provided
+      if (supplier_tenant_id) {
+        supplierTenantIdNum = parseInt(supplier_tenant_id, 10);
+        if (isNaN(supplierTenantIdNum)) {
+          return res.status(400).json({
+            message: 'supplier_tenant_id must be a valid number',
+            error: 'Invalid parameter type: supplier_tenant_id',
+          });
+        }
+      }
+
+      // Menggunakan getRFQLossRiskRateTrend untuk mendapatkan data Direct RFQ rejection
+      const directRFQRejectData =
+        await this.srmProcurementService.getRFQLossRiskRateTrend(
+          industryTenantIdNum,
+          supplierTenantIdNum,
+        );
+
+      // Transform data untuk format yang dibutuhkan forecast (year sebagai number)
+      const formattedData = directRFQRejectData.map((item) => ({
+        year: parseInt(item.year),
+        value: item.value,
+      }));
+
+      return this.sendSuccessGet(
+        req,
+        res,
+        formattedData,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleDetailedError(req, res, error, 500);
+    }
+  }
+
+  /**
+   * Get RFQ reject summary (alias untuk getRFQLossSummaryController)
+   * Supports both industry_tenant_id and supplier_tenant_id
+   */
+  public async getRFQRejectSummaryController(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    try {
+      const industry_tenant_id = req.query.industry_tenant_id as
+        | string
+        | undefined;
+      const supplier_tenant_id = req.query.supplier_tenant_id as
+        | string
+        | undefined;
+
+      // Validate that one of the parameters is provided
+      if (!industry_tenant_id && !supplier_tenant_id) {
+        return res.status(400).json({
+          message:
+            'Either industry_tenant_id or supplier_tenant_id is required',
+          error:
+            'Missing required parameter: industry_tenant_id OR supplier_tenant_id',
+        });
+      }
+
+      // Validate that only one parameter is provided
+      if (industry_tenant_id && supplier_tenant_id) {
+        return res.status(400).json({
+          message:
+            'Please provide either industry_tenant_id or supplier_tenant_id, not both',
+          error:
+            'Too many parameters: industry_tenant_id AND supplier_tenant_id',
+        });
+      }
+
+      let industryTenantIdNum: number | undefined;
+      let supplierTenantIdNum: number | undefined;
+
+      // Parse industry_tenant_id if provided
+      if (industry_tenant_id) {
+        industryTenantIdNum = parseInt(industry_tenant_id, 10);
+        if (isNaN(industryTenantIdNum)) {
+          return res.status(400).json({
+            message: 'industry_tenant_id must be a valid number',
+            error: 'Invalid parameter type: industry_tenant_id',
+          });
+        }
+      }
+
+      // Parse supplier_tenant_id if provided
+      if (supplier_tenant_id) {
+        supplierTenantIdNum = parseInt(supplier_tenant_id, 10);
+        if (isNaN(supplierTenantIdNum)) {
+          return res.status(400).json({
+            message: 'supplier_tenant_id must be a valid number',
+            error: 'Invalid parameter type: supplier_tenant_id',
+          });
+        }
+      }
+
+      // Menggunakan getRFQLossSummary untuk mendapatkan Direct RFQ rejection summary
+      const rfqRejectSummary =
+        await this.srmProcurementService.getRFQLossSummary(
+          industryTenantIdNum,
+          supplierTenantIdNum,
+        );
+
+      return this.sendSuccessGet(
+        req,
+        res,
+        rfqRejectSummary,
+        MessagesKey.SUCCESSGET,
+        200,
+      );
+    } catch (error) {
+      return this.handleDetailedError(req, res, error, 500);
+    }
+  }
+
+  // ============================================================================
   // INDUSTRY PERSPECTIVE - RFQ DELAY RISK ANALYSIS
   // ============================================================================
 

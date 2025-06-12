@@ -212,9 +212,12 @@ export class RiskMitigationService {
         );
       }
     } else if (risk_group === 'SRM Procurement') {
-      if (risk_name === 'Keterlambatan RFQ') {
+      if (risk_name === 'Penolakan Direct RFQ') {
         riskRateTrend =
-          await this.srmProcurementService.getRFQDelayRiskRateTrend(tenantId);
+          await this.srmProcurementService.getRFQLossRiskRateTrend(
+            tenantId,
+            undefined,
+          );
       }
     } else if (risk_group === 'SRM Contract') {
       if (risk_name === 'Penerimaan terlambat') {

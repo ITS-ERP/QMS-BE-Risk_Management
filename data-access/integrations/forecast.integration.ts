@@ -26,12 +26,20 @@ export const getDefectInspectionProductByYearIndustry = (
     `/general_forecast?endpoint=defect_inspection_product_by_year&industry_tenant_id=${industry_tenant_id}`,
   );
 
-export const getDelayedSRMIndustry = (
+// export const getDelayedSRMIndustry = (
+//   req: Request,
+//   industry_tenant_id: number,
+// ) =>
+//   forecastAPI(req).get(
+//     `/general_forecast?endpoint=delayed_count&industry_tenant_id=${industry_tenant_id}`,
+//   );
+
+export const getDirectRFQRejectIndustry = (
   req: Request,
   industry_tenant_id: number,
 ) =>
   forecastAPI(req).get(
-    `/general_forecast?endpoint=delayed_count&industry_tenant_id=${industry_tenant_id}`,
+    `/general_forecast?endpoint=direct_rfq_reject&industry_tenant_id=${industry_tenant_id}`,
   );
 
 export const getLateSRMIndustry = (req: Request, industry_tenant_id: number) =>

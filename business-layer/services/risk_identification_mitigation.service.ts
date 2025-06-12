@@ -265,17 +265,22 @@ export class RiskIdentificationMitigationService {
         );
       }
     } else if (risk_group === 'SRM Procurement') {
-      if (risk_name === 'Keterlambatan RFQ') {
-        const summary =
-          await this.srmProcurementService.getRFQDelaySummary(tenantId);
-        riskRate = summary.delay_rate;
-        const forecast = await forecastIntegration.getDelayedSRMIndustry(
+      if (risk_name === 'Penolakan Direct RFQ') {
+        const summary = await this.srmProcurementService.getRFQLossSummary(
+          tenantId,
+          undefined,
+        );
+        riskRate = summary.loss_rate;
+        const forecast = await forecastIntegration.getDirectRFQRejectIndustry(
           req,
           tenantId || 0,
         );
         forecastPrediction = this.calculateForecastPrediction(forecast.data);
         riskRateTrend =
-          await this.srmProcurementService.getRFQDelayRiskRateTrend(tenantId);
+          await this.srmProcurementService.getRFQLossRiskRateTrend(
+            tenantId,
+            undefined,
+          );
       }
     } else if (risk_group === 'SRM Contract') {
       if (risk_name === 'Penerimaan terlambat') {

@@ -47,11 +47,11 @@ const DEFAULT_RISK_TEMPLATES = {
       risk_mitigation: 'Peningkatan pengawasan kualitas produksi',
     },
     {
-      risk_name: 'Keterlambatan RFQ',
-      risk_desc:
-        'Keterlambatan proses RFQ dalam rentang waktu purchase request ke pembuatan RFQ',
+      risk_name: 'Penolakan Direct RFQ',
+      risk_desc: 'Penolakan Direct RFQ oleh Supplier dalam proses procurement',
       risk_group: 'SRM Procurement',
-      risk_mitigation: 'Peningkatan komunikasi dengan supplier',
+      risk_mitigation:
+        'Evaluasi kriteria Direct RFQ dan komunikasi dengan supplier',
     },
     {
       risk_name: 'Penerimaan terlambat',
