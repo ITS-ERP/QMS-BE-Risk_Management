@@ -7,8 +7,8 @@ import { CRMRequisitionService } from './crm_requisition.service';
 import { CRMContractService } from './crm_contract.service';
 import { RiskBaseService } from './risk_base.service';
 import { RiskRateTrendData } from './risk_monitoring.service';
-import * as forecastIntegration from '../../data-access/integrations/forecast.integration';
-import { ForecastData } from '../../helpers/dtos/risk_identification.dto';
+// DIHAPUS: import * as forecastIntegration from '../../data-access/integrations/forecast.integration';
+// DIHAPUS: import { ForecastData } from '../../helpers/dtos/risk_identification.dto';
 
 export interface RiskIdentificationMitigationResult {
   pkid?: string | number;
@@ -19,7 +19,7 @@ export interface RiskIdentificationMitigationResult {
   risk_mitigation: string;
   tenant_id?: string;
   priority: string;
-  forecast_prediction: string;
+  // DIHAPUS: forecast_prediction: string;
   mitigation_effectivity: number | string;
 }
 
@@ -44,10 +44,6 @@ export class RiskIdentificationMitigationService {
 
   /**
    * Mendapatkan data gabungan identifikasi dan mitigasi risiko berdasarkan user
-   * @param req Request object
-   * @param riskUser Tipe user (Industry, Supplier, Retail)
-   * @param tenantId ID tenant
-   * @returns Data gabungan identifikasi dan mitigasi risiko
    */
   async getRiskIdentificationAndMitigation(
     req: Request,
@@ -80,7 +76,7 @@ export class RiskIdentificationMitigationService {
             riskBase;
 
           let riskRate: number | null = null;
-          let forecastPrediction = 'Data Prediksi Forecast Tidak Tersedia';
+          // DIHAPUS: let forecastPrediction = 'Data Prediksi Forecast Tidak Tersedia';
           let mitigationEffectivity: number | string =
             'Gagal mendapatkan data risiko';
           let riskRateTrend: RiskRateTrendData[] = [];
@@ -97,7 +93,7 @@ export class RiskIdentificationMitigationService {
                 tenantId,
               );
               riskRate = result.riskRate;
-              forecastPrediction = result.forecastPrediction;
+              // DIHAPUS: forecastPrediction = result.forecastPrediction;
               riskRateTrend = result.riskRateTrend;
               riskRateTrendSuccess = result.success;
             } else if (normalizedRiskUser === 'supplier') {
@@ -108,7 +104,7 @@ export class RiskIdentificationMitigationService {
                 tenantId,
               );
               riskRate = result.riskRate;
-              forecastPrediction = result.forecastPrediction;
+              // DIHAPUS: forecastPrediction = result.forecastPrediction;
               riskRateTrend = result.riskRateTrend;
               riskRateTrendSuccess = result.success;
             } else if (normalizedRiskUser === 'retail') {
@@ -119,7 +115,7 @@ export class RiskIdentificationMitigationService {
                 tenantId,
               );
               riskRate = result.riskRate;
-              forecastPrediction = result.forecastPrediction;
+              // DIHAPUS: forecastPrediction = result.forecastPrediction;
               riskRateTrend = result.riskRateTrend;
               riskRateTrendSuccess = result.success;
             }
@@ -129,7 +125,7 @@ export class RiskIdentificationMitigationService {
               dataError,
             );
             riskRate = null;
-            forecastPrediction = 'Gagal mengambil data prediksi forecast';
+            // DIHAPUS: forecastPrediction = 'Gagal mengambil data prediksi forecast';
             riskRateTrendSuccess = false;
           }
 
@@ -164,7 +160,7 @@ export class RiskIdentificationMitigationService {
             risk_mitigation,
             tenant_id: risk_tenant_id,
             priority,
-            forecast_prediction: forecastPrediction,
+            // DIHAPUS: forecast_prediction: forecastPrediction,
             mitigation_effectivity: mitigationEffectivity,
           });
         } catch (riskError) {
@@ -184,7 +180,7 @@ export class RiskIdentificationMitigationService {
                     ? String(tenantId)
                     : undefined,
               priority: 'Gagal menghitung prioritas',
-              forecast_prediction: 'Data Prediksi Forecast Tidak Tersedia',
+              // DIHAPUS: forecast_prediction: 'Data Prediksi Forecast Tidak Tersedia',
               mitigation_effectivity: 'Gagal mendapatkan data risiko',
             });
           }
@@ -199,7 +195,7 @@ export class RiskIdentificationMitigationService {
   }
 
   /**
-   * Memproses risiko untuk Industry
+   * Memproses risiko untuk Industry - SIMPLIFIED VERSION
    */
   private async processIndustryRisk(
     req: Request,
@@ -208,7 +204,7 @@ export class RiskIdentificationMitigationService {
     tenantId?: number,
   ) {
     let riskRate: number | null = null;
-    let forecastPrediction = 'Data Prediksi Forecast Tidak Tersedia';
+    // DIHAPUS: let forecastPrediction = 'Data Prediksi Forecast Tidak Tersedia';
     let riskRateTrend: RiskRateTrendData[] = [];
 
     if (risk_group === 'Inventory') {
@@ -218,12 +214,7 @@ export class RiskIdentificationMitigationService {
           tenantId,
         );
         riskRate = summary.reject_rate;
-        const forecast =
-          await forecastIntegration.getRejectReceiveByYearIndustry(
-            req,
-            tenantId || 0,
-          );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend = await this.inventoryService.getReceiveRiskRateTrend(
           req,
           tenantId,
@@ -234,12 +225,7 @@ export class RiskIdentificationMitigationService {
           tenantId,
         );
         riskRate = summary.reject_rate;
-        const forecast =
-          await forecastIntegration.getRejectTransferByYearIndustry(
-            req,
-            tenantId || 0,
-          );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend = await this.inventoryService.getTransferRiskRateTrend(
           req,
           tenantId,
@@ -253,12 +239,7 @@ export class RiskIdentificationMitigationService {
             tenantId,
           );
         riskRate = summary.defect_rate;
-        const forecast =
-          await forecastIntegration.getDefectInspectionProductByYearIndustry(
-            req,
-            tenantId || 0,
-          );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend = await this.manufacturingService.getDefectRiskRateTrend(
           req,
           tenantId,
@@ -271,11 +252,7 @@ export class RiskIdentificationMitigationService {
           undefined,
         );
         riskRate = summary.loss_rate;
-        const forecast = await forecastIntegration.getDirectRFQRejectIndustry(
-          req,
-          tenantId || 0,
-        );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.srmProcurementService.getRFQLossRiskRateTrend(
             tenantId,
@@ -289,11 +266,7 @@ export class RiskIdentificationMitigationService {
           tenantId,
         );
         riskRate = summary.late_receipt_rate;
-        const forecast = await forecastIntegration.getLateSRMIndustry(
-          req,
-          tenantId || 0,
-        );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.srmContractService.getLateReceiptRiskRateTrend(
             undefined,
@@ -306,12 +279,7 @@ export class RiskIdentificationMitigationService {
             tenantId,
           );
         riskRate = summary.mismatch_rate;
-        const forecast =
-          await forecastIntegration.getNoncompliantQuantitySRMIndustry(
-            req,
-            tenantId || 0,
-          );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.srmContractService.getQuantityMismatchRiskRateTrend(
             undefined,
@@ -325,11 +293,7 @@ export class RiskIdentificationMitigationService {
           undefined,
         );
         riskRate = summary.rejection_rate;
-        const forecast = await forecastIntegration.getLORRejectIndustry(
-          req,
-          tenantId || 0,
-        );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.crmRequisitionService.getLoRRejectionRiskRateTrend(
             tenantId,
@@ -341,11 +305,7 @@ export class RiskIdentificationMitigationService {
           undefined,
         );
         riskRate = summary.rejection_rate;
-        const forecast = await forecastIntegration.getLOARejectIndustry(
-          req,
-          tenantId || 0,
-        );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.crmRequisitionService.getLoARejectionRiskRateTrend(
             tenantId,
@@ -359,11 +319,7 @@ export class RiskIdentificationMitigationService {
           undefined,
         );
         riskRate = summary.decline_rate;
-        const forecast = await forecastIntegration.getTotalContractCRMIndustry(
-          req,
-          tenantId || 0,
-        );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.crmContractService.getContractDeclineRiskRateTrend(
             tenantId,
@@ -375,11 +331,7 @@ export class RiskIdentificationMitigationService {
           undefined,
         );
         riskRate = summary.late_delivery_rate;
-        const forecast = await forecastIntegration.getLateCRMIndustry(
-          req,
-          tenantId || 0,
-        );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.crmContractService.getLateDeliveryRiskRateTrend(
             tenantId,
@@ -392,12 +344,7 @@ export class RiskIdentificationMitigationService {
             undefined,
           );
         riskRate = summary.mismatch_rate;
-        const forecast =
-          await forecastIntegration.getNoncompliantQuantityCRMIndustry(
-            req,
-            tenantId || 0,
-          );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.crmContractService.getQuantityMismatchRiskRateTrend(
             tenantId,
@@ -406,11 +353,12 @@ export class RiskIdentificationMitigationService {
       }
     }
 
-    return { riskRate, forecastPrediction, riskRateTrend, success: true };
+    // DIHAPUS: return forecastPrediction
+    return { riskRate, riskRateTrend, success: true };
   }
 
   /**
-   * Memproses risiko untuk Supplier
+   * Memproses risiko untuk Supplier - SIMPLIFIED VERSION
    */
   private async processSupplierRisk(
     req: Request,
@@ -419,7 +367,7 @@ export class RiskIdentificationMitigationService {
     tenantId?: number,
   ) {
     let riskRate: number | null = null;
-    let forecastPrediction = 'Data Prediksi Forecast Tidak Tersedia';
+    // DIHAPUS: let forecastPrediction = 'Data Prediksi Forecast Tidak Tersedia';
     let riskRateTrend: RiskRateTrendData[] = [];
 
     if (risk_group === 'Procurement') {
@@ -429,11 +377,7 @@ export class RiskIdentificationMitigationService {
           tenantId,
         );
         riskRate = summary.loss_rate;
-        const forecast = await forecastIntegration.getLoseCountSupplier(
-          req,
-          tenantId || 0,
-        );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.srmProcurementService.getRFQLossRiskRateTrend(
             undefined,
@@ -447,11 +391,7 @@ export class RiskIdentificationMitigationService {
           undefined,
         );
         riskRate = summary.decline_rate;
-        const forecast = await forecastIntegration.getTotalContractSRMSupplier(
-          req,
-          tenantId || 0,
-        );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.srmContractService.getContractDeclineRiskRateTrend(
             tenantId,
@@ -463,11 +403,7 @@ export class RiskIdentificationMitigationService {
           undefined,
         );
         riskRate = summary.late_receipt_rate;
-        const forecast = await forecastIntegration.getLateSRMSupplier(
-          req,
-          tenantId || 0,
-        );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.srmContractService.getLateReceiptRiskRateTrend(
             tenantId,
@@ -480,12 +416,7 @@ export class RiskIdentificationMitigationService {
             undefined,
           );
         riskRate = summary.mismatch_rate;
-        const forecast =
-          await forecastIntegration.getNoncompliantQuantitySRMSupplier(
-            req,
-            tenantId || 0,
-          );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.srmContractService.getQuantityMismatchRiskRateTrend(
             tenantId,
@@ -494,11 +425,12 @@ export class RiskIdentificationMitigationService {
       }
     }
 
-    return { riskRate, forecastPrediction, riskRateTrend, success: true };
+    // DIHAPUS: return forecastPrediction
+    return { riskRate, riskRateTrend, success: true };
   }
 
   /**
-   * Memproses risiko untuk Retail
+   * Memproses risiko untuk Retail - SIMPLIFIED VERSION
    */
   private async processRetailRisk(
     req: Request,
@@ -507,7 +439,7 @@ export class RiskIdentificationMitigationService {
     tenantId?: number,
   ) {
     let riskRate: number | null = null;
-    let forecastPrediction = 'Data Prediksi Forecast Tidak Tersedia';
+    // DIHAPUS: let forecastPrediction = 'Data Prediksi Forecast Tidak Tersedia';
     let riskRateTrend: RiskRateTrendData[] = [];
 
     if (risk_group === 'Requisition') {
@@ -517,11 +449,7 @@ export class RiskIdentificationMitigationService {
           tenantId,
         );
         riskRate = summary.rejection_rate;
-        const forecast = await forecastIntegration.getLORRejectRetail(
-          req,
-          tenantId || 0,
-        );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.crmRequisitionService.getLoRRejectionRiskRateTrend(
             undefined,
@@ -533,11 +461,7 @@ export class RiskIdentificationMitigationService {
           tenantId,
         );
         riskRate = summary.rejection_rate;
-        const forecast = await forecastIntegration.getLOARejectRetail(
-          req,
-          tenantId || 0,
-        );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.crmRequisitionService.getLoARejectionRiskRateTrend(
             undefined,
@@ -551,11 +475,7 @@ export class RiskIdentificationMitigationService {
           tenantId,
         );
         riskRate = summary.late_delivery_rate;
-        const forecast = await forecastIntegration.getLateCRMRetail(
-          req,
-          tenantId || 0,
-        );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.crmContractService.getLateDeliveryRiskRateTrend(
             undefined,
@@ -568,12 +488,7 @@ export class RiskIdentificationMitigationService {
             tenantId,
           );
         riskRate = summary.mismatch_rate;
-        const forecast =
-          await forecastIntegration.getNoncompliantQuantityCRMRetail(
-            req,
-            tenantId || 0,
-          );
-        forecastPrediction = this.calculateForecastPrediction(forecast.data);
+        // DIHAPUS: forecast integration
         riskRateTrend =
           await this.crmContractService.getQuantityMismatchRiskRateTrend(
             undefined,
@@ -582,7 +497,8 @@ export class RiskIdentificationMitigationService {
       }
     }
 
-    return { riskRate, forecastPrediction, riskRateTrend, success: true };
+    // DIHAPUS: return forecastPrediction
+    return { riskRate, riskRateTrend, success: true };
   }
 
   /**
@@ -644,21 +560,5 @@ export class RiskIdentificationMitigationService {
     }
   }
 
-  /**
-   * Menghitung prediksi forecast berdasarkan data
-   */
-  private calculateForecastPrediction(forecastData: ForecastData): string {
-    try {
-      const actualData = forecastData.actual_data;
-      const forecastDataYear = forecastData.forecast_data[0].value;
-      const lastActualValue = actualData[actualData.length - 1].value;
-
-      return lastActualValue < forecastDataYear
-        ? 'Akan Meningkat'
-        : 'Akan Menurun';
-    } catch (error) {
-      console.error('Error calculating forecast prediction:', error);
-      return 'Data Prediksi Forecast Tidak Tersedia';
-    }
-  }
+  // DIHAPUS: calculateForecastPrediction method
 }
