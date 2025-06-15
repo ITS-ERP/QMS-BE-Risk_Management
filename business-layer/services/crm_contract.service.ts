@@ -4,19 +4,23 @@ import * as crmContractIntegration from '../../data-access/integrations/crm_cont
 interface Contract {
   pkid: number;
   code: string;
-  industry_pkid: number; // tenant_id milik industry
-  retail_pkid: number; // tenant_id milik retail
+  industry_pkid: number;
+  retail_pkid: number;
+  start_date?: string;
+  end_date?: string; // ✅ Tambah end_date untuk consistency
+  amount_of_item?: number;
+  contract_type?: string;
+  payment_method?: string;
   status: string;
   letter_of_agreement_pkid: number;
   tenant_id: number | null;
   created_date: string;
 }
 
-// Interface untuk Contract Details
-interface ContractDetail {
+// Interface untuk History Shipments
+interface HistoryShipment {
   pkid: number;
   code: string;
-  currency_code: string;
   target_date: string;
   delivered_date: string | null;
   target_quantity: number;
@@ -28,14 +32,39 @@ interface ContractDetail {
   total_price: number;
   description: string;
   status: string;
-  item_pkid: number;
-  contract_pkid: number;
+  contract_detail_pkid: number;
   tenant_id: number | null;
 }
 
-// Interface untuk Contract dengan Details
-interface ContractWithDetails extends Contract {
-  details: ContractDetail[];
+// Interface untuk detail dengan shipments dari API
+interface ContractDetailWithShipments {
+  pkid: number;
+  code: string;
+  currency_code: string;
+  target_total_price: number;
+  tax_id: number;
+  description: string;
+  item_pkid: number;
+  contract_pkid: number;
+  tenant_id: number | null;
+  history_shipments?: HistoryShipment[];
+}
+
+// ✅ Interface untuk flattened shipment dengan contract info
+interface ShipmentWithContractInfo {
+  shipment_pkid: number;
+  target_date: string;
+  delivered_date: string | null;
+  target_quantity: number;
+  total_quantity: number | null;
+  total_accepted_quantity: number | null;
+  total_rejected_quantity: number | null;
+  status: string;
+  contract_pkid: number;
+  industry_pkid: number;
+  retail_pkid: number;
+  created_date: string;
+  end_date?: string; // ✅ Tambah end_date
 }
 
 export class CRMContractService {
@@ -44,10 +73,77 @@ export class CRMContractService {
     return response.data.data;
   }
 
-  async fetchContractDetailsByContractID(pkid: number) {
-    const response =
-      await crmContractIntegration.getContractDetailsByContractID(pkid);
-    return response.data.data;
+  // ✅ Method baru untuk mendapatkan semua shipments dengan contract info
+  private async getAllShipmentsWithContractInfo(): Promise<
+    ShipmentWithContractInfo[]
+  > {
+    try {
+      // Ambil semua contracts untuk mapping
+      const contracts = await this.fetchAllCRMContract();
+      const contractMap = new Map<number, Contract>();
+      contracts.forEach((contract: Contract) => {
+        contractMap.set(contract.pkid, contract);
+      });
+
+      // Ambil semua contract details dengan history_shipments
+      const detailsResponse =
+        await crmContractIntegration.getAllContractDetail();
+      const contractDetails = detailsResponse.data
+        .data as ContractDetailWithShipments[];
+
+      const allShipments: ShipmentWithContractInfo[] = [];
+
+      // Flatten semua shipments dengan contract info
+      contractDetails.forEach((detail) => {
+        const contract = contractMap.get(detail.contract_pkid);
+        if (!contract) return;
+
+        if (
+          detail.history_shipments &&
+          Array.isArray(detail.history_shipments)
+        ) {
+          detail.history_shipments.forEach((shipment) => {
+            allShipments.push({
+              shipment_pkid: shipment.pkid,
+              target_date: shipment.target_date,
+              delivered_date: shipment.delivered_date,
+              target_quantity: shipment.target_quantity,
+              total_quantity: shipment.total_quantity,
+              total_accepted_quantity: shipment.total_accepted_quantity,
+              total_rejected_quantity: shipment.total_rejected_quantity,
+              status: shipment.status,
+              contract_pkid: contract.pkid,
+              industry_pkid: contract.industry_pkid,
+              retail_pkid: contract.retail_pkid,
+              created_date: contract.created_date,
+              end_date: contract.end_date, // ✅ Include end_date
+            });
+          });
+        }
+      });
+
+      return allShipments;
+    } catch (error) {
+      console.error('Error getting all shipments with contract info:', error);
+      return [];
+    }
+  }
+
+  // ✅ Helper untuk filter berdasarkan tenant
+  private filterByTenant(
+    shipments: ShipmentWithContractInfo[],
+    industry_tenant_id?: number,
+    retail_tenant_id?: number,
+  ): ShipmentWithContractInfo[] {
+    return shipments.filter((shipment) => {
+      if (industry_tenant_id && shipment.industry_pkid !== industry_tenant_id) {
+        return false;
+      }
+      if (retail_tenant_id && shipment.retail_pkid !== retail_tenant_id) {
+        return false;
+      }
+      return true;
+    });
   }
 
   async getContractTotal(
@@ -62,48 +158,24 @@ export class CRMContractService {
 
     const yearlyTotal: { [key: string]: number } = {};
 
-    // Get contract details untuk mendapatkan target_date
-    const contractsWithDetails: ContractWithDetails[] = await Promise.all(
-      contractsData.map(async (contract: Contract) => {
-        try {
-          const details = await this.fetchContractDetailsByContractID(
-            contract.pkid,
-          );
-          return {
-            ...contract,
-            details: Array.isArray(details) ? details : [],
-          };
-        } catch (error) {
-          return {
-            ...contract,
-            details: [],
-          };
-        }
-      }),
-    );
-
-    // Filter dan hitung berdasarkan tenant_id
-    contractsWithDetails.forEach((contract: ContractWithDetails) => {
-      let includeItem = true;
-
+    // ✅ Filter contracts berdasarkan tenant
+    const filteredContracts = contractsData.filter((contract: Contract) => {
       if (industry_tenant_id && contract.industry_pkid !== industry_tenant_id) {
-        includeItem = false;
+        return false;
       }
-
       if (retail_tenant_id && contract.retail_pkid !== retail_tenant_id) {
-        includeItem = false;
+        return false;
       }
+      return true;
+    });
 
-      if (includeItem && contract.details.length > 0) {
-        // Gunakan target_date dari detail pertama
-        const yearKey = new Date(contract.details[0].target_date)
-          .getFullYear()
-          .toString();
-
+    // ✅ UPDATED: Gunakan end_date untuk consistency dengan dashboard analytics
+    filteredContracts.forEach((contract: Contract) => {
+      if (contract.end_date) {
+        const yearKey = new Date(contract.end_date).getFullYear().toString();
         if (!yearlyTotal[yearKey]) {
           yearlyTotal[yearKey] = 0;
         }
-
         yearlyTotal[yearKey] += 1;
       }
     });
@@ -119,65 +191,33 @@ export class CRMContractService {
     industry_tenant_id?: number,
     retail_tenant_id?: number,
   ) {
-    const contractsData = await this.fetchAllCRMContract();
-
-    if (!Array.isArray(contractsData)) {
-      throw new Error('Contracts data is not an array');
-    }
+    // ✅ Gunakan method baru
+    const allShipments = await this.getAllShipmentsWithContractInfo();
+    const filteredShipments = this.filterByTenant(
+      allShipments,
+      industry_tenant_id,
+      retail_tenant_id,
+    );
 
     const yearlyTrend: { [key: string]: { on_time: number; late: number } } =
       {};
 
-    // Get contract details untuk setiap contract
-    const contractsWithDetails: ContractWithDetails[] = await Promise.all(
-      contractsData.map(async (contract: Contract) => {
-        try {
-          const details = await this.fetchContractDetailsByContractID(
-            contract.pkid,
-          );
-          return {
-            ...contract,
-            details: Array.isArray(details) ? details : [],
-          };
-        } catch (error) {
-          return {
-            ...contract,
-            details: [],
-          };
+    // ✅ Proses semua shipments yang sudah delivered
+    filteredShipments.forEach((shipment) => {
+      if (shipment.target_date && shipment.delivered_date) {
+        const targetDate = new Date(shipment.target_date);
+        const deliveredDate = new Date(shipment.delivered_date);
+        const yearKey = targetDate.getFullYear().toString();
+
+        if (!yearlyTrend[yearKey]) {
+          yearlyTrend[yearKey] = { on_time: 0, late: 0 };
         }
-      }),
-    );
 
-    // Filter dan analisis
-    contractsWithDetails.forEach((contract: ContractWithDetails) => {
-      let includeItem = true;
-
-      if (industry_tenant_id && contract.industry_pkid !== industry_tenant_id) {
-        includeItem = false;
-      }
-
-      if (retail_tenant_id && contract.retail_pkid !== retail_tenant_id) {
-        includeItem = false;
-      }
-
-      if (includeItem && contract.details.length > 0) {
-        contract.details.forEach((detail: ContractDetail) => {
-          if (detail.target_date && detail.delivered_date) {
-            const targetDate = new Date(detail.target_date);
-            const deliveredDate = new Date(detail.delivered_date);
-            const yearKey = targetDate.getFullYear().toString();
-
-            if (!yearlyTrend[yearKey]) {
-              yearlyTrend[yearKey] = { on_time: 0, late: 0 };
-            }
-
-            if (deliveredDate <= targetDate) {
-              yearlyTrend[yearKey].on_time += 1;
-            } else {
-              yearlyTrend[yearKey].late += 1;
-            }
-          }
-        });
+        if (deliveredDate <= targetDate) {
+          yearlyTrend[yearKey].on_time += 1;
+        } else {
+          yearlyTrend[yearKey].late += 1;
+        }
       }
     });
 
@@ -208,64 +248,36 @@ export class CRMContractService {
     industry_tenant_id?: number,
     retail_tenant_id?: number,
   ) {
-    const contractsData = await this.fetchAllCRMContract();
-
-    if (!Array.isArray(contractsData)) {
-      throw new Error('Contracts data is not an array');
-    }
+    // ✅ Gunakan method baru
+    const allShipments = await this.getAllShipmentsWithContractInfo();
+    const filteredShipments = this.filterByTenant(
+      allShipments,
+      industry_tenant_id,
+      retail_tenant_id,
+    );
 
     const yearlyCompliance: {
       [key: string]: { compliant: number; noncompliant: number };
     } = {};
 
-    // Get contract details untuk setiap contract
-    const contractsWithDetails: ContractWithDetails[] = await Promise.all(
-      contractsData.map(async (contract: Contract) => {
-        try {
-          const details = await this.fetchContractDetailsByContractID(
-            contract.pkid,
-          );
-          return {
-            ...contract,
-            details: Array.isArray(details) ? details : [],
-          };
-        } catch (error) {
-          return {
-            ...contract,
-            details: [],
-          };
+    // ✅ Proses semua shipments yang memiliki quantity data
+    filteredShipments.forEach((shipment) => {
+      if (
+        shipment.target_date &&
+        shipment.total_quantity !== null &&
+        shipment.target_quantity
+      ) {
+        const yearKey = new Date(shipment.target_date).getFullYear().toString();
+
+        if (!yearlyCompliance[yearKey]) {
+          yearlyCompliance[yearKey] = { compliant: 0, noncompliant: 0 };
         }
-      }),
-    );
 
-    // Filter dan analisis
-    contractsWithDetails.forEach((contract: ContractWithDetails) => {
-      let includeItem = true;
-
-      if (industry_tenant_id && contract.industry_pkid !== industry_tenant_id) {
-        includeItem = false;
-      }
-
-      if (retail_tenant_id && contract.retail_pkid !== retail_tenant_id) {
-        includeItem = false;
-      }
-
-      if (includeItem && contract.details.length > 0) {
-        contract.details.forEach((detail: ContractDetail) => {
-          const yearKey = new Date(detail.target_date).getFullYear().toString();
-
-          if (detail.total_quantity !== null && detail.target_quantity) {
-            if (!yearlyCompliance[yearKey]) {
-              yearlyCompliance[yearKey] = { compliant: 0, noncompliant: 0 };
-            }
-
-            if (detail.total_quantity >= detail.target_quantity) {
-              yearlyCompliance[yearKey].compliant += 1;
-            } else {
-              yearlyCompliance[yearKey].noncompliant += 1;
-            }
-          }
-        });
+        if (shipment.total_quantity >= shipment.target_quantity) {
+          yearlyCompliance[yearKey].compliant += 1;
+        } else {
+          yearlyCompliance[yearKey].noncompliant += 1;
+        }
       }
     });
 
@@ -376,19 +388,19 @@ export class CRMContractService {
       totalLate += item.late;
     });
 
-    const totalDeliveries = totalOnTime + totalLate;
+    const totalShipments = totalOnTime + totalLate;
 
     return {
-      total_deliveries: totalDeliveries > 0 ? totalDeliveries : 0,
+      total_shipments: totalShipments > 0 ? totalShipments : 0,
       on_time_deliveries: totalOnTime > 0 ? totalOnTime : 0,
       late_deliveries: totalLate > 0 ? totalLate : 0,
       on_time_rate:
-        totalDeliveries > 0
-          ? parseFloat(((totalOnTime / totalDeliveries) * 100).toFixed(2))
+        totalShipments > 0
+          ? parseFloat(((totalOnTime / totalShipments) * 100).toFixed(2))
           : 0.0,
       late_delivery_rate:
-        totalDeliveries > 0
-          ? parseFloat(((totalLate / totalDeliveries) * 100).toFixed(2))
+        totalShipments > 0
+          ? parseFloat(((totalLate / totalShipments) * 100).toFixed(2))
           : 0.0,
     };
   }
@@ -411,19 +423,19 @@ export class CRMContractService {
       totalNonCompliant += item.noncompliant;
     });
 
-    const totalContracts = totalCompliant + totalNonCompliant;
+    const totalShipments = totalCompliant + totalNonCompliant;
 
     return {
-      total_contract: totalContracts > 0 ? totalContracts : 0,
-      compliant_quantity: totalCompliant > 0 ? totalCompliant : 0,
-      mismatch_quantity: totalNonCompliant > 0 ? totalNonCompliant : 0,
+      total_shipments: totalShipments,
+      compliant_quantity: totalCompliant,
+      mismatch_quantity: totalNonCompliant,
       compliant_rate:
-        totalContracts > 0
-          ? parseFloat(((totalCompliant / totalContracts) * 100).toFixed(2))
+        totalShipments > 0
+          ? parseFloat(((totalCompliant / totalShipments) * 100).toFixed(2))
           : 0.0,
       mismatch_rate:
-        totalContracts > 0
-          ? parseFloat(((totalNonCompliant / totalContracts) * 100).toFixed(2))
+        totalShipments > 0
+          ? parseFloat(((totalNonCompliant / totalShipments) * 100).toFixed(2))
           : 0.0,
     };
   }

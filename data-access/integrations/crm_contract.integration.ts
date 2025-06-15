@@ -6,7 +6,7 @@ export const getContractByID = (pkid: number) =>
   crmContractApi.get(`/contract/${pkid}`);
 
 export const getAllContractDetail = () =>
-  crmContractApi.get(`/contractDetails/`);
+  crmContractApi.get(`/contractDetail/`);
 
 export const getAllContractDetailsByID = (pkid: number) =>
   crmContractApi.get(`/contractDetail/${pkid}`);
