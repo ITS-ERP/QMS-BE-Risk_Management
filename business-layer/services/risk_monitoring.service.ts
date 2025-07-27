@@ -288,6 +288,7 @@ export class RiskMonitoringService {
       );
     } else if (normalizedRiskUser === 'supplier') {
       return await this.getSupplierTrendData(
+        req,
         risk_group,
         risk_name,
         supplierTenantId,
@@ -338,6 +339,7 @@ export class RiskMonitoringService {
     } else if (risk_group === 'SRM Procurement') {
       if (risk_name === 'Penolakan Direct RFQ') {
         return await this.srmProcurementService.getRFQLossRiskRateTrend(
+          req,
           industryTenantId,
           undefined,
         );
@@ -345,11 +347,13 @@ export class RiskMonitoringService {
     } else if (risk_group === 'SRM Contract') {
       if (risk_name === 'Penerimaan terlambat') {
         return await this.srmContractService.getLateReceiptRiskRateTrend(
+          req,
           undefined,
           industryTenantId,
         );
       } else if (risk_name === 'Jumlah diterima tidak sesuai') {
         return await this.srmContractService.getQuantityMismatchRiskRateTrend(
+          req,
           undefined,
           industryTenantId,
         );
@@ -392,6 +396,7 @@ export class RiskMonitoringService {
    * Helper method untuk mendapatkan trend data Supplier
    */
   private async getSupplierTrendData(
+    req: Request,
     risk_group: string,
     risk_name: string,
     supplierTenantId?: number,
@@ -403,6 +408,7 @@ export class RiskMonitoringService {
     if (risk_group === 'Procurement') {
       if (risk_name === 'Kekalahan pada proses RFQ') {
         return await this.srmProcurementService.getRFQLossRiskRateTrend(
+          req,
           undefined,
           supplierTenantId,
         );
@@ -410,16 +416,19 @@ export class RiskMonitoringService {
     } else if (risk_group === 'Contract') {
       if (risk_name === 'Penurunan jumlah kontrak') {
         return await this.srmContractService.getContractDeclineRiskRateTrend(
+          req,
           supplierTenantId,
           undefined,
         );
       } else if (risk_name === 'Pengiriman terlambat') {
         return await this.srmContractService.getLateReceiptRiskRateTrend(
+          req,
           supplierTenantId,
           undefined,
         );
       } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
         return await this.srmContractService.getQuantityMismatchRiskRateTrend(
+          req,
           supplierTenantId,
           undefined,
         );

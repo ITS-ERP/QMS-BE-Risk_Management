@@ -248,6 +248,7 @@ export class RiskIdentificationMitigationService {
     } else if (risk_group === 'SRM Procurement') {
       if (risk_name === 'Penolakan Direct RFQ') {
         const summary = await this.srmProcurementService.getRFQLossSummary(
+          req,
           tenantId,
           undefined,
         );
@@ -255,6 +256,7 @@ export class RiskIdentificationMitigationService {
         // DIHAPUS: forecast integration
         riskRateTrend =
           await this.srmProcurementService.getRFQLossRiskRateTrend(
+            req,
             tenantId,
             undefined,
           );
@@ -262,6 +264,7 @@ export class RiskIdentificationMitigationService {
     } else if (risk_group === 'SRM Contract') {
       if (risk_name === 'Penerimaan terlambat') {
         const summary = await this.srmContractService.getLateReceiptSummary(
+          req,
           undefined,
           tenantId,
         );
@@ -269,12 +272,14 @@ export class RiskIdentificationMitigationService {
         // DIHAPUS: forecast integration
         riskRateTrend =
           await this.srmContractService.getLateReceiptRiskRateTrend(
+            req,
             undefined,
             tenantId,
           );
       } else if (risk_name === 'Jumlah diterima tidak sesuai') {
         const summary =
           await this.srmContractService.getQuantityMismatchSummary(
+            req,
             undefined,
             tenantId,
           );
@@ -282,6 +287,7 @@ export class RiskIdentificationMitigationService {
         // DIHAPUS: forecast integration
         riskRateTrend =
           await this.srmContractService.getQuantityMismatchRiskRateTrend(
+            req,
             undefined,
             tenantId,
           );
@@ -373,6 +379,7 @@ export class RiskIdentificationMitigationService {
     if (risk_group === 'Procurement') {
       if (risk_name === 'Kekalahan pada proses RFQ') {
         const summary = await this.srmProcurementService.getRFQLossSummary(
+          req,
           undefined,
           tenantId,
         );
@@ -380,6 +387,7 @@ export class RiskIdentificationMitigationService {
         // DIHAPUS: forecast integration
         riskRateTrend =
           await this.srmProcurementService.getRFQLossRiskRateTrend(
+            req,
             undefined,
             tenantId,
           );
@@ -387,6 +395,7 @@ export class RiskIdentificationMitigationService {
     } else if (risk_group === 'Contract') {
       if (risk_name === 'Penurunan jumlah kontrak') {
         const summary = await this.srmContractService.getContractDeclineSummary(
+          req,
           tenantId,
           undefined,
         );
@@ -394,11 +403,13 @@ export class RiskIdentificationMitigationService {
         // DIHAPUS: forecast integration
         riskRateTrend =
           await this.srmContractService.getContractDeclineRiskRateTrend(
+            req,
             tenantId,
             undefined,
           );
       } else if (risk_name === 'Pengiriman terlambat') {
         const summary = await this.srmContractService.getLateReceiptSummary(
+          req,
           tenantId,
           undefined,
         );
@@ -406,12 +417,14 @@ export class RiskIdentificationMitigationService {
         // DIHAPUS: forecast integration
         riskRateTrend =
           await this.srmContractService.getLateReceiptRiskRateTrend(
+            req,
             tenantId,
             undefined,
           );
       } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
         const summary =
           await this.srmContractService.getQuantityMismatchSummary(
+            req,
             tenantId,
             undefined,
           );
@@ -419,6 +432,7 @@ export class RiskIdentificationMitigationService {
         // DIHAPUS: forecast integration
         riskRateTrend =
           await this.srmContractService.getQuantityMismatchRiskRateTrend(
+            req,
             tenantId,
             undefined,
           );

@@ -16,7 +16,7 @@ export class CRMRequisitionController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const allCRMLoR = await this.crmRequisitionService.fetchAllCRMLoR();
+      const allCRMLoR = await this.crmRequisitionService.fetchAllCRMLoR(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -34,7 +34,7 @@ export class CRMRequisitionController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      const allCRMLoA = await this.crmRequisitionService.fetchAllCRMLoA();
+      const allCRMLoA = await this.crmRequisitionService.fetchAllCRMLoA(req);
       return this.sendSuccessGet(
         req,
         res,

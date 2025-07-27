@@ -1,4 +1,8 @@
-import * as crmContractIntegration from '../../data-access/integrations/crm_contract.integration';
+import { Request } from 'express';
+import {
+  getContractsViaRPC,
+  getContractDetailsWithShipmentsViaRPC,
+} from '../../rabbit/requestCRMData';
 
 // Interface untuk Contract
 interface Contract {
@@ -68,9 +72,27 @@ interface ShipmentWithContractInfo {
 }
 
 export class CRMContractService {
+  // 🎯 UPDATED: Fetch all CRM Contract menggunakan RabbitMQ
   async fetchAllCRMContract() {
-    const response = await crmContractIntegration.getAllContracts();
-    return response.data.data;
+    // 🎯 Create mock request for RabbitMQ call
+    const mockReq = { headers: {} } as Request;
+
+    // Create a mock tenant_id for RabbitMQ call since risk monitoring doesn't have specific tenant context
+    const tenant_id = 1; // Default tenant for broad data fetching
+
+    // Gunakan tanggal default untuk range yang luas
+    const startDate = new Date('2020-01-01');
+    const endDate = new Date('2030-12-31');
+
+    // 🎯 USE RABBITMQ INSTEAD OF DIRECT API
+    const response = (await getContractsViaRPC(
+      mockReq,
+      startDate,
+      endDate,
+      tenant_id,
+    )) as Contract[];
+
+    return response;
   }
 
   // ✅ Method baru untuk mendapatkan semua shipments dengan contract info
@@ -78,6 +100,9 @@ export class CRMContractService {
     ShipmentWithContractInfo[]
   > {
     try {
+      // 🎯 Create mock request for RabbitMQ call
+      const mockReq = { headers: {} } as Request;
+
       // Ambil semua contracts untuk mapping
       const contracts = await this.fetchAllCRMContract();
       const contractMap = new Map<number, Contract>();
@@ -85,11 +110,14 @@ export class CRMContractService {
         contractMap.set(contract.pkid, contract);
       });
 
-      // Ambil semua contract details dengan history_shipments
-      const detailsResponse =
-        await crmContractIntegration.getAllContractDetail();
-      const contractDetails = detailsResponse.data
-        .data as ContractDetailWithShipments[];
+      // Create a mock tenant_id for RabbitMQ call
+      const tenant_id = 1; // Default tenant for broad data fetching
+
+      // 🎯 USE RABBITMQ untuk ambil semua contract details dengan history_shipments
+      const contractDetails = (await getContractDetailsWithShipmentsViaRPC(
+        mockReq,
+        tenant_id,
+      )) as ContractDetailWithShipments[];
 
       const allShipments: ShipmentWithContractInfo[] = [];
 

@@ -215,6 +215,7 @@ export class RiskMitigationService {
       if (risk_name === 'Penolakan Direct RFQ') {
         riskRateTrend =
           await this.srmProcurementService.getRFQLossRiskRateTrend(
+            req,
             tenantId,
             undefined,
           );
@@ -223,12 +224,14 @@ export class RiskMitigationService {
       if (risk_name === 'Penerimaan terlambat') {
         riskRateTrend =
           await this.srmContractService.getLateReceiptRiskRateTrend(
+            req,
             undefined,
             tenantId,
           );
       } else if (risk_name === 'Jumlah diterima tidak sesuai') {
         riskRateTrend =
           await this.srmContractService.getQuantityMismatchRiskRateTrend(
+            req,
             undefined,
             tenantId,
           );
@@ -287,6 +290,7 @@ export class RiskMitigationService {
       if (risk_name === 'Kekalahan pada proses RFQ') {
         riskRateTrend =
           await this.srmProcurementService.getRFQLossRiskRateTrend(
+            req,
             undefined,
             tenantId,
           );
@@ -295,18 +299,21 @@ export class RiskMitigationService {
       if (risk_name === 'Penurunan jumlah kontrak') {
         riskRateTrend =
           await this.srmContractService.getContractDeclineRiskRateTrend(
+            req,
             tenantId,
             undefined,
           );
       } else if (risk_name === 'Pengiriman terlambat') {
         riskRateTrend =
           await this.srmContractService.getLateReceiptRiskRateTrend(
+            req,
             tenantId,
             undefined,
           );
       } else if (risk_name === 'Jumlah dikirim tidak sesuai') {
         riskRateTrend =
           await this.srmContractService.getQuantityMismatchRiskRateTrend(
+            req,
             tenantId,
             undefined,
           );

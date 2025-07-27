@@ -25,7 +25,7 @@ export class SRMContractController extends BaseController {
   ): Promise<Response> {
     try {
       const allSRMContract =
-        await this.srmContractService.fetchAllSRMContract();
+        await this.srmContractService.fetchAllSRMContract(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -94,6 +94,7 @@ export class SRMContractController extends BaseController {
 
       const allOnTimeVsLateTrend =
         await this.srmContractService.getAllOnTimeVsLateTrend(
+          req,
           industryTenantIdNum,
           supplierTenantIdNum,
         );
@@ -146,6 +147,7 @@ export class SRMContractController extends BaseController {
       );
 
       const top5LateTrend = await this.srmContractService.getLateTrend(
+        req,
         industryTenantIdNum || undefined,
         supplierTenantIdNum || undefined,
       );
@@ -189,6 +191,7 @@ export class SRMContractController extends BaseController {
 
       const lateReceiptSummary =
         await this.srmContractService.getLateReceiptSummary(
+          req,
           supplierTenantIdNum || undefined,
           industryTenantIdNum || undefined,
         );
@@ -232,6 +235,7 @@ export class SRMContractController extends BaseController {
 
       const lateReceiptRiskRateTrend =
         await this.srmContractService.getLateReceiptRiskRateTrend(
+          req,
           supplierTenantIdNum || undefined,
           industryTenantIdNum || undefined,
         );
@@ -279,6 +283,7 @@ export class SRMContractController extends BaseController {
 
       const quantityCompliance =
         await this.srmContractService.getQuantityCompliance(
+          req,
           industryTenantIdNum || undefined,
           supplierTenantIdNum || undefined,
         );
@@ -322,6 +327,7 @@ export class SRMContractController extends BaseController {
 
       const nonCompliantQuantity =
         await this.srmContractService.getNonCompliantQuantity(
+          req,
           industryTenantIdNum || undefined,
           supplierTenantIdNum || undefined,
         );
@@ -365,6 +371,7 @@ export class SRMContractController extends BaseController {
 
       const quantityMismatchSummary =
         await this.srmContractService.getQuantityMismatchSummary(
+          req,
           supplierTenantIdNum || undefined,
           industryTenantIdNum || undefined,
         );
@@ -408,6 +415,7 @@ export class SRMContractController extends BaseController {
 
       const quantityMismatchRiskRateTrend =
         await this.srmContractService.getQuantityMismatchRiskRateTrend(
+          req,
           supplierTenantIdNum || undefined,
           industryTenantIdNum || undefined,
         );
@@ -454,6 +462,7 @@ export class SRMContractController extends BaseController {
       );
 
       const contractTotal = await this.srmContractService.getContractTotal(
+        req,
         industryTenantIdNum || undefined,
         supplierTenantIdNum || undefined,
       );
@@ -497,6 +506,7 @@ export class SRMContractController extends BaseController {
 
       const contractDeclineSummary =
         await this.srmContractService.getContractDeclineSummary(
+          req,
           supplierTenantIdNum || undefined,
           industryTenantIdNum || undefined,
         );
@@ -540,6 +550,7 @@ export class SRMContractController extends BaseController {
 
       const contractDeclineRiskRateTrend =
         await this.srmContractService.getContractDeclineRiskRateTrend(
+          req,
           supplierTenantIdNum || undefined,
           industryTenantIdNum || undefined,
         );
@@ -586,8 +597,10 @@ export class SRMContractController extends BaseController {
         });
       }
 
-      const topSuppliers =
-        await this.srmContractService.getTopSuppliers(industryTenantIdNum);
+      const topSuppliers = await this.srmContractService.getTopSuppliers(
+        req,
+        industryTenantIdNum,
+      );
 
       return this.sendSuccessGet(
         req,
@@ -627,8 +640,10 @@ export class SRMContractController extends BaseController {
         });
       }
 
-      const topIndustries =
-        await this.srmContractService.getTopIndustries(supplierTenantIdNum);
+      const topIndustries = await this.srmContractService.getTopIndustries(
+        req,
+        supplierTenantIdNum,
+      );
 
       return this.sendSuccessGet(
         req,

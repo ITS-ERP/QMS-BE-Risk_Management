@@ -5,7 +5,7 @@
   "main": "app.ts",
   "scripts": {
     "start": "ts-node ./web-main/app.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "dev": "nodemon -r dotenv/config ./web-main/app.ts",
     "migrate": "npx sequelize-cli db:migrate",
     "seed": "npx sequelize-cli db:seed:all",
@@ -17,8 +17,7 @@
     "prettier-check": "prettier --check .",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
-    "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -39,9 +38,12 @@
   },
   "homepage": "https://github.com/ITS-ERP/TEMPLATE-BE#readme",
   "dependencies": {
+    "@types/amqplib": "^0.10.7",
     "@types/express": "^4.17.21",
     "@types/jsreport": "^2.9.4",
     "@types/jsreport-client": "^1.2.3",
+    "@types/uuid": "^10.0.0",
+    "amqplib": "^0.10.8",
     "axios": "^1.7.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -58,7 +60,8 @@
     "pdfkit": "^0.15.0",
     "pdfkit-table": "^0.1.99",
     "pdfmake": "^0.2.10",
-    "sequelize": "^6.37.3"
+    "sequelize": "^6.37.3",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

@@ -25,7 +25,7 @@ export class SRMProcurementController extends BaseController {
   ): Promise<Response> {
     try {
       const allSRMProcurement =
-        await this.srmProcurementService.fetchAllSRMProcurement();
+        await this.srmProcurementService.fetchAllSRMProcurement(req);
       return this.sendSuccessGet(
         req,
         res,
@@ -106,6 +106,7 @@ export class SRMProcurementController extends BaseController {
       // Menggunakan getRFQLossRiskRateTrend untuk mendapatkan data Direct RFQ rejection
       const directRFQRejectData =
         await this.srmProcurementService.getRFQLossRiskRateTrend(
+          req,
           industryTenantIdNum,
           supplierTenantIdNum,
         );
@@ -192,6 +193,7 @@ export class SRMProcurementController extends BaseController {
       // Menggunakan getRFQLossSummary untuk mendapatkan Direct RFQ rejection summary
       const rfqRejectSummary =
         await this.srmProcurementService.getRFQLossSummary(
+          req,
           industryTenantIdNum,
           supplierTenantIdNum,
         );
@@ -240,6 +242,7 @@ export class SRMProcurementController extends BaseController {
 
       const onTimeDelayedCount =
         await this.srmProcurementService.getRFQOnTimeDelayedCount(
+          req,
           industryTenantIdNum,
         );
 
@@ -281,8 +284,10 @@ export class SRMProcurementController extends BaseController {
         });
       }
 
-      const delayCount =
-        await this.srmProcurementService.getRFQDelayCount(industryTenantIdNum);
+      const delayCount = await this.srmProcurementService.getRFQDelayCount(
+        req,
+        industryTenantIdNum,
+      );
 
       return this.sendSuccessGet(
         req,
@@ -324,6 +329,7 @@ export class SRMProcurementController extends BaseController {
 
       const rfqDelaySummary =
         await this.srmProcurementService.getRFQDelaySummary(
+          req,
           industryTenantIdNum,
         );
 
@@ -367,6 +373,7 @@ export class SRMProcurementController extends BaseController {
 
       const rfqDelayRiskRateTrend =
         await this.srmProcurementService.getRFQDelayRiskRateTrend(
+          req,
           industryTenantIdNum,
         );
 
@@ -448,6 +455,7 @@ export class SRMProcurementController extends BaseController {
       }
 
       const winLoseCount = await this.srmProcurementService.getWinLoseCount(
+        req,
         industryTenantIdNum,
         supplierTenantIdNum,
       );
@@ -526,6 +534,7 @@ export class SRMProcurementController extends BaseController {
       }
 
       const loseCount = await this.srmProcurementService.getLoseCount(
+        req,
         industryTenantIdNum,
         supplierTenantIdNum,
       );
@@ -604,6 +613,7 @@ export class SRMProcurementController extends BaseController {
       }
 
       const rfqLossSummary = await this.srmProcurementService.getRFQLossSummary(
+        req,
         industryTenantIdNum,
         supplierTenantIdNum,
       );
@@ -683,6 +693,7 @@ export class SRMProcurementController extends BaseController {
 
       const rfqLossRiskRateTrend =
         await this.srmProcurementService.getRFQLossRiskRateTrend(
+          req,
           industryTenantIdNum,
           supplierTenantIdNum,
         );
@@ -731,6 +742,7 @@ export class SRMProcurementController extends BaseController {
 
       const comprehensiveStats =
         await this.srmProcurementService.getComprehensiveRFQStats(
+          req,
           industryTenantIdNum,
         );
 
@@ -774,6 +786,7 @@ export class SRMProcurementController extends BaseController {
 
       const supplierStats =
         await this.srmProcurementService.getSupplierRFQStats(
+          req,
           supplierTenantIdNum,
         );
 

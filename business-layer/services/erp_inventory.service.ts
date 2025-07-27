@@ -4,28 +4,36 @@ import {
   ReceiveItem,
   TransferItem,
 } from '../../data-access/utility/interfaces';
-import * as inventoryIntegration from '../../data-access/integrations/erp_inventory.integration';
+import {
+  getReceivesViaRPC,
+  getTransfersViaRPC,
+} from '../../rabbit/requestERPData';
 
 export class InventoryService {
+  // ================================
   // RECEIVE METHODS
+  // ================================
+
+  /**
+   * 🎯 UPDATED: Fetch all receives menggunakan RabbitMQ
+   */
   async fetchAllReceive(
     req: Request,
     industry_tenant_id?: number,
   ): Promise<ReceiveItem[]> {
-    const response = await inventoryIntegration.getAllReceiveWithAuth(req);
-
-    // Filter logic: use industry_tenant_id parameter if provided
-    if (industry_tenant_id !== undefined) {
-      const filteredData = response.data.data.filter(
-        (item: ReceiveItem) => item.tenant_id === industry_tenant_id,
-      );
-      return filteredData;
-    }
-
-    // Fallback: use authenticated user's tenant (backward compatibility)
     const context = getQMSContext(req);
-    const filteredData = response.data.data.filter(
-      (item: ReceiveItem) => item.tenant_id === context.tenant_id_number,
+
+    // 🎯 USE RABBITMQ INSTEAD OF DIRECT API
+    const response = (await getReceivesViaRPC(
+      req,
+      context.tenant_id_number,
+    )) as ReceiveItem[];
+
+    // Filter berdasarkan tenant_id - prioritas industry_tenant_id jika ada, fallback ke context
+    const targetTenantId = industry_tenant_id || context.tenant_id_number;
+    const filteredData = response.filter(
+      (item: ReceiveItem) =>
+        item.tenant_id === targetTenantId || item.tenant_id === null,
     );
 
     return filteredData;
@@ -40,21 +48,14 @@ export class InventoryService {
     let accept = 0;
     let reject = 0;
 
-    data.forEach(
-      (item: {
-        receiveDetails: {
-          item_accepted_quantity: string;
-          item_rejected_quantity: string;
-        }[];
-      }) => {
-        item.receiveDetails.forEach((detail) => {
-          const acceptedQuantity = parseFloat(detail.item_accepted_quantity);
-          const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
-          accept += acceptedQuantity;
-          reject += rejectedQuantity;
-        });
-      },
-    );
+    data.forEach((item: ReceiveItem) => {
+      item.receiveDetails.forEach((detail) => {
+        const acceptedQuantity = parseFloat(detail.item_accepted_quantity);
+        const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
+        accept += acceptedQuantity;
+        reject += rejectedQuantity;
+      });
+    });
 
     const total = accept + reject;
     return { accept, reject, total };
@@ -83,33 +84,26 @@ export class InventoryService {
       'Dec',
     ];
 
-    data.forEach(
-      (item: {
-        received_date: string;
-        receiveDetails: {
-          item_accepted_quantity: string;
-          item_rejected_quantity: string;
-        }[];
-      }) => {
-        const receivedDate = new Date(item.received_date);
-        const monthKey = `${monthNames[receivedDate.getMonth()]} ${receivedDate.getFullYear()}`;
+    data.forEach((item: ReceiveItem) => {
+      const receivedDate = new Date(item.received_date);
+      const monthKey = `${monthNames[receivedDate.getMonth()]} ${receivedDate.getFullYear()}`;
 
-        if (!monthlyData[monthKey]) {
-          monthlyData[monthKey] = { accept: 0, reject: 0 };
-        }
+      if (!monthlyData[monthKey]) {
+        monthlyData[monthKey] = { accept: 0, reject: 0 };
+      }
 
-        item.receiveDetails.forEach((detail) => {
-          const acceptedQuantity = parseFloat(detail.item_accepted_quantity);
-          const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
-          monthlyData[monthKey].accept += acceptedQuantity;
-          monthlyData[monthKey].reject += rejectedQuantity;
-        });
-      },
-    );
+      item.receiveDetails.forEach((detail) => {
+        const acceptedQuantity = parseFloat(detail.item_accepted_quantity);
+        const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
+        monthlyData[monthKey].accept += acceptedQuantity;
+        monthlyData[monthKey].reject += rejectedQuantity;
+      });
+    });
 
     const top5Monthly = Object.entries(monthlyData)
       .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
       .slice(0, 5)
+      .reverse()
       .map(([month, values]) => ({ month, ...values }));
 
     return top5Monthly;
@@ -124,33 +118,24 @@ export class InventoryService {
     const yearlyData: { [key: string]: { accept: number; reject: number } } =
       {};
 
-    data.forEach(
-      (item: {
-        received_date: string;
-        receiveDetails: {
-          item_accepted_quantity: string;
-          item_rejected_quantity: string;
-        }[];
-      }) => {
-        const receivedDate = new Date(item.received_date);
-        const yearKey = receivedDate.getFullYear().toString();
+    data.forEach((item: ReceiveItem) => {
+      const receivedDate = new Date(item.received_date);
+      const yearKey = receivedDate.getFullYear().toString();
 
-        if (!yearlyData[yearKey]) {
-          yearlyData[yearKey] = { accept: 0, reject: 0 };
-        }
+      if (!yearlyData[yearKey]) {
+        yearlyData[yearKey] = { accept: 0, reject: 0 };
+      }
 
-        item.receiveDetails.forEach((detail) => {
-          const acceptedQuantity = parseFloat(detail.item_accepted_quantity);
-          const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
-          yearlyData[yearKey].accept += acceptedQuantity;
-          yearlyData[yearKey].reject += rejectedQuantity;
-        });
-      },
-    );
+      item.receiveDetails.forEach((detail) => {
+        const acceptedQuantity = parseFloat(detail.item_accepted_quantity);
+        const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
+        yearlyData[yearKey].accept += acceptedQuantity;
+        yearlyData[yearKey].reject += rejectedQuantity;
+      });
+    });
 
     const allYearlyData = Object.entries(yearlyData)
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .reverse()
+      .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
       .map(([year, values]) => ({ year, ...values }));
 
     return allYearlyData;
@@ -195,26 +180,19 @@ export class InventoryService {
 
     const yearlyData: { [key: string]: { reject: number } } = {};
 
-    data.forEach(
-      (item: {
-        received_date: string;
-        receiveDetails: {
-          item_rejected_quantity: string;
-        }[];
-      }) => {
-        const receivedDate = new Date(item.received_date);
-        const yearKey = receivedDate.getFullYear().toString();
+    data.forEach((item: ReceiveItem) => {
+      const receivedDate = new Date(item.received_date);
+      const yearKey = receivedDate.getFullYear().toString();
 
-        if (!yearlyData[yearKey]) {
-          yearlyData[yearKey] = { reject: 0 };
-        }
+      if (!yearlyData[yearKey]) {
+        yearlyData[yearKey] = { reject: 0 };
+      }
 
-        item.receiveDetails.forEach((detail) => {
-          const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
-          yearlyData[yearKey].reject += rejectedQuantity;
-        });
-      },
-    );
+      item.receiveDetails.forEach((detail) => {
+        const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
+        yearlyData[yearKey].reject += rejectedQuantity;
+      });
+    });
 
     const top5Yearly = Object.entries(yearlyData)
       .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
@@ -225,25 +203,30 @@ export class InventoryService {
     return top5Yearly;
   }
 
+  // ================================
   // TRANSFER METHODS
+  // ================================
+
+  /**
+   * 🎯 UPDATED: Fetch all transfers menggunakan RabbitMQ
+   */
   async fetchAllTransfer(
     req: Request,
     industry_tenant_id?: number,
   ): Promise<TransferItem[]> {
-    const response = await inventoryIntegration.getAllTransferWithAuth(req);
-
-    // Filter logic: use industry_tenant_id parameter if provided
-    if (industry_tenant_id !== undefined) {
-      const filteredData = response.data.data.filter(
-        (item: TransferItem) => item.tenant_id === industry_tenant_id,
-      );
-      return filteredData;
-    }
-
-    // Fallback: use authenticated user's tenant (backward compatibility)
     const context = getQMSContext(req);
-    const filteredData = response.data.data.filter(
-      (item: TransferItem) => item.tenant_id === context.tenant_id_number,
+
+    // 🎯 USE RABBITMQ INSTEAD OF DIRECT API
+    const response = (await getTransfersViaRPC(
+      req,
+      context.tenant_id_number,
+    )) as TransferItem[];
+
+    // Filter berdasarkan tenant_id - prioritas industry_tenant_id jika ada, fallback ke context
+    const targetTenantId = industry_tenant_id || context.tenant_id_number;
+    const filteredData = response.filter(
+      (item: TransferItem) =>
+        item.tenant_id === targetTenantId || item.tenant_id === null,
     );
 
     return filteredData;
@@ -258,22 +241,14 @@ export class InventoryService {
     let accept = 0;
     let reject = 0;
 
-    data.forEach(
-      (item: {
-        transferDetails: {
-          item_accepted_quantity: string;
-          item_rejected_quantity: string;
-        }[];
-      }) => {
-        item.transferDetails.forEach((detail) => {
-          const acceptedQuantity = parseFloat(detail.item_accepted_quantity);
-          const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
-
-          accept += acceptedQuantity;
-          reject += rejectedQuantity;
-        });
-      },
-    );
+    data.forEach((item: TransferItem) => {
+      item.transferDetails.forEach((detail) => {
+        const acceptedQuantity = parseFloat(detail.item_accepted_quantity);
+        const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
+        accept += acceptedQuantity;
+        reject += rejectedQuantity;
+      });
+    });
 
     const total = accept + reject;
     return { accept, reject, total };
@@ -288,33 +263,24 @@ export class InventoryService {
     const yearlyData: { [key: string]: { accept: number; reject: number } } =
       {};
 
-    data.forEach(
-      (item: {
-        transfer_date: string;
-        transferDetails: {
-          item_accepted_quantity: string;
-          item_rejected_quantity: string;
-        }[];
-      }) => {
-        const transferDate = new Date(item.transfer_date);
-        const yearKey = transferDate.getFullYear().toString();
+    data.forEach((item: TransferItem) => {
+      const transferDate = new Date(item.transfer_date);
+      const yearKey = transferDate.getFullYear().toString();
 
-        if (!yearlyData[yearKey]) {
-          yearlyData[yearKey] = { accept: 0, reject: 0 };
-        }
+      if (!yearlyData[yearKey]) {
+        yearlyData[yearKey] = { accept: 0, reject: 0 };
+      }
 
-        item.transferDetails.forEach((detail) => {
-          const acceptedQuantity = parseFloat(detail.item_accepted_quantity);
-          const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
-          yearlyData[yearKey].accept += acceptedQuantity;
-          yearlyData[yearKey].reject += rejectedQuantity;
-        });
-      },
-    );
+      item.transferDetails.forEach((detail) => {
+        const acceptedQuantity = parseFloat(detail.item_accepted_quantity);
+        const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
+        yearlyData[yearKey].accept += acceptedQuantity;
+        yearlyData[yearKey].reject += rejectedQuantity;
+      });
+    });
 
     const allYearlyData = Object.entries(yearlyData)
-      .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
-      .reverse()
+      .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
       .map(([year, values]) => ({ year, ...values }));
 
     return allYearlyData;
@@ -359,26 +325,19 @@ export class InventoryService {
 
     const yearlyData: { [key: string]: { reject: number } } = {};
 
-    data.forEach(
-      (item: {
-        transfer_date: string;
-        transferDetails: {
-          item_rejected_quantity: string;
-        }[];
-      }) => {
-        const transferDate = new Date(item.transfer_date);
-        const yearKey = transferDate.getFullYear().toString();
+    data.forEach((item: TransferItem) => {
+      const transferDate = new Date(item.transfer_date);
+      const yearKey = transferDate.getFullYear().toString();
 
-        if (!yearlyData[yearKey]) {
-          yearlyData[yearKey] = { reject: 0 };
-        }
+      if (!yearlyData[yearKey]) {
+        yearlyData[yearKey] = { reject: 0 };
+      }
 
-        item.transferDetails.forEach((detail) => {
-          const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
-          yearlyData[yearKey].reject += rejectedQuantity;
-        });
-      },
-    );
+      item.transferDetails.forEach((detail) => {
+        const rejectedQuantity = parseFloat(detail.item_rejected_quantity);
+        yearlyData[yearKey].reject += rejectedQuantity;
+      });
+    });
 
     const top5Yearly = Object.entries(yearlyData)
       .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
@@ -389,7 +348,13 @@ export class InventoryService {
     return top5Yearly;
   }
 
+  // ================================
   // RISK ANALYSIS METHODS
+  // ================================
+
+  /**
+   * Risk Rate Trend untuk Receive (Ketidaksesuaian Jumlah Received Items)
+   */
   async getReceiveRiskRateTrend(
     req: Request,
     industry_tenant_id?: number,
@@ -410,6 +375,9 @@ export class InventoryService {
     return riskRateTrend;
   }
 
+  /**
+   * Risk Rate Trend untuk Transfer (Ketidaksesuaian Jumlah Transferred Items)
+   */
   async getTransferRiskRateTrend(
     req: Request,
     industry_tenant_id?: number,
