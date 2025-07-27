@@ -10,8 +10,6 @@ import {
 import { RiskBaseResultDTO } from '../../helpers/dtos/risk_base.dto';
 import { getQMSContext } from '../../data-access/utility/requestHelper';
 import * as userManagementIntegration from '../../data-access/integrations/userManagement.integration';
-
-// Type definition for risk base creation (without auto-generated fields)
 type RiskBaseCreationData = Omit<
   RiskBaseAttributes,
   | 'pkid'
@@ -160,10 +158,6 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     this.riskBaseRepository = new RiskBaseRepository();
   }
 
-  // ============================================================================
-  // ORIGINAL METHODS (Unchanged)
-  // ============================================================================
-
   public async findAllRiskBases(
     req: Request,
   ): Promise<Model<RiskBaseAttributes>[]> {
@@ -177,19 +171,11 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     return await super.findByPKID(req, pkid);
   }
 
-  /**
-   * Menemukan risk bases berdasarkan kriteria yang disediakan
-   * @param req Request object
-   * @param criteria Kriteria pencarian seperti risk_user, risk_group, tenant_id
-   * @returns Array dari RiskBaseResultDTO
-   */
   public async findRiskBasesByCriteria(
     req: Request,
     criteria: Record<string, string | number | undefined>,
   ): Promise<RiskBaseResultDTO[]> {
     console.log('Finding risk bases with criteria:', criteria);
-
-    // Bersihkan kriteria dari nilai undefined
     const cleanCriteria: Record<string, string | number> = {};
     for (const key in criteria) {
       if (criteria[key] !== undefined) {
@@ -198,11 +184,7 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     }
 
     console.log('Clean criteria:', cleanCriteria);
-
-    // Konstruksi where clause berdasarkan kriteria yang diberikan
     const where: WhereOptions<RiskBaseAttributes> = cleanCriteria;
-
-    // Temukan risk bases berdasarkan kriteria
     const riskBases = await this.where(req, where);
     console.log(`Found ${riskBases.length} risk bases`);
 
@@ -211,31 +193,20 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     );
   }
 
-  /**
-   * Mencari satu risk base berdasarkan kriteria where
-   * @param req Request object
-   * @param criteria Kriteria pencarian
-   * @returns Model risk base atau null
-   */
   public async findOneRiskByCriteria(
     req: Request,
     criteria: Record<string, string | number | undefined>,
   ): Promise<RiskBaseResultDTO | null> {
     console.log('Finding one risk base with criteria:', criteria);
-
-    // Bersihkan kriteria dari nilai undefined
     const cleanCriteria: Record<string, string | number> = {};
     for (const key in criteria) {
       if (criteria[key] !== undefined) {
         cleanCriteria[key] = criteria[key] as string | number;
       }
     }
-
-    // Konstruksi where clause
     const where: WhereOptions<RiskBaseAttributes> = cleanCriteria;
 
     try {
-      // Gunakan where dari BaseService tetapi ambil hanya item pertama
       const riskBases = await this.where(req, where);
 
       if (!riskBases || riskBases.length === 0) {
@@ -316,14 +287,10 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
   ): Promise<[number, Model<RiskBaseAttributes>[]]> {
     try {
       console.log(`🔒 DEBUG: Starting update for PKID ${pkid}`);
-
-      // ✅ Get tenant info
       const tenantCheck = await this.checkTenantRiskBases(req);
       console.log(
         `🔒 DEBUG: Tenant info - ID: ${tenantCheck.tenantId}, User: ${tenantCheck.riskUser}`,
       );
-
-      // ✅ Check ownership
       const existingRiskBase =
         await this.riskBaseRepository.findByPkidAndTenant(
           req,
@@ -340,16 +307,12 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
       }
 
       console.log(`✅ DEBUG: Ownership validated. Proceeding with update...`);
-
-      // ✅ Simple sanitization - hanya hapus yang critical
       const sanitizedEntity = { ...entity };
       delete sanitizedEntity.pkid;
       delete sanitizedEntity.tenant_id;
       delete sanitizedEntity.risk_user;
 
       console.log(`🔄 DEBUG: Sanitized entity:`, sanitizedEntity);
-
-      // ✅ Call original update
       const result = await super.update(req, pkid, sanitizedEntity);
       console.log(`✅ DEBUG: Update result:`, result);
 
@@ -379,15 +342,6 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     await super.restore(req, pkid);
   }
 
-  // ============================================================================
-  // NEW TENANT-BASED METHODS
-  // ============================================================================
-
-  /**
-   * Get tenant information from User Management API
-   * @param req Request object with authentication
-   * @returns Tenant info with type
-   */
   private async getTenantInfo(req: Request): Promise<{
     tenant_id: number;
     tenant_type: string;
@@ -425,11 +379,6 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     }
   }
 
-  /**
-   * Map tenant type to risk_user
-   * @param tenantType Tenant type from User Management
-   * @returns Risk user type
-   */
   private mapTenantTypeToRiskUser(tenantType: string): string {
     const normalizedType = tenantType.toLowerCase();
 
@@ -443,19 +392,12 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     } else if (normalizedType.includes('retail')) {
       return 'Retail';
     }
-
-    // Default fallback
     console.warn(
       `⚠️ Unknown tenant type: ${tenantType}, defaulting to Industry`,
     );
     return 'Industry';
   }
 
-  /**
-   * Check if tenant already has risk bases
-   * @param req Request object
-   * @returns Promise<{exists: boolean, count: number, riskUser: string}>
-   */
   public async checkTenantRiskBases(req: Request): Promise<{
     exists: boolean;
     count: number;
@@ -498,11 +440,6 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     }
   }
 
-  /**
-   * Create default risk bases for authenticated tenant
-   * @param req Request object with authentication
-   * @returns Promise<RiskBaseResultVM[]>
-   */
   public async createDefaultRiskBasesForTenant(req: Request): Promise<{
     success: boolean;
     message: string;
@@ -511,8 +448,6 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
   }> {
     try {
       console.log('🚀 Starting default risk bases creation for tenant');
-
-      // Check if tenant already has risk bases
       const tenantCheck = await this.checkTenantRiskBases(req);
 
       if (tenantCheck.exists) {
@@ -522,8 +457,6 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
           count: tenantCheck.count,
         };
       }
-
-      // Get risk templates for tenant type
       const riskTemplates =
         DEFAULT_RISK_TEMPLATES[
           tenantCheck.riskUser as keyof typeof DEFAULT_RISK_TEMPLATES
@@ -539,8 +472,6 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
       console.log(
         `📋 Creating ${riskTemplates.length} default risks for ${tenantCheck.riskUser}`,
       );
-
-      // Prepare risk base entities with tenant_id and risk_user
       const riskBaseEntities: RiskBaseCreationData[] = riskTemplates.map(
         (template) => ({
           ...template,
@@ -548,22 +479,17 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
           tenant_id: tenantCheck.tenantId,
         }),
       );
-
-      // Bulk create using repository method (cast to expected type)
       const result = await this.riskBaseRepository.bulkCreateWithValidation(
         req,
         riskBaseEntities as CreationAttributes<Model<RiskBaseAttributes>>[],
       );
 
       if (typeof result === 'string') {
-        // Error occurred
         return {
           success: false,
           message: result,
         };
       }
-
-      // Convert to result VMs
       const resultVMs = result.map(
         (model) => new RiskBaseResultVM(this.convertToResultDTO(model)),
       );
@@ -588,11 +514,6 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     }
   }
 
-  /**
-   * Get risk bases for authenticated tenant
-   * @param req Request object with authentication
-   * @returns Promise<RiskBaseResultDTO[]>
-   */
   public async getTenantRiskBases(req: Request): Promise<RiskBaseResultDTO[]> {
     try {
       const tenantCheck = await this.checkTenantRiskBases(req);
@@ -610,12 +531,6 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     }
   }
 
-  /**
-   * Update risk mitigations for tenant
-   * @param req Request object with authentication
-   * @param updates Array of risk mitigation updates
-   * @returns Promise<{success: boolean, message: string, updatedCount: number}>
-   */
   public async updateTenantRiskMitigations(
     req: Request,
     updates: Array<{ risk_name: string; risk_mitigation: string }>,
@@ -664,11 +579,6 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     }
   }
 
-  /**
-   * Delete all risk bases for tenant (soft delete)
-   * @param req Request object with authentication
-   * @returns Promise<{success: boolean, message: string, deletedCount: number}>
-   */
   public async deleteTenantRiskBases(req: Request): Promise<{
     success: boolean;
     message: string;
@@ -712,17 +622,6 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     }
   }
 
-  // ============================================================================
-  // LEGACY METHOD (Updated)
-  // ============================================================================
-
-  /**
-   * Mencari kode yang sesuai berdasarkan tenant_id (Legacy method - updated)
-   * @param req Request object
-   * @param tenantId ID tenant
-   * @param riskUser Tipe user (Industry, Supplier, Retail)
-   * @returns Object dengan pasangan kode (industryCode, supplierCode, retailCode)
-   */
   public async findCodesByTenantId(
     req: Request,
     tenantId: string | number,
@@ -747,22 +646,16 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
     console.log(
       `Searching for codes with tenant_id ${numericTenantId} and user ${riskUser}`,
     );
-
-    // Cari risk bases dengan tenant_id ini
     const criteria = {
       tenant_id: numericTenantId,
       risk_user: riskUser,
     };
-
-    // Gunakan metode yang sudah ada untuk mendapatkan risk base
     const riskBase = await this.findOneRiskByCriteria(req, criteria);
 
     if (!riskBase) {
       console.log(
         `No risk base found for tenant_id ${tenantId} and user ${riskUser}`,
       );
-
-      // Jika tidak ada data ditemukan, buat kode default berdasarkan tenant_id
       const paddedId = String(numericTenantId).padStart(3, '0');
       if (riskUser.toLowerCase() === 'industry') {
         return { industryCode: `IND-${paddedId}` };
@@ -780,8 +673,6 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
       supplierCode?: string;
       retailCode?: string;
     } = {};
-
-    // Coba dapatkan kode berdasarkan tipe pengguna
     try {
       const paddedId = String(numericTenantId).padStart(3, '0');
       if (riskUser.toLowerCase() === 'industry') {
@@ -793,8 +684,6 @@ export class RiskBaseService extends BaseService<Model<RiskBaseAttributes>> {
       }
     } catch (error) {
       console.error('Error extracting code information:', error);
-
-      // Jika terjadi error, buat kode default
       const paddedId = String(numericTenantId).padStart(3, '0');
       if (riskUser.toLowerCase() === 'industry') {
         codes.industryCode = `IND-${paddedId}`;

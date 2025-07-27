@@ -10,8 +10,6 @@ export class RiskMonitoringController extends BaseController {
     super();
     this.riskMonitoringService = new RiskMonitoringService();
   }
-
-  // Controller untuk mendapatkan monitoring risiko berdasarkan jenis pengguna
   public async getRiskMonitoringController(
     req: Request,
     res: Response,
@@ -25,19 +23,13 @@ export class RiskMonitoringController extends BaseController {
         | string
         | undefined;
       const retailTenantId = req.query.retail_tenant_id as string | undefined;
-
-      // Validasi parameter wajib
       if (!riskUser) {
         return res.status(400).json({
           message: 'risk_user is required',
           error: 'Missing required parameter: risk_user',
         });
       }
-
-      // Normalisasi riskUser untuk perbandingan case-insensitive
       const normalizedRiskUser = riskUser.toLowerCase();
-
-      // Validasi bahwa tenant_id yang sesuai disediakan berdasarkan riskUser
       if (normalizedRiskUser === 'industry' && !industryTenantId) {
         return res.status(400).json({
           message: 'industry_tenant_id is required for risk_user Industry',
@@ -58,13 +50,9 @@ export class RiskMonitoringController extends BaseController {
           error: 'Missing required parameter: retail_tenant_id',
         });
       }
-
-      // Parse dan validasi tenant_id format
       let industryTenantIdNum: number | undefined;
       let supplierTenantIdNum: number | undefined;
       let retailTenantIdNum: number | undefined;
-
-      // Validasi dan parse industry_tenant_id jika ada
       if (industryTenantId) {
         industryTenantIdNum = parseInt(industryTenantId, 10);
         if (isNaN(industryTenantIdNum)) {
@@ -74,8 +62,6 @@ export class RiskMonitoringController extends BaseController {
           });
         }
       }
-
-      // Validasi dan parse supplier_tenant_id jika ada
       if (supplierTenantId) {
         supplierTenantIdNum = parseInt(supplierTenantId, 10);
         if (isNaN(supplierTenantIdNum)) {
@@ -85,8 +71,6 @@ export class RiskMonitoringController extends BaseController {
           });
         }
       }
-
-      // Validasi dan parse retail_tenant_id jika ada
       if (retailTenantId) {
         retailTenantIdNum = parseInt(retailTenantId, 10);
         if (isNaN(retailTenantIdNum)) {
@@ -106,8 +90,6 @@ export class RiskMonitoringController extends BaseController {
             supplierTenantIdNum,
             retailTenantIdNum,
           );
-
-        // Jika tidak ada data yang ditemukan, kembalikan array kosong dengan pesan sukses
         if (!riskMonitoring || riskMonitoring.length === 0) {
           console.log(`No risk monitoring data found for ${riskUser}`);
           return this.sendSuccessGet(req, res, [], MessagesKey.SUCCESSGET, 200);
@@ -136,8 +118,6 @@ export class RiskMonitoringController extends BaseController {
       return this.handleError(req, res, error, 500);
     }
   }
-
-  // Controller untuk mendapatkan monitoring risiko spesifik
   public async getSpecificRiskMonitoringController(
     req: Request,
     res: Response,
@@ -152,19 +132,13 @@ export class RiskMonitoringController extends BaseController {
         | string
         | undefined;
       const retailTenantId = req.query.retail_tenant_id as string | undefined;
-
-      // Validasi parameter wajib
       if (!riskUser || !riskName) {
         return res.status(400).json({
           message: 'risk_user and risk_name are required',
           error: 'Missing required parameters: risk_user AND risk_name',
         });
       }
-
-      // Normalisasi riskUser untuk perbandingan case-insensitive
       const normalizedRiskUser = riskUser.toLowerCase();
-
-      // Validasi bahwa tenant_id yang sesuai disediakan berdasarkan riskUser
       if (normalizedRiskUser === 'industry' && !industryTenantId) {
         return res.status(400).json({
           message: 'industry_tenant_id is required for risk_user Industry',
@@ -185,13 +159,9 @@ export class RiskMonitoringController extends BaseController {
           error: 'Missing required parameter: retail_tenant_id',
         });
       }
-
-      // Parse dan validasi tenant_id format
       let industryTenantIdNum: number | undefined;
       let supplierTenantIdNum: number | undefined;
       let retailTenantIdNum: number | undefined;
-
-      // Validasi dan parse industry_tenant_id jika ada
       if (industryTenantId) {
         industryTenantIdNum = parseInt(industryTenantId, 10);
         if (isNaN(industryTenantIdNum)) {
@@ -201,8 +171,6 @@ export class RiskMonitoringController extends BaseController {
           });
         }
       }
-
-      // Validasi dan parse supplier_tenant_id jika ada
       if (supplierTenantId) {
         supplierTenantIdNum = parseInt(supplierTenantId, 10);
         if (isNaN(supplierTenantIdNum)) {
@@ -212,8 +180,6 @@ export class RiskMonitoringController extends BaseController {
           });
         }
       }
-
-      // Validasi dan parse retail_tenant_id jika ada
       if (retailTenantId) {
         retailTenantIdNum = parseInt(retailTenantId, 10);
         if (isNaN(retailTenantIdNum)) {

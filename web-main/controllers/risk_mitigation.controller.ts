@@ -1,5 +1,3 @@
-// web-main\controllers\risk_mitigation.controller.ts
-
 import { Request, Response } from 'express';
 import { RiskMitigationService } from '../../business-layer/services/risk_mitigation.service';
 import { BaseController } from '../common/base.controller';
@@ -13,9 +11,6 @@ export class RiskMitigationController extends BaseController {
     this.riskMitigationService = new RiskMitigationService();
   }
 
-  /**
-   * Validate authentication header
-   */
   private validateAuthHeader(req: Request): string | null {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -27,21 +22,15 @@ export class RiskMitigationController extends BaseController {
     return null;
   }
 
-  /**
-   * Controller untuk mendapatkan mitigasi risiko berdasarkan jenis pengguna
-   */
   public async getRiskMitigationController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      // Validate authentication
       const authError = this.validateAuthHeader(req);
       if (authError) {
         return this.handleError(req, res, authError, 401);
       }
-
-      // Extract query parameters
       const riskUser = req.query.risk_user as string | undefined;
       const tenantId = req.query.tenant_id as string | undefined;
 
@@ -50,8 +39,6 @@ export class RiskMitigationController extends BaseController {
         tenantId,
         hasAuth: !!req.headers.authorization,
       });
-
-      // Validate required parameters
       if (!riskUser) {
         return this.handleError(req, res, 'Risk user is required', 400);
       }
@@ -71,15 +58,12 @@ export class RiskMitigationController extends BaseController {
       }
 
       try {
-        // Call service with proper parameters (req object contains auth headers)
         const riskMitigation =
           await this.riskMitigationService.getRiskMitigation(
             req,
             riskUser,
             tenantIdNum,
           );
-
-        // Return empty array with standard success message if no data found
         if (!riskMitigation || riskMitigation.length === 0) {
           console.log(
             `No data found for ${riskUser} with tenant_id ${tenantIdNum}`,
@@ -103,8 +87,6 @@ export class RiskMitigationController extends BaseController {
           serviceError instanceof Error
             ? serviceError.message
             : 'Unknown service error';
-
-        // Check if it's an authentication error from downstream services
         if (
           errorMessage.includes('401') ||
           errorMessage.includes('unauthorized')
@@ -137,21 +119,15 @@ export class RiskMitigationController extends BaseController {
     }
   }
 
-  /**
-   * Controller untuk mendapatkan mitigasi risiko berdasarkan PKID
-   */
   public async getRiskMitigationByPkidController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      // Validate authentication
       const authError = this.validateAuthHeader(req);
       if (authError) {
         return this.handleError(req, res, authError, 401);
       }
-
-      // Extract path and query parameters
       const pkidParam = req.params.pkid;
       const riskUser = req.query.risk_user as string | undefined;
       const tenantId = req.query.tenant_id as string | undefined;
@@ -162,8 +138,6 @@ export class RiskMitigationController extends BaseController {
         tenantId,
         hasAuth: !!req.headers.authorization,
       });
-
-      // Validate PKID parameter
       if (!pkidParam) {
         return this.handleError(req, res, 'PKID is required', 400);
       }
@@ -172,8 +146,6 @@ export class RiskMitigationController extends BaseController {
       if (isNaN(pkid)) {
         return this.handleError(req, res, 'PKID must be a valid number', 400);
       }
-
-      // Validate tenant_id if provided
       let tenantIdNum: number | undefined = undefined;
       if (tenantId) {
         tenantIdNum = parseInt(tenantId, 10);
@@ -188,7 +160,6 @@ export class RiskMitigationController extends BaseController {
       }
 
       try {
-        // Call service with proper parameters
         const riskMitigation =
           await this.riskMitigationService.getRiskMitigationByPkid(
             req,
@@ -196,8 +167,6 @@ export class RiskMitigationController extends BaseController {
             riskUser,
             tenantIdNum,
           );
-
-        // Handle not found case
         if (!riskMitigation) {
           let notFoundMessage = `Risk mitigation with PKID ${pkid} not found`;
           if (riskUser) {
@@ -225,8 +194,6 @@ export class RiskMitigationController extends BaseController {
           serviceError instanceof Error
             ? serviceError.message
             : 'Unknown service error';
-
-        // Check if it's an authentication error from downstream services
         if (
           errorMessage.includes('401') ||
           errorMessage.includes('unauthorized')
@@ -259,21 +226,15 @@ export class RiskMitigationController extends BaseController {
     }
   }
 
-  /**
-   * Controller untuk mendapatkan mitigasi risiko spesifik berdasarkan nama risiko
-   */
   public async getSpecificRiskMitigationController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      // Validate authentication
       const authError = this.validateAuthHeader(req);
       if (authError) {
         return this.handleError(req, res, authError, 401);
       }
-
-      // Extract query parameters
       const riskUser = req.query.risk_user as string | undefined;
       const riskName = req.query.risk_name as string | undefined;
       const tenantId = req.query.tenant_id as string | undefined;
@@ -284,8 +245,6 @@ export class RiskMitigationController extends BaseController {
         tenantId,
         hasAuth: !!req.headers.authorization,
       });
-
-      // Validate required parameters
       if (!riskUser || !riskName) {
         return this.handleError(
           req,
@@ -310,7 +269,6 @@ export class RiskMitigationController extends BaseController {
       }
 
       try {
-        // Call service with proper parameters (req object contains auth headers)
         const specificRiskMitigation =
           await this.riskMitigationService.getSpecificRiskMitigation(
             req,
@@ -318,8 +276,6 @@ export class RiskMitigationController extends BaseController {
             riskName,
             tenantIdNum,
           );
-
-        // Handle not found case
         if (!specificRiskMitigation) {
           console.log(
             `Risk mitigation with name '${riskName}' not found for ${riskUser}`,
@@ -351,8 +307,6 @@ export class RiskMitigationController extends BaseController {
           serviceError instanceof Error
             ? serviceError.message
             : 'Unknown service error';
-
-        // Check if it's an authentication error from downstream services
         if (
           errorMessage.includes('401') ||
           errorMessage.includes('unauthorized')

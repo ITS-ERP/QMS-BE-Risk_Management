@@ -9,10 +9,6 @@ import {
   HistoryShipment,
 } from '../../rabbit/external/crmContractDB';
 
-// ================================
-// TYPE DEFINITIONS FOR CRM DATA
-// ================================
-
 export interface CRMContractData {
   pkid: number;
   code: string;
@@ -88,10 +84,6 @@ export interface CRMHistoryShipmentData {
   deleted_date?: Date;
   deleted_host?: string;
 }
-
-// ================================
-// EXISTING FALLBACK FUNCTIONS (unchanged)
-// ================================
 
 export const fallbackGetLoRFromCRMDB = async (
   tenant_id: number,
@@ -260,13 +252,6 @@ export const fallbackGetContractDetailsWithShipmentsFromCRMDB = async (
   }
 };
 
-// ================================
-// NEW FALLBACK FUNCTIONS FOR CONTRACT ASSESSMENT
-// ================================
-
-/**
- * Fallback: Get contract by pkid from CRM Contract Management Database
- */
 export const fallbackGetContractByPkidFromCRMDB = async (
   contract_pkid: number,
 ): Promise<CRMContractData | null> => {
@@ -279,7 +264,7 @@ export const fallbackGetContractByPkidFromCRMDB = async (
       where: {
         pkid: contract_pkid,
         is_deleted: {
-          [Op.or]: [false, null], // Include records where is_deleted is false or null
+          [Op.or]: [false, null],
         },
       },
       raw: true,
@@ -305,10 +290,6 @@ export const fallbackGetContractByPkidFromCRMDB = async (
   }
 };
 
-/**
- * Fallback: Get all contracts from CRM Contract Management Database
- * Used for assessment getAllContractsCRM functionality
- */
 export const fallbackGetAllContractsFromCRMDB = async (): Promise<
   CRMContractData[]
 > => {
@@ -320,11 +301,11 @@ export const fallbackGetAllContractsFromCRMDB = async (): Promise<
     const contracts = (await Contract.findAll({
       where: {
         is_deleted: {
-          [Op.or]: [false, null], // Include records where is_deleted is false or null
+          [Op.or]: [false, null],
         },
       },
       raw: true,
-      order: [['created_date', 'DESC']], // Latest contracts first
+      order: [['created_date', 'DESC']],
     })) as unknown as CRMContractData[];
 
     console.log(
@@ -341,9 +322,6 @@ export const fallbackGetAllContractsFromCRMDB = async (): Promise<
   }
 };
 
-/**
- * Fallback: Get contracts by industry_id from CRM Contract Management Database
- */
 export const fallbackGetContractsByIndustryFromCRMDB = async (
   industry_id: number,
 ): Promise<CRMContractData[]> => {
@@ -356,7 +334,7 @@ export const fallbackGetContractsByIndustryFromCRMDB = async (
       where: {
         industry_pkid: industry_id,
         is_deleted: {
-          [Op.or]: [false, null], // Include records where is_deleted is false or null
+          [Op.or]: [false, null],
         },
       },
       raw: true,
@@ -376,9 +354,6 @@ export const fallbackGetContractsByIndustryFromCRMDB = async (
   }
 };
 
-/**
- * Fallback: Get contracts by retail_id from CRM Contract Management Database
- */
 export const fallbackGetContractsByRetailFromCRMDB = async (
   retail_id: number,
 ): Promise<CRMContractData[]> => {
@@ -391,7 +366,7 @@ export const fallbackGetContractsByRetailFromCRMDB = async (
       where: {
         retail_pkid: retail_id,
         is_deleted: {
-          [Op.or]: [false, null], // Include records where is_deleted is false or null
+          [Op.or]: [false, null],
         },
       },
       raw: true,
@@ -411,10 +386,6 @@ export const fallbackGetContractsByRetailFromCRMDB = async (
   }
 };
 
-/**
- * Fallback: Get contracts with user resolution for assessment
- * This combines user and contract data for assessment purposes
- */
 export const fallbackGetCRMContractsWithUserResolution = async (
   tenant_id: number,
   user_type: 'industry' | 'retail',
@@ -427,10 +398,8 @@ export const fallbackGetCRMContractsWithUserResolution = async (
     let contracts: CRMContractData[] = [];
 
     if (user_type === 'industry') {
-      // For industry: get contracts by industry_pkid
       contracts = await fallbackGetContractsByIndustryFromCRMDB(tenant_id);
     } else if (user_type === 'retail') {
-      // For retail: get contracts by retail_pkid
       contracts = await fallbackGetContractsByRetailFromCRMDB(tenant_id);
     }
 
@@ -448,9 +417,6 @@ export const fallbackGetCRMContractsWithUserResolution = async (
   }
 };
 
-/**
- * Fallback: Get contract details by contract_pkid from CRM Database
- */
 export const fallbackGetContractDetailsByContractPkidFromCRMDB = async (
   contract_pkid: number,
 ): Promise<CRMContractDetailData[]> => {
@@ -499,15 +465,9 @@ export const fallbackGetContractDetailsByContractPkidFromCRMDB = async (
   }
 };
 
-/**
- * Fallback: Test database connections
- * Helper function to verify CRM database connectivity
- */
 export const fallbackTestCRMConnections = async () => {
   try {
     console.log(`🔍 [Fallback Test] Testing CRM database connections...`);
-
-    // Test contract management DB
     const contractTest = (await Contract.findOne({
       limit: 1,
       raw: true,
@@ -515,8 +475,6 @@ export const fallbackTestCRMConnections = async () => {
     console.log(
       `✅ [Fallback Test] CRM Contract Management DB connection: ${contractTest ? 'SUCCESS' : 'EMPTY TABLE'}`,
     );
-
-    // Test requisition DB
     const lorTest = await LetterOfRequest.findOne({
       limit: 1,
       raw: true,
@@ -524,8 +482,6 @@ export const fallbackTestCRMConnections = async () => {
     console.log(
       `✅ [Fallback Test] CRM Requisition DB connection: ${lorTest ? 'SUCCESS' : 'EMPTY TABLE'}`,
     );
-
-    // Test contract details
     const contractDetailTest = (await ContractDetail.findOne({
       limit: 1,
       raw: true,

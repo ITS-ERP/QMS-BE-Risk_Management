@@ -10,26 +10,15 @@ import {
 } from '../../rabbit/requestERPData';
 
 export class InventoryService {
-  // ================================
-  // RECEIVE METHODS
-  // ================================
-
-  /**
-   * 🎯 UPDATED: Fetch all receives menggunakan RabbitMQ
-   */
   async fetchAllReceive(
     req: Request,
     industry_tenant_id?: number,
   ): Promise<ReceiveItem[]> {
     const context = getQMSContext(req);
-
-    // 🎯 USE RABBITMQ INSTEAD OF DIRECT API
     const response = (await getReceivesViaRPC(
       req,
       context.tenant_id_number,
     )) as ReceiveItem[];
-
-    // Filter berdasarkan tenant_id - prioritas industry_tenant_id jika ada, fallback ke context
     const targetTenantId = industry_tenant_id || context.tenant_id_number;
     const filteredData = response.filter(
       (item: ReceiveItem) =>
@@ -203,26 +192,15 @@ export class InventoryService {
     return top5Yearly;
   }
 
-  // ================================
-  // TRANSFER METHODS
-  // ================================
-
-  /**
-   * 🎯 UPDATED: Fetch all transfers menggunakan RabbitMQ
-   */
   async fetchAllTransfer(
     req: Request,
     industry_tenant_id?: number,
   ): Promise<TransferItem[]> {
     const context = getQMSContext(req);
-
-    // 🎯 USE RABBITMQ INSTEAD OF DIRECT API
     const response = (await getTransfersViaRPC(
       req,
       context.tenant_id_number,
     )) as TransferItem[];
-
-    // Filter berdasarkan tenant_id - prioritas industry_tenant_id jika ada, fallback ke context
     const targetTenantId = industry_tenant_id || context.tenant_id_number;
     const filteredData = response.filter(
       (item: TransferItem) =>
@@ -348,13 +326,6 @@ export class InventoryService {
     return top5Yearly;
   }
 
-  // ================================
-  // RISK ANALYSIS METHODS
-  // ================================
-
-  /**
-   * Risk Rate Trend untuk Receive (Ketidaksesuaian Jumlah Received Items)
-   */
   async getReceiveRiskRateTrend(
     req: Request,
     industry_tenant_id?: number,
@@ -375,9 +346,6 @@ export class InventoryService {
     return riskRateTrend;
   }
 
-  /**
-   * Risk Rate Trend untuk Transfer (Ketidaksesuaian Jumlah Transferred Items)
-   */
   async getTransferRiskRateTrend(
     req: Request,
     industry_tenant_id?: number,

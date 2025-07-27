@@ -313,8 +313,6 @@ export const HistoryShipment = crmContractDB.define(
     timestamps: false,
   },
 );
-
-// Set up relationships
 ContractDetail.hasMany(HistoryShipment, {
   foreignKey: 'contract_detail_pkid',
   as: 'history_shipments',

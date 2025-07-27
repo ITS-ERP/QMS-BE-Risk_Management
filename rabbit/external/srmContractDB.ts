@@ -13,8 +13,6 @@ export const srmContractDB = new Sequelize(
     logging: false,
   },
 );
-
-// Master Contract Model
 export const MasterContract = srmContractDB.define(
   'master_contracts',
   {
@@ -122,8 +120,6 @@ export const MasterContract = srmContractDB.define(
     timestamps: false,
   },
 );
-
-// Detail Contract Model
 export const DetailContract = srmContractDB.define(
   'detail_contracts',
   {
@@ -227,8 +223,6 @@ export const DetailContract = srmContractDB.define(
     timestamps: false,
   },
 );
-
-// History Shipments Model
 export const HistoryShipment = srmContractDB.define(
   'history_shipments',
   {
@@ -324,8 +318,6 @@ export const HistoryShipment = srmContractDB.define(
     timestamps: false,
   },
 );
-
-// Requested Periodic Shipments Model
 export const RequestedPeriodicShipment = srmContractDB.define(
   'requested_periodic_shipments',
   {
@@ -409,8 +401,6 @@ export const RequestedPeriodicShipment = srmContractDB.define(
     timestamps: false,
   },
 );
-
-// Detail Contract Periodic Shipments Model
 export const DetailContractPeriodicShipment = srmContractDB.define(
   'detail_contract_periodic_shipments',
   {
@@ -486,8 +476,6 @@ export const DetailContractPeriodicShipment = srmContractDB.define(
     timestamps: false,
   },
 );
-
-// Relation of Contracts Model
 export const RelationOfContract = srmContractDB.define(
   'relation_of_contracts',
   {
@@ -555,8 +543,6 @@ export const RelationOfContract = srmContractDB.define(
     timestamps: false,
   },
 );
-
-// Accepted Periodic Shipments Model
 export const AcceptedPeriodicShipment = srmContractDB.define(
   'accepted_periodic_shipments',
   {
@@ -624,107 +610,71 @@ export const AcceptedPeriodicShipment = srmContractDB.define(
     timestamps: false,
   },
 );
-
-// ================================
-// ✅ DEFINE ASSOCIATIONS (THIS WAS MISSING!)
-// ================================
-
-// MasterContract has many DetailContracts
 MasterContract.hasMany(DetailContract, {
   foreignKey: 'master_contract_pkid',
   as: 'detailContracts',
 });
-
-// DetailContract belongs to MasterContract
 DetailContract.belongsTo(MasterContract, {
   foreignKey: 'master_contract_pkid',
   as: 'masterContract',
 });
-
-// DetailContract has many HistoryShipments
 DetailContract.hasMany(HistoryShipment, {
   foreignKey: 'detail_contract_pkid',
   as: 'historyShipments',
 });
-
-// HistoryShipment belongs to DetailContract
 HistoryShipment.belongsTo(DetailContract, {
   foreignKey: 'detail_contract_pkid',
   as: 'detailContract',
 });
-
-// DetailContract has many RequestedPeriodicShipments
 DetailContract.hasMany(RequestedPeriodicShipment, {
   foreignKey: 'detail_contract_pkid',
   as: 'requestedPeriodicShipments',
 });
-
-// RequestedPeriodicShipment belongs to DetailContract
 RequestedPeriodicShipment.belongsTo(DetailContract, {
   foreignKey: 'detail_contract_pkid',
   as: 'detailContract',
 });
-
-// DetailContract has many DetailContractPeriodicShipments
 DetailContract.hasMany(DetailContractPeriodicShipment, {
   foreignKey: 'detail_contract_pkid',
   as: 'periodicShipments',
 });
-
-// DetailContractPeriodicShipment belongs to DetailContract
 DetailContractPeriodicShipment.belongsTo(DetailContract, {
   foreignKey: 'detail_contract_pkid',
   as: 'detailContract',
 });
-
-// RequestedPeriodicShipment has one AcceptedPeriodicShipment
 RequestedPeriodicShipment.hasOne(AcceptedPeriodicShipment, {
   foreignKey: 'requested_periodic_shipment_pkid',
   as: 'acceptedShipment',
 });
-
-// AcceptedPeriodicShipment belongs to RequestedPeriodicShipment
 AcceptedPeriodicShipment.belongsTo(RequestedPeriodicShipment, {
   foreignKey: 'requested_periodic_shipment_pkid',
   as: 'requestedShipment',
 });
-
-// HistoryShipment has one AcceptedPeriodicShipment
 HistoryShipment.hasOne(AcceptedPeriodicShipment, {
   foreignKey: 'history_shipment_pkid',
   as: 'acceptedShipment',
 });
-
-// AcceptedPeriodicShipment belongs to HistoryShipment
 AcceptedPeriodicShipment.belongsTo(HistoryShipment, {
   foreignKey: 'history_shipment_pkid',
   as: 'historyShipment',
 });
-
-// MasterContract has many RelationOfContracts as parent
 MasterContract.hasMany(RelationOfContract, {
   foreignKey: 'master_contract_pkid',
   as: 'childRelations',
 });
-
-// MasterContract has many RelationOfContracts as child
 MasterContract.hasMany(RelationOfContract, {
   foreignKey: 'child_contract_pkid',
   as: 'parentRelations',
 });
-
-// RelationOfContract belongs to MasterContract (parent)
 RelationOfContract.belongsTo(MasterContract, {
   foreignKey: 'master_contract_pkid',
   as: 'parentContract',
 });
-
-// RelationOfContract belongs to MasterContract (child)
 RelationOfContract.belongsTo(MasterContract, {
   foreignKey: 'child_contract_pkid',
   as: 'childContract',
 });
 
-console.log(
-  '✅ SRM Contract DB Models and Associations initialized successfully',
-);
+// console.log(
+//   '✅ SRM Contract DB Models and Associations initialized successfully',
+// );

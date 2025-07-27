@@ -10,8 +10,6 @@ export class InventoryController extends BaseController {
     super();
     this.inventoryService = new InventoryService();
   }
-
-  // RECEIVE CONTROLLERS
   public async getAllReceiveController(
     req: Request,
     res: Response,
@@ -20,8 +18,6 @@ export class InventoryController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -53,8 +49,6 @@ export class InventoryController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -86,8 +80,6 @@ export class InventoryController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -119,8 +111,6 @@ export class InventoryController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -152,8 +142,6 @@ export class InventoryController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -185,8 +173,6 @@ export class InventoryController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -210,8 +196,6 @@ export class InventoryController extends BaseController {
       return this.handleError(req, res, error, 500);
     }
   }
-
-  // TRANSFER CONTROLLERS
   public async getAllTransferController(
     req: Request,
     res: Response,
@@ -220,8 +204,6 @@ export class InventoryController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -253,8 +235,6 @@ export class InventoryController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -286,8 +266,6 @@ export class InventoryController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -319,8 +297,6 @@ export class InventoryController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -352,8 +328,6 @@ export class InventoryController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -377,8 +351,6 @@ export class InventoryController extends BaseController {
       return this.handleError(req, res, error, 500);
     }
   }
-
-  // RISK ANALYSIS CONTROLLERS
   public async getReceiveRiskRateTrendController(
     req: Request,
     res: Response,
@@ -387,8 +359,6 @@ export class InventoryController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -421,8 +391,6 @@ export class InventoryController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',

@@ -3,7 +3,6 @@ import { RiskBaseService } from '../../business-layer/services/risk_base.service
 import { BaseController } from '../common/base.controller';
 import { MessagesKey } from '../../helpers/messages/messagesKey';
 import { RiskBaseInputVM } from '../../helpers/view-models/risk_base.vm';
-// import { RiskBaseAttributes } from '../../infrastructure/models/risk_base.model';
 
 export class RiskBaseController extends BaseController {
   private riskBaseService: RiskBaseService;
@@ -12,10 +11,6 @@ export class RiskBaseController extends BaseController {
     super();
     this.riskBaseService = new RiskBaseService();
   }
-
-  // ============================================================================
-  // ORIGINAL METHODS (Unchanged)
-  // ============================================================================
 
   public async findAllRiskBases(
     req: Request,
@@ -70,15 +65,10 @@ export class RiskBaseController extends BaseController {
     res: Response,
   ): Promise<Response> {
     try {
-      // Konversi req.query menjadi Record<string, string | number | undefined>
       const criteria: Record<string, string | number | undefined> = {};
-
-      // Hanya ambil properti dari query yang relevan dan bisa dikonversi
       Object.keys(req.query).forEach((key) => {
         const value = req.query[key];
-        // Hanya ambil string dan number yang valid
         if (typeof value === 'string') {
-          // Coba konversi ke number jika mungkin
           const numValue = Number(value);
           if (!isNaN(numValue) && value.trim() !== '') {
             criteria[key] = numValue;
@@ -86,7 +76,6 @@ export class RiskBaseController extends BaseController {
             criteria[key] = value;
           }
         } else if (Array.isArray(value) && value.length > 0) {
-          // Jika array, ambil nilai pertama saja
           const firstValue = value[0];
           if (typeof firstValue === 'string') {
             const numValue = Number(firstValue);
@@ -124,7 +113,7 @@ export class RiskBaseController extends BaseController {
 
   public async createRiskBase(req: Request, res: Response): Promise<Response> {
     try {
-      const vm = new RiskBaseInputVM(req.body); // Menggunakan View-Model untuk input
+      const vm = new RiskBaseInputVM(req.body);
       const resultVM = await this.riskBaseService.createRiskBase(req, vm);
       return this.sendSuccessCreate(
         req,
@@ -145,7 +134,7 @@ export class RiskBaseController extends BaseController {
       if (!Array.isArray(req.body)) {
         return this.sendErrorBadRequest(req, res);
       }
-      const vms = req.body.map((item) => new RiskBaseInputVM(item)); // Membuat array dari View-Model input
+      const vms = req.body.map((item) => new RiskBaseInputVM(item));
       const resultVMs = await this.riskBaseService.bulkCreateRiskBases(
         req,
         vms,
@@ -251,14 +240,6 @@ export class RiskBaseController extends BaseController {
     }
   }
 
-  // ============================================================================
-  // NEW TENANT-BASED METHODS
-  // ============================================================================
-
-  /**
-   * Check if authenticated tenant has risk bases
-   * GET /rm/api/risk-base/tenant/check
-   */
   public async checkTenantRiskBasesController(
     req: Request,
     res: Response,
@@ -289,10 +270,6 @@ export class RiskBaseController extends BaseController {
     }
   }
 
-  /**
-   * Initialize default risk bases for authenticated tenant
-   * POST /rm/api/risk-base/tenant/initialize
-   */
   public async initializeTenantRiskBasesController(
     req: Request,
     res: Response,
@@ -313,7 +290,6 @@ export class RiskBaseController extends BaseController {
           },
         });
       } else {
-        // Business logic error (like duplicate creation)
         return res.status(409).json({
           isSuccess: false,
           message: result.message,
@@ -328,10 +304,6 @@ export class RiskBaseController extends BaseController {
     }
   }
 
-  /**
-   * Get all risk bases for authenticated tenant
-   * GET /rm/api/risk-base/tenant
-   */
   public async getTenantRiskBasesController(
     req: Request,
     res: Response,
@@ -369,19 +341,12 @@ export class RiskBaseController extends BaseController {
     }
   }
 
-  /**
-   * Update risk mitigations for authenticated tenant
-   * PUT /rm/api/risk-base/tenant/mitigations
-   * Body: [{ risk_name: string, risk_mitigation: string }]
-   */
   public async updateTenantRiskMitigationsController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
       console.log('📝 Updating tenant risk mitigations');
-
-      // Validate request body
       if (!Array.isArray(req.body)) {
         return res.status(400).json({
           isSuccess: false,
@@ -389,8 +354,6 @@ export class RiskBaseController extends BaseController {
           data: null,
         });
       }
-
-      // Validate each update item
       const validationErrors: string[] = [];
       req.body.forEach((update, index) => {
         if (!update.risk_name || typeof update.risk_name !== 'string') {
@@ -446,10 +409,6 @@ export class RiskBaseController extends BaseController {
     }
   }
 
-  /**
-   * Delete all risk bases for authenticated tenant
-   * DELETE /rm/api/risk-base/tenant
-   */
   public async deleteTenantRiskBasesController(
     req: Request,
     res: Response,
@@ -482,24 +441,16 @@ export class RiskBaseController extends BaseController {
     }
   }
 
-  /**
-   * Force re-initialize risk bases for authenticated tenant
-   * POST /rm/api/risk-base/tenant/reinitialize
-   * This will delete existing risks and create new defaults
-   */
   public async reinitializeTenantRiskBasesController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
       console.log('🔄 Re-initializing tenant risk bases');
-
-      // First, delete existing risk bases
       const deleteResult =
         await this.riskBaseService.deleteTenantRiskBases(req);
 
       if (!deleteResult.success && deleteResult.deletedCount === 0) {
-        // No existing risks to delete, proceed with creation
         console.log(
           'ℹ️ No existing risks found, proceeding with initialization',
         );
@@ -510,8 +461,6 @@ export class RiskBaseController extends BaseController {
           data: null,
         });
       }
-
-      // Then, create new default risk bases
       const createResult =
         await this.riskBaseService.createDefaultRiskBasesForTenant(req);
 

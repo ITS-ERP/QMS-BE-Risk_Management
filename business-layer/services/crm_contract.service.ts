@@ -3,15 +3,13 @@ import {
   getContractsViaRPC,
   getContractDetailsWithShipmentsViaRPC,
 } from '../../rabbit/requestCRMData';
-
-// Interface untuk Contract
 interface Contract {
   pkid: number;
   code: string;
   industry_pkid: number;
   retail_pkid: number;
   start_date?: string;
-  end_date?: string; // ✅ Tambah end_date untuk consistency
+  end_date?: string;
   amount_of_item?: number;
   contract_type?: string;
   payment_method?: string;
@@ -20,8 +18,6 @@ interface Contract {
   tenant_id: number | null;
   created_date: string;
 }
-
-// Interface untuk History Shipments
 interface HistoryShipment {
   pkid: number;
   code: string;
@@ -39,8 +35,6 @@ interface HistoryShipment {
   contract_detail_pkid: number;
   tenant_id: number | null;
 }
-
-// Interface untuk detail dengan shipments dari API
 interface ContractDetailWithShipments {
   pkid: number;
   code: string;
@@ -53,8 +47,6 @@ interface ContractDetailWithShipments {
   tenant_id: number | null;
   history_shipments?: HistoryShipment[];
 }
-
-// ✅ Interface untuk flattened shipment dengan contract info
 interface ShipmentWithContractInfo {
   shipment_pkid: number;
   target_date: string;
@@ -68,23 +60,15 @@ interface ShipmentWithContractInfo {
   industry_pkid: number;
   retail_pkid: number;
   created_date: string;
-  end_date?: string; // ✅ Tambah end_date
+  end_date?: string;
 }
 
 export class CRMContractService {
-  // 🎯 UPDATED: Fetch all CRM Contract menggunakan RabbitMQ
   async fetchAllCRMContract() {
-    // 🎯 Create mock request for RabbitMQ call
     const mockReq = { headers: {} } as Request;
-
-    // Create a mock tenant_id for RabbitMQ call since risk monitoring doesn't have specific tenant context
-    const tenant_id = 1; // Default tenant for broad data fetching
-
-    // Gunakan tanggal default untuk range yang luas
+    const tenant_id = 1;
     const startDate = new Date('2020-01-01');
     const endDate = new Date('2030-12-31');
-
-    // 🎯 USE RABBITMQ INSTEAD OF DIRECT API
     const response = (await getContractsViaRPC(
       mockReq,
       startDate,
@@ -94,34 +78,23 @@ export class CRMContractService {
 
     return response;
   }
-
-  // ✅ Method baru untuk mendapatkan semua shipments dengan contract info
   private async getAllShipmentsWithContractInfo(): Promise<
     ShipmentWithContractInfo[]
   > {
     try {
-      // 🎯 Create mock request for RabbitMQ call
       const mockReq = { headers: {} } as Request;
-
-      // Ambil semua contracts untuk mapping
       const contracts = await this.fetchAllCRMContract();
       const contractMap = new Map<number, Contract>();
       contracts.forEach((contract: Contract) => {
         contractMap.set(contract.pkid, contract);
       });
-
-      // Create a mock tenant_id for RabbitMQ call
-      const tenant_id = 1; // Default tenant for broad data fetching
-
-      // 🎯 USE RABBITMQ untuk ambil semua contract details dengan history_shipments
+      const tenant_id = 1;
       const contractDetails = (await getContractDetailsWithShipmentsViaRPC(
         mockReq,
         tenant_id,
       )) as ContractDetailWithShipments[];
 
       const allShipments: ShipmentWithContractInfo[] = [];
-
-      // Flatten semua shipments dengan contract info
       contractDetails.forEach((detail) => {
         const contract = contractMap.get(detail.contract_pkid);
         if (!contract) return;
@@ -144,7 +117,7 @@ export class CRMContractService {
               industry_pkid: contract.industry_pkid,
               retail_pkid: contract.retail_pkid,
               created_date: contract.created_date,
-              end_date: contract.end_date, // ✅ Include end_date
+              end_date: contract.end_date,
             });
           });
         }
@@ -156,8 +129,6 @@ export class CRMContractService {
       return [];
     }
   }
-
-  // ✅ Helper untuk filter berdasarkan tenant
   private filterByTenant(
     shipments: ShipmentWithContractInfo[],
     industry_tenant_id?: number,
@@ -185,8 +156,6 @@ export class CRMContractService {
     }
 
     const yearlyTotal: { [key: string]: number } = {};
-
-    // ✅ Filter contracts berdasarkan tenant
     const filteredContracts = contractsData.filter((contract: Contract) => {
       if (industry_tenant_id && contract.industry_pkid !== industry_tenant_id) {
         return false;
@@ -196,8 +165,6 @@ export class CRMContractService {
       }
       return true;
     });
-
-    // ✅ UPDATED: Gunakan end_date untuk consistency dengan dashboard analytics
     filteredContracts.forEach((contract: Contract) => {
       if (contract.end_date) {
         const yearKey = new Date(contract.end_date).getFullYear().toString();
@@ -219,7 +186,6 @@ export class CRMContractService {
     industry_tenant_id?: number,
     retail_tenant_id?: number,
   ) {
-    // ✅ Gunakan method baru
     const allShipments = await this.getAllShipmentsWithContractInfo();
     const filteredShipments = this.filterByTenant(
       allShipments,
@@ -229,8 +195,6 @@ export class CRMContractService {
 
     const yearlyTrend: { [key: string]: { on_time: number; late: number } } =
       {};
-
-    // ✅ Proses semua shipments yang sudah delivered
     filteredShipments.forEach((shipment) => {
       if (shipment.target_date && shipment.delivered_date) {
         const targetDate = new Date(shipment.target_date);
@@ -276,7 +240,6 @@ export class CRMContractService {
     industry_tenant_id?: number,
     retail_tenant_id?: number,
   ) {
-    // ✅ Gunakan method baru
     const allShipments = await this.getAllShipmentsWithContractInfo();
     const filteredShipments = this.filterByTenant(
       allShipments,
@@ -287,8 +250,6 @@ export class CRMContractService {
     const yearlyCompliance: {
       [key: string]: { compliant: number; noncompliant: number };
     } = {};
-
-    // ✅ Proses semua shipments yang memiliki quantity data
     filteredShipments.forEach((shipment) => {
       if (
         shipment.target_date &&
@@ -334,8 +295,6 @@ export class CRMContractService {
       .slice(0, 5)
       .reverse();
   }
-
-  // Summary untuk Penurunan Kontrak
   async getContractDeclineSummary(
     industry_tenant_id?: number,
     retail_tenant_id?: number,
@@ -397,8 +356,6 @@ export class CRMContractService {
       decline_rate: declineRate,
     };
   }
-
-  // Summary untuk Pengiriman Terlambat
   async getLateDeliverySummary(
     industry_tenant_id?: number,
     retail_tenant_id?: number,
@@ -432,8 +389,6 @@ export class CRMContractService {
           : 0.0,
     };
   }
-
-  // Summary untuk Jumlah Tidak Sesuai
   async getQuantityMismatchSummary(
     industry_tenant_id?: number,
     retail_tenant_id?: number,
@@ -467,8 +422,6 @@ export class CRMContractService {
           : 0.0,
     };
   }
-
-  // Risk Rate Trend untuk Penurunan Kontrak
   async getContractDeclineRiskRateTrend(
     industry_tenant_id?: number,
     retail_tenant_id?: number,
@@ -504,8 +457,6 @@ export class CRMContractService {
 
     return riskRateTrend;
   }
-
-  // Risk Rate Trend untuk Pengiriman terlambat
   async getLateDeliveryRiskRateTrend(
     industry_tenant_id?: number,
     retail_tenant_id?: number,
@@ -528,8 +479,6 @@ export class CRMContractService {
 
     return riskRateTrend;
   }
-
-  // Risk Rate Trend untuk Jumlah tidak sesuai
   async getQuantityMismatchRiskRateTrend(
     industry_tenant_id?: number,
     retail_tenant_id?: number,

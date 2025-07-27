@@ -14,8 +14,6 @@ export class AssetService {
     industry_tenant_id?: number,
   ): Promise<AssetItem[]> {
     const response = await assetIntegration.getAssetWithAuth(req);
-
-    // Filter logic: use industry_tenant_id parameter if provided
     if (industry_tenant_id !== undefined) {
       const filteredData = response.data.data.filter(
         (item: AssetItem) =>
@@ -23,8 +21,6 @@ export class AssetService {
       );
       return filteredData;
     }
-
-    // Fallback: use authenticated user's tenant (backward compatibility)
     const context = getQMSContext(req);
     const filteredData = response.data.data.filter(
       (item: AssetItem) =>
@@ -39,8 +35,6 @@ export class AssetService {
     industry_tenant_id?: number,
   ): Promise<AssetDisposalItem[]> {
     const response = await assetIntegration.getAssetDisposalWithAuth(req);
-
-    // Filter logic: use industry_tenant_id parameter if provided
     if (industry_tenant_id !== undefined) {
       const filteredData = response.data.data.filter(
         (item: AssetDisposalItem) =>
@@ -48,8 +42,6 @@ export class AssetService {
       );
       return filteredData;
     }
-
-    // Fallback: use authenticated user's tenant (backward compatibility)
     const context = getQMSContext(req);
     const filteredData = response.data.data.filter(
       (item: AssetDisposalItem) =>
@@ -64,8 +56,6 @@ export class AssetService {
     industry_tenant_id?: number,
   ): Promise<AssetMaintenanceItem[]> {
     const response = await assetIntegration.getMaintanedAssetWithAuth(req);
-
-    // Filter logic: use industry_tenant_id parameter if provided
     if (industry_tenant_id !== undefined) {
       const filteredData = response.data.data.filter(
         (item: AssetMaintenanceItem) =>
@@ -73,8 +63,6 @@ export class AssetService {
       );
       return filteredData;
     }
-
-    // Fallback: use authenticated user's tenant (backward compatibility)
     const context = getQMSContext(req);
     const filteredData = response.data.data.filter(
       (item: AssetMaintenanceItem) =>
@@ -89,8 +77,6 @@ export class AssetService {
     industry_tenant_id?: number,
   ): Promise<AssetStockTakeItem[]> {
     const response = await assetIntegration.getAssetStockTakeWithAuth(req);
-
-    // Filter logic: use industry_tenant_id parameter if provided
     if (industry_tenant_id !== undefined) {
       const filteredData = response.data.data.filter(
         (item: AssetStockTakeItem) =>
@@ -98,8 +84,6 @@ export class AssetService {
       );
       return filteredData;
     }
-
-    // Fallback: use authenticated user's tenant (backward compatibility)
     const context = getQMSContext(req);
     const filteredData = response.data.data.filter(
       (item: AssetStockTakeItem) =>

@@ -1,5 +1,3 @@
-// business-layer\services\risk_mitigation.service.ts
-
 import { Request } from 'express';
 import { InventoryService } from './erp_inventory.service';
 import { ManufacturingService } from './erp_manufacturing.service';
@@ -9,8 +7,6 @@ import { CRMRequisitionService } from './crm_requisition.service';
 import { CRMContractService } from './crm_contract.service';
 import { RiskBaseService } from './risk_base.service';
 import { RiskRateTrendData } from './risk_monitoring.service';
-
-// Interface untuk hasil mitigasi risiko
 export interface RiskMitigationResult {
   pkid?: string | number;
   risk_name: string;
@@ -41,13 +37,6 @@ export class RiskMitigationService {
     this.riskBaseService = new RiskBaseService();
   }
 
-  /**
-   * Mendapatkan data mitigasi risiko berdasarkan user dan tenant
-   * @param req Request object
-   * @param riskUser Tipe user (Industry, Supplier, Retail)
-   * @param tenantId ID tenant
-   * @returns Data mitigasi risiko
-   */
   async getRiskMitigation(
     req: Request,
     riskUser: string,
@@ -181,9 +170,6 @@ export class RiskMitigationService {
     }
   }
 
-  /**
-   * Memproses risiko untuk Industry
-   */
   private async processIndustryRisk(
     req: Request,
     risk_group: string,
@@ -275,9 +261,6 @@ export class RiskMitigationService {
     return { riskRateTrend, success: true };
   }
 
-  /**
-   * Memproses risiko untuk Supplier
-   */
   private async processSupplierRisk(
     req: Request,
     risk_group: string,
@@ -323,9 +306,6 @@ export class RiskMitigationService {
     return { riskRateTrend, success: true };
   }
 
-  /**
-   * Memproses risiko untuk Retail
-   */
   private async processRetailRisk(
     req: Request,
     risk_group: string,
@@ -367,14 +347,6 @@ export class RiskMitigationService {
     return { riskRateTrend, success: true };
   }
 
-  /**
-   * Mendapatkan data mitigasi risiko berdasarkan PKID
-   * @param req Request object
-   * @param pkid ID dari risk mitigation
-   * @param riskUser Tipe user (Industry, Supplier, Retail) - opsional untuk validasi
-   * @param tenantId ID tenant - opsional untuk validasi
-   * @returns Data mitigasi untuk risiko berdasarkan PKID
-   */
   async getRiskMitigationByPkid(
     req: Request,
     pkid: number,
@@ -481,14 +453,6 @@ export class RiskMitigationService {
     }
   }
 
-  /**
-   * Mendapatkan data mitigasi untuk risiko spesifik
-   * @param req Request object
-   * @param riskUser Tipe user (Industry, Supplier, Retail)
-   * @param riskName Nama risiko
-   * @param tenantId ID tenant
-   * @returns Data mitigasi untuk risiko spesifik
-   */
   async getSpecificRiskMitigation(
     req: Request,
     riskUser: string,
@@ -504,9 +468,6 @@ export class RiskMitigationService {
     }
   }
 
-  /**
-   * Menghitung efektivitas mitigasi berdasarkan trend
-   */
   private calculateMitigationEffectivity(
     riskRateTrend: RiskRateTrendData[],
   ): number | string {

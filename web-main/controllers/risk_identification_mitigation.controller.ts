@@ -12,9 +12,6 @@ export class RiskIdentificationMitigationController extends BaseController {
       new RiskIdentificationMitigationService();
   }
 
-  /**
-   * Validate authentication header
-   */
   private validateAuthHeader(req: Request): string | null {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -26,21 +23,15 @@ export class RiskIdentificationMitigationController extends BaseController {
     return null;
   }
 
-  /**
-   * Controller untuk mendapatkan gabungan identifikasi dan mitigasi risiko berdasarkan jenis pengguna
-   */
   public async getRiskIdentificationMitigationController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      // Validate authentication
       const authError = this.validateAuthHeader(req);
       if (authError) {
         return this.handleError(req, res, authError, 401);
       }
-
-      // Extract query parameters
       const riskUser = req.query.risk_user as string | undefined;
       const tenantId = req.query.tenant_id as string | undefined;
 
@@ -49,8 +40,6 @@ export class RiskIdentificationMitigationController extends BaseController {
         tenantId,
         hasAuth: !!req.headers.authorization,
       });
-
-      // Validate required parameters
       if (!riskUser) {
         return this.handleError(req, res, 'Risk user is required', 400);
       }
@@ -70,15 +59,12 @@ export class RiskIdentificationMitigationController extends BaseController {
       }
 
       try {
-        // Call service with proper parameters (req object contains auth headers)
         const riskIdentificationMitigation =
           await this.riskIdentificationMitigationService.getRiskIdentificationAndMitigation(
             req,
             riskUser,
             tenantIdNum,
           );
-
-        // Return empty array with standard success message if no data found
         if (
           !riskIdentificationMitigation ||
           riskIdentificationMitigation.length === 0
@@ -105,8 +91,6 @@ export class RiskIdentificationMitigationController extends BaseController {
           serviceError instanceof Error
             ? serviceError.message
             : 'Unknown service error';
-
-        // Check if it's an authentication error from downstream services
         if (
           errorMessage.includes('401') ||
           errorMessage.includes('unauthorized')
@@ -139,21 +123,15 @@ export class RiskIdentificationMitigationController extends BaseController {
     }
   }
 
-  /**
-   * Controller untuk mendapatkan identifikasi dan mitigasi risiko spesifik berdasarkan nama risiko
-   */
   public async getSpecificRiskIdentificationMitigationController(
     req: Request,
     res: Response,
   ): Promise<Response> {
     try {
-      // Validate authentication
       const authError = this.validateAuthHeader(req);
       if (authError) {
         return this.handleError(req, res, authError, 401);
       }
-
-      // Extract query parameters
       const riskUser = req.query.risk_user as string | undefined;
       const riskName = req.query.risk_name as string | undefined;
       const tenantId = req.query.tenant_id as string | undefined;
@@ -164,8 +142,6 @@ export class RiskIdentificationMitigationController extends BaseController {
         tenantId,
         hasAuth: !!req.headers.authorization,
       });
-
-      // Validate required parameters
       if (!riskUser || !riskName) {
         return this.handleError(
           req,
@@ -190,7 +166,6 @@ export class RiskIdentificationMitigationController extends BaseController {
       }
 
       try {
-        // Call service with proper parameters (req object contains auth headers)
         const specificRiskData =
           await this.riskIdentificationMitigationService.getSpecificRiskIdentificationAndMitigation(
             req,
@@ -198,8 +173,6 @@ export class RiskIdentificationMitigationController extends BaseController {
             riskName,
             tenantIdNum,
           );
-
-        // Handle not found case
         if (!specificRiskData) {
           console.log(`Risk with name '${riskName}' not found for ${riskUser}`);
           return this.handleError(
@@ -224,8 +197,6 @@ export class RiskIdentificationMitigationController extends BaseController {
           serviceError instanceof Error
             ? serviceError.message
             : 'Unknown service error';
-
-        // Check if it's an authentication error from downstream services
         if (
           errorMessage.includes('401') ||
           errorMessage.includes('unauthorized')

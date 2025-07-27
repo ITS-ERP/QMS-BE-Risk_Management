@@ -1,6 +1,4 @@
 import { Request } from 'express';
-
-// ✅ UPDATED: Import RabbitMQ functions instead of integration APIs
 import {
   getSupplierByTenantIdViaRPC,
   getAllContractsByIndustryIdViaRPC,
@@ -12,10 +10,6 @@ import {
   getTotalHistoryShipmentByIndustryAndYearViaRPC,
   getTotalHistoryShipmentBySupplierAndYearViaRPC,
 } from '../../rabbit/requestSRMData';
-
-// ============================================================================
-// TYPE DEFINITIONS
-// ============================================================================
 
 interface HistoryShipment {
   pkid: number;
@@ -63,25 +57,14 @@ interface ContractDeclineSummary {
   decline_rate: number;
 }
 
-/**
- * SRM Contract Service for Risk Management - UPDATED WITH RABBITMQ
- * Updated to work with RabbitMQ integration system
- * Maintains same function names and response structures for compatibility
- */
 export class SRMContractService {
   constructor() {
-    console.log('🚀 [SRM Contract Service] Initialized with RabbitMQ support');
+    // console.log('🚀 [SRM Contract Service] Initialized with RabbitMQ support');
   }
-
-  // ============================================================================
-  // LEGACY COMPATIBILITY METHOD
-  // ============================================================================
   async fetchAllSRMContract(req: Request) {
     console.log('📡 [SRM Contract] Fetching all contract data via RabbitMQ');
 
     try {
-      // Note: There's no direct equivalent in the RabbitMQ functions for "getAllSRMContract"
-      // This would need to be implemented based on specific requirements
       console.warn(
         '⚠️ [SRM Contract] fetchAllSRMContract needs specific implementation based on requirements',
       );
@@ -95,12 +78,6 @@ export class SRMContractService {
     }
   }
 
-  // ============================================================================
-  // TENANT RESOLUTION HELPER
-  // ============================================================================
-  /**
-   * ✅ UPDATED: Convert supplier_tenant_id to supplier_id using RabbitMQ
-   */
   private async resolveSupplierTenantId(
     req: Request,
     supplier_tenant_id: number,
@@ -109,14 +86,10 @@ export class SRMContractService {
       console.log(
         `\n🔍 [SUPPLIER LOOKUP] Looking up supplier_pkid for tenant_id: ${supplier_tenant_id} via RabbitMQ`,
       );
-
-      // ✅ UPDATED: Use RabbitMQ instead of direct API call
       const supplierData: any = await getSupplierByTenantIdViaRPC(
         req,
         supplier_tenant_id,
       );
-
-      // ✅ DEBUG: Log response structure
       console.log(`🔍 [SRM SUPPLIER RPC] Response:`, {
         hasData: !!supplierData,
         hasPkid: !!supplierData?.pkid,
@@ -124,8 +97,6 @@ export class SRMContractService {
       });
 
       console.log(`🔍 [SRM SUPPLIER RPC] Full response:`, supplierData);
-
-      // ✅ IMPROVED: Better error handling
       if (!supplierData || typeof supplierData.pkid === 'undefined') {
         console.error(
           `❌ [NO SUPPLIER] No supplier found or invalid format for tenant_id: ${supplier_tenant_id}`,
@@ -134,9 +105,7 @@ export class SRMContractService {
           `❌ [RESPONSE STRUCTURE] Expected object with pkid, got:`,
           typeof supplierData,
         );
-
-        // ✅ FALLBACK: Testing purposes
-        const fallbackSupplierPkid = supplier_tenant_id - 2; // tenant_id 3 → supplier_pkid 1
+        const fallbackSupplierPkid = supplier_tenant_id - 2;
         console.warn(
           `⚠️ [FALLBACK] Using fallback mapping: tenant_id ${supplier_tenant_id} → supplier_pkid ${fallbackSupplierPkid}`,
         );
@@ -154,9 +123,7 @@ export class SRMContractService {
         `❌ [SUPPLIER LOOKUP ERROR] Error getting supplier_pkid for tenant_id ${supplier_tenant_id}:`,
         error,
       );
-
-      // ✅ FALLBACK: For testing when RabbitMQ is not available
-      const fallbackSupplierPkid = supplier_tenant_id - 2; // tenant_id 3 → supplier_pkid 1
+      const fallbackSupplierPkid = supplier_tenant_id - 2;
       console.warn(
         `⚠️ [FALLBACK] RabbitMQ call failed, using fallback mapping: tenant_id ${supplier_tenant_id} → supplier_pkid ${fallbackSupplierPkid}`,
       );
@@ -164,9 +131,6 @@ export class SRMContractService {
     }
   }
 
-  /**
-   * Get date range for analysis (default: last 5 years)
-   */
   private getDateRange(years: number = 5): {
     start_date: string;
     end_date: string;
@@ -179,14 +143,6 @@ export class SRMContractService {
     };
   }
 
-  // ============================================================================
-  // DELIVERY PERFORMANCE ANALYSIS - UPDATED WITH RABBITMQ
-  // ============================================================================
-
-  /**
-   * ✅ UPDATED: Analyze on-time vs late delivery trend using RabbitMQ
-   * Only analyzes shipments with status "Arrived" and complete delivery data
-   */
   async getAllOnTimeVsLateTrend(
     req: Request,
     industry_tenant_id?: number,
@@ -201,10 +157,8 @@ export class SRMContractService {
       let shipmentData: YearlyShipmentData[] = [];
 
       if (industry_tenant_id) {
-        const industry_id = industry_tenant_id; // Direct mapping
+        const industry_id = industry_tenant_id;
         console.log(`🏭 [INDUSTRY TREND] Using industry_pkid: ${industry_id}`);
-
-        // ✅ UPDATED: Use RabbitMQ instead of direct API call
         const response = await getAllHistoryShipmentByIndustryForAllYearsViaRPC(
           req,
           industry_id,
@@ -219,8 +173,6 @@ export class SRMContractService {
           throw new Error('Invalid supplier_tenant_id');
         }
         console.log(`🏪 [SUPPLIER TREND] Using supplier_pkid: ${supplier_id}`);
-
-        // ✅ UPDATED: Use RabbitMQ instead of direct API call
         const response = await getAllHistoryShipmentBySupplierForAllYearsViaRPC(
           req,
           supplier_id,
@@ -231,8 +183,6 @@ export class SRMContractService {
       console.log(
         `📊 [DELIVERY TREND] Found ${shipmentData.length} yearly records`,
       );
-
-      // ✅ LOGIC TETAP SAMA - hanya data source yang berubah
       shipmentData.forEach((yearData: YearlyShipmentData) => {
         const year = yearData.year.toString();
         if (!yearlyTrend[year]) {
@@ -240,7 +190,6 @@ export class SRMContractService {
         }
 
         yearData.historyShipments.forEach((shipment: HistoryShipment) => {
-          // STRICT LOGIC tetap sama
           if (
             shipment.status === 'Arrived' &&
             shipment.target_deadline_date &&
@@ -261,7 +210,6 @@ export class SRMContractService {
               );
             }
           } else {
-            // Log skipped shipments for transparency
             if (shipment.status !== 'Arrived') {
               console.log(
                 `⚪ SKIPPED: Shipment ${shipment.pkid} (status: ${shipment.status} - not 'Arrived')`,
@@ -277,8 +225,6 @@ export class SRMContractService {
           }
         });
       });
-
-      // Convert to array format - TETAP SAMA
       const allYearlyTrend = Object.entries(yearlyTrend)
         .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
         .map(([year, values]) => ({ year, ...values }))
@@ -299,9 +245,6 @@ export class SRMContractService {
     }
   }
 
-  /**
-   * ✅ UPDATED: Get late delivery trend (only late deliveries)
-   */
   async getLateTrend(
     req: Request,
     industry_tenant_id?: number,
@@ -330,14 +273,6 @@ export class SRMContractService {
     return top5LateTrend;
   }
 
-  // ============================================================================
-  // QUANTITY COMPLIANCE ANALYSIS - UPDATED WITH RABBITMQ
-  // ============================================================================
-
-  /**
-   * ✅ UPDATED: Analyze quantity compliance (target vs actual quantity) using RabbitMQ
-   * Only analyzes shipments with status "Arrived" and complete quantity data
-   */
   async getQuantityCompliance(
     req: Request,
     industry_tenant_id?: number,
@@ -357,8 +292,6 @@ export class SRMContractService {
         console.log(
           `🏭 [INDUSTRY COMPLIANCE] Using industry_pkid: ${industry_id}`,
         );
-
-        // ✅ UPDATED: Use RabbitMQ instead of direct API call
         const response = await getAllHistoryShipmentByIndustryForAllYearsViaRPC(
           req,
           industry_id,
@@ -375,8 +308,6 @@ export class SRMContractService {
         console.log(
           `🏪 [SUPPLIER COMPLIANCE] Using supplier_pkid: ${supplier_id}`,
         );
-
-        // ✅ UPDATED: Use RabbitMQ instead of direct API call
         const response = await getAllHistoryShipmentBySupplierForAllYearsViaRPC(
           req,
           supplier_id,
@@ -387,8 +318,6 @@ export class SRMContractService {
       console.log(
         `📊 [QUANTITY COMPLIANCE] Found ${shipmentData.length} yearly records`,
       );
-
-      // ✅ LOGIC TETAP SAMA - hanya data source yang berubah
       shipmentData.forEach((yearData: YearlyShipmentData) => {
         const year = yearData.year.toString();
         if (!yearlyCompliance[year]) {
@@ -396,7 +325,6 @@ export class SRMContractService {
         }
 
         yearData.historyShipments.forEach((shipment: HistoryShipment) => {
-          // STRICT LOGIC tetap sama
           if (
             shipment.status === 'Arrived' &&
             shipment.target_quantity &&
@@ -417,7 +345,6 @@ export class SRMContractService {
               );
             }
           } else {
-            // Log skipped shipments for transparency
             if (shipment.status !== 'Arrived') {
               console.log(
                 `⚪ SKIPPED: Shipment ${shipment.pkid} (status: ${shipment.status} - not 'Arrived')`,
@@ -430,8 +357,6 @@ export class SRMContractService {
           }
         });
       });
-
-      // Convert to array format - TETAP SAMA
       const allYearlyCompliance = Object.entries(yearlyCompliance)
         .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
         .map(([year, values]) => ({ year, ...values }))
@@ -452,9 +377,6 @@ export class SRMContractService {
     }
   }
 
-  /**
-   * ✅ UPDATED: Get non-compliant quantity trend
-   */
   async getNonCompliantQuantity(
     req: Request,
     industry_tenant_id?: number,
@@ -482,14 +404,7 @@ export class SRMContractService {
     );
     return top5NonCompliantQuantity;
   }
-  // ============================================================================
-  // CONTRACT VOLUME ANALYSIS - UPDATED WITH RABBITMQ
-  // ============================================================================
 
-  /**
-   * ✅ UPDATED: Get total contract count by year using RabbitMQ
-   * Uses contract-level counting (unique contracts per year)
-   */
   async getContractTotal(
     req: Request,
     industry_tenant_id?: number,
@@ -499,8 +414,6 @@ export class SRMContractService {
 
     try {
       console.log(`📡 [RabbitMQ] Getting contract total analysis`);
-
-      // ✅ UPDATED: Use same interface as main service
       interface MasterContractData {
         pkid: number;
         supplier_pkid: number;
@@ -520,8 +433,6 @@ export class SRMContractService {
       if (industry_tenant_id) {
         const industry_id = industry_tenant_id;
         console.log(`🏭 [CONTRACT TOTAL] Using industry_pkid: ${industry_id}`);
-
-        // ✅ UPDATED: Use RabbitMQ instead of direct API call
         const response = await getAllContractsByIndustryIdViaRPC(
           req,
           industry_id,
@@ -536,8 +447,6 @@ export class SRMContractService {
           throw new Error('Invalid supplier_tenant_id');
         }
         console.log(`🏪 [CONTRACT TOTAL] Using supplier_pkid: ${supplier_id}`);
-
-        // ✅ UPDATED: Use RabbitMQ instead of direct API call
         const response = await getAllContractsBySupplierIdViaRPC(
           req,
           supplier_id,
@@ -548,8 +457,6 @@ export class SRMContractService {
       console.log(
         `📊 [CONTRACT TOTAL] Found ${allContractsData.length} master contracts`,
       );
-
-      // ✅ LOGIC SAMA SEPERTI MAIN SERVICE: Count unique MASTER contracts per year
       allContractsData.forEach((contract) => {
         contract.detailContracts.forEach((detail) => {
           detail.historyShipments.forEach((shipment) => {
@@ -561,20 +468,16 @@ export class SRMContractService {
               if (!yearlyContracts[year]) {
                 yearlyContracts[year] = new Set<number>();
               }
-
-              // ✅ COUNT MASTER CONTRACT ID (bukan detail_contract_pkid)
               yearlyContracts[year].add(contract.pkid);
             }
           });
         });
       });
-
-      // Convert to array format - TETAP SAMA
       const allYearlyTotal = Object.entries(yearlyContracts)
         .sort((a, b) => parseInt(b[0]) - parseInt(a[0]))
         .map(([year, contractSet]) => ({
           year,
-          total: contractSet.size, // ✅ Count unique MASTER contracts
+          total: contractSet.size,
         }))
         .reverse();
 
@@ -590,13 +493,6 @@ export class SRMContractService {
     }
   }
 
-  // ============================================================================
-  // SUMMARY METHODS (Risk Analysis) - UPDATED WITH RABBITMQ
-  // ============================================================================
-
-  /**
-   * ✅ UPDATED: Get late receipt summary
-   */
   async getLateReceiptSummary(
     req: Request,
     supplier_tenant_id?: number,
@@ -639,9 +535,6 @@ export class SRMContractService {
     return summary;
   }
 
-  /**
-   * ✅ UPDATED: Get quantity mismatch summary
-   */
   async getQuantityMismatchSummary(
     req: Request,
     supplier_tenant_id?: number,
@@ -684,9 +577,6 @@ export class SRMContractService {
     return summary;
   }
 
-  /**
-   * ✅ UPDATED: Get contract decline summary
-   */
   async getContractDeclineSummary(
     req: Request,
     supplier_tenant_id?: number,
@@ -725,8 +615,6 @@ export class SRMContractService {
     const currentYearContracts = currentYearData.total;
     const previousYearContracts = previousYearData.total;
     const totalContracts = currentYearContracts + previousYearContracts;
-
-    // Calculate growth/decline percentage
     let growthRate = 0.0;
     let declineRate = 0.0;
 
@@ -764,15 +652,9 @@ export class SRMContractService {
     );
     return summary;
   }
-  // ============================================================================
-  // RISK RATE TREND ANALYSIS - UPDATED WITH RABBITMQ
-  // ============================================================================
 
-  /**
-   * ✅ UPDATED: Get late receipt risk rate trend
-   */
   async getLateReceiptRiskRateTrend(
-    req: Request, // ✅ FIXED: Added req parameter
+    req: Request,
     supplier_tenant_id?: number,
     industry_tenant_id?: number,
   ) {
@@ -780,7 +662,7 @@ export class SRMContractService {
 
     try {
       const yearlyData = await this.getAllOnTimeVsLateTrend(
-        req, // ✅ FIXED: Use req parameter instead of dummy
+        req,
         industry_tenant_id,
         supplier_tenant_id,
       );
@@ -808,11 +690,8 @@ export class SRMContractService {
     }
   }
 
-  /**
-   * ✅ UPDATED: Get quantity mismatch risk rate trend
-   */
   async getQuantityMismatchRiskRateTrend(
-    req: Request, // ✅ FIXED: Added req parameter
+    req: Request,
     supplier_tenant_id?: number,
     industry_tenant_id?: number,
   ) {
@@ -820,7 +699,7 @@ export class SRMContractService {
 
     try {
       const yearlyData = await this.getQuantityCompliance(
-        req, // ✅ FIXED: Use req parameter instead of dummy
+        req,
         industry_tenant_id,
         supplier_tenant_id,
       );
@@ -850,11 +729,8 @@ export class SRMContractService {
     }
   }
 
-  /**
-   * ✅ UPDATED: Get contract decline risk rate trend
-   */
   async getContractDeclineRiskRateTrend(
-    req: Request, // ✅ FIXED: Added req parameter
+    req: Request,
     supplier_tenant_id?: number,
     industry_tenant_id?: number,
   ) {
@@ -862,17 +738,12 @@ export class SRMContractService {
 
     try {
       const yearlyData = await this.getContractTotal(
-        req, // ✅ FIXED: Use req parameter instead of dummy
+        req,
         industry_tenant_id,
         supplier_tenant_id,
       );
-
-      // Convert to risk rate trend format
       const riskRateTrend = [];
-
-      // Need at least 2 years of data to calculate decline
       if (yearlyData.length === 1) {
-        // Hanya satu tahun data — tidak bisa hitung tren tapi kita return saja dengan nilai 0
         const currentYear = yearlyData[0];
         riskRateTrend.push({
           year: currentYear.year,
@@ -916,13 +787,6 @@ export class SRMContractService {
     }
   }
 
-  // ============================================================================
-  // ADDITIONAL ANALYTICS METHODS - UPDATED WITH RABBITMQ
-  // ============================================================================
-
-  /**
-   * ✅ UPDATED: Get top suppliers for industry using RabbitMQ
-   */
   async getTopSuppliers(
     req: Request,
     industry_tenant_id: number,
@@ -933,8 +797,6 @@ export class SRMContractService {
       console.log(
         `📡 [RabbitMQ] Getting top suppliers for industry ${industry_id}`,
       );
-
-      // ✅ UPDATED: Use RabbitMQ instead of direct API call
       const response = await getTopSuppliersByIndustryIdViaRPC(
         req,
         industry_id,
@@ -953,9 +815,6 @@ export class SRMContractService {
     }
   }
 
-  /**
-   * ✅ UPDATED: Get top industries for supplier using RabbitMQ
-   */
   async getTopIndustries(
     req: Request,
     supplier_tenant_id: number,
@@ -972,8 +831,6 @@ export class SRMContractService {
       console.log(
         `📡 [RabbitMQ] Getting top industries for supplier ${supplier_id}`,
       );
-
-      // ✅ UPDATED: Use RabbitMQ instead of direct API call
       const response = await getTopIndustriesBySupplierIdViaRPC(
         req,
         supplier_id,

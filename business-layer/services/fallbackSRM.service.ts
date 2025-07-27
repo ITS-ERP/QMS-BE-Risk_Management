@@ -1,6 +1,4 @@
 import { Op } from 'sequelize';
-
-// Import SRM Database Models
 import {
   Supplier,
   srmSupplierPortalDB,
@@ -30,10 +28,6 @@ import {
   srmContractDB,
 } from '../../rabbit/external/srmContractDB';
 
-// ================================
-// SRM SUPPLIER PORTAL FALLBACK FUNCTIONS
-// ================================
-
 export const fallbackGetSupplierByTenantIdFromSRMDB = async (
   tenantId: number,
 ) => {
@@ -41,11 +35,7 @@ export const fallbackGetSupplierByTenantIdFromSRMDB = async (
     console.log(
       `🔄 [Fallback SRM] Getting supplier by tenant ID ${tenantId} from SRM Supplier Portal DB`,
     );
-
-    // Connect to SRM Supplier Portal database
     await srmSupplierPortalDB.authenticate();
-
-    // Find supplier by tenant_id
     const supplier = await Supplier.findOne({
       where: {
         tenant_id: tenantId,
@@ -77,9 +67,6 @@ export const fallbackGetSupplierByTenantIdFromSRMDB = async (
     throw new Error(`Failed to get supplier by tenant ID: ${error}`);
   }
 };
-// ================================
-// SRM PROCUREMENT FALLBACK FUNCTIONS
-// ================================
 
 export const fallbackGetAllRFQsFromSRMDB = async (criteria?: any) => {
   try {
@@ -92,8 +79,6 @@ export const fallbackGetAllRFQsFromSRMDB = async (criteria?: any) => {
         [Op.or]: [false, null],
       },
     };
-
-    // Apply criteria if provided
     if (criteria) {
       if (criteria.status) whereClause.status = criteria.status;
       if (criteria.type) whereClause.type = criteria.type;
@@ -130,8 +115,6 @@ export const fallbackGetAllDirectRFQsFromSRMDB = async (criteria?: any) => {
         [Op.or]: [false, null],
       },
     };
-
-    // Apply criteria if provided
     if (criteria) {
       if (criteria.status) whereClause.status = criteria.status;
       if (criteria.industry_pkid)
@@ -173,8 +156,6 @@ export const fallbackGetRFQsByIndustryIdFromSRMDB = async (
         [Op.or]: [false, null],
       },
     };
-
-    // Apply additional criteria if provided
     if (criteria) {
       if (criteria.status) whereClause.status = criteria.status;
       if (criteria.type) whereClause.type = criteria.type;
@@ -218,8 +199,6 @@ export const fallbackGetDirectRFQsByIndustryIdFromSRMDB = async (
         [Op.or]: [false, null],
       },
     };
-
-    // Apply additional criteria if provided
     if (criteria) {
       if (criteria.status) whereClause.status = criteria.status;
     }
@@ -254,8 +233,6 @@ export const fallbackGetRFQWinningItemCountByRFQIdFromSRMDB = async (
     );
 
     await srmProcurementDB.authenticate();
-
-    // Get bid items for this RFQ
     const bidItems = await BidItem.findAll({
       where: {
         rfq_pkid: rfqPkid,
@@ -264,8 +241,6 @@ export const fallbackGetRFQWinningItemCountByRFQIdFromSRMDB = async (
         },
       },
     });
-
-    // Count winning items (bid items that have winners)
     let winningItemCount = 0;
     for (const bidItem of bidItems) {
       const winners = await BidItemWinner.findAll({
@@ -311,8 +286,6 @@ export const fallbackGetWinningOffersByParticipantIdFromSRMDB = async (
     );
 
     await srmProcurementDB.authenticate();
-
-    // Get all supplier offers for this participant
     const supplierOffers = await SupplierOffer.findAll({
       where: {
         rfq_participant_pkid: rfqParticipantPkid,
@@ -321,8 +294,6 @@ export const fallbackGetWinningOffersByParticipantIdFromSRMDB = async (
         },
       },
     });
-
-    // Check which offers are winners
     const winningOffers = [];
     for (const offer of supplierOffers) {
       const winner = await BidItemWinner.findOne({
@@ -366,8 +337,6 @@ export const fallbackGetRFQsBySupplierIdFromSRMDB = async (
     );
 
     await srmProcurementDB.authenticate();
-
-    // Get RFQ participants for this supplier
     const participants = await RFQParticipant.findAll({
       where: {
         supplier_pkid: supplierPkid,
@@ -391,8 +360,6 @@ export const fallbackGetRFQsBySupplierIdFromSRMDB = async (
         [Op.or]: [false, null],
       },
     };
-
-    // Apply additional criteria if provided
     if (criteria) {
       if (criteria.status) whereClause.status = criteria.status;
       if (criteria.type) whereClause.type = criteria.type;
@@ -436,8 +403,6 @@ export const fallbackGetDirectRFQsBySupplierIdFromSRMDB = async (
         [Op.or]: [false, null],
       },
     };
-
-    // Apply additional criteria if provided
     if (criteria) {
       if (criteria.status) whereClause.status = criteria.status;
     }
@@ -482,15 +447,11 @@ export const fallbackGetTotalRFQByStatusByIndustryIdFromSRMDB = async (
       },
       attributes: ['status'],
     });
-
-    // Group by status and count
     const statusCounts = rfqs.reduce((acc: any, rfq: any) => {
       const status = rfq.get('status');
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {});
-
-    // Convert to array format
     const result = Object.entries(statusCounts).map(([status, total]) => ({
       status,
       total,
@@ -520,8 +481,6 @@ export const fallbackGetTotalRFQByStatusBySupplierIdFromSRMDB = async (
     );
 
     await srmProcurementDB.authenticate();
-
-    // Get RFQ participants for this supplier
     const participants = await RFQParticipant.findAll({
       where: {
         supplier_pkid: supplierPkid,
@@ -548,15 +507,11 @@ export const fallbackGetTotalRFQByStatusBySupplierIdFromSRMDB = async (
       },
       attributes: ['status'],
     });
-
-    // Group by status and count
     const statusCounts = rfqs.reduce((acc: any, rfq: any) => {
       const status = rfq.get('status');
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {});
-
-    // Convert to array format
     const result = Object.entries(statusCounts).map(([status, total]) => ({
       status,
       total,
@@ -596,15 +551,11 @@ export const fallbackGetTotalDirectRFQByStatusByIndustryIdFromSRMDB = async (
       },
       attributes: ['status'],
     });
-
-    // Group by status and count
     const statusCounts = directRfqs.reduce((acc: any, rfq: any) => {
       const status = rfq.get('status');
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {});
-
-    // Convert to array format
     const result = Object.entries(statusCounts).map(([status, total]) => ({
       status,
       total,
@@ -646,15 +597,11 @@ export const fallbackGetTotalDirectRFQByStatusBySupplierIdFromSRMDB = async (
       },
       attributes: ['status'],
     });
-
-    // Group by status and count
     const statusCounts = directRfqs.reduce((acc: any, rfq: any) => {
       const status = rfq.get('status');
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {});
-
-    // Convert to array format
     const result = Object.entries(statusCounts).map(([status, total]) => ({
       status,
       total,
@@ -676,9 +623,6 @@ export const fallbackGetTotalDirectRFQByStatusBySupplierIdFromSRMDB = async (
     );
   }
 };
-// ================================
-// SRM PROCUREMENT FALLBACK FUNCTIONS (CONTINUED)
-// ================================
 
 export const fallbackGetTotalRFQLastYearsByIndustryIdFromSRMDB = async (
   industryPkid: number,
@@ -751,8 +695,6 @@ export const fallbackGetTotalRFQLastYearsBySupplierIdFromSRMDB = async (
     for (let i = 0; i < range; i++) {
       years.push(currentYear - i);
     }
-
-    // Get all participants for this supplier
     const participants = await RFQParticipant.findAll({
       where: {
         supplier_pkid: supplierPkid,
@@ -932,8 +874,6 @@ export const fallbackGetWinningRFQsBySupplierInDateRangeFromSRMDB = async (
 
     const start = new Date(startDate);
     const end = new Date(endDate);
-
-    // Get participants for this supplier
     const participants = await RFQParticipant.findAll({
       where: {
         supplier_pkid: supplierPkid,
@@ -945,7 +885,6 @@ export const fallbackGetWinningRFQsBySupplierInDateRangeFromSRMDB = async (
 
     const winningRfqs = [];
     for (const participant of participants) {
-      // Check if this participant has winning offers
       const offers = await SupplierOffer.findAll({
         where: {
           rfq_participant_pkid: participant.get('pkid'),
@@ -966,7 +905,6 @@ export const fallbackGetWinningRFQsBySupplierInDateRangeFromSRMDB = async (
         });
 
         if (winner) {
-          // Get the RFQ details
           const rfq = await RFQ.findOne({
             where: {
               pkid: participant.get('rfq_pkid'),
@@ -982,12 +920,10 @@ export const fallbackGetWinningRFQsBySupplierInDateRangeFromSRMDB = async (
           if (rfq) {
             winningRfqs.push(rfq.toJSON());
           }
-          break; // Don't add the same RFQ multiple times
+          break;
         }
       }
     }
-
-    // ✅ FIXED: Group by year and format like SRM API response
     const yearlyGrouped = winningRfqs.reduce((acc: any, rfq: any) => {
       const year = new Date(rfq.rfq_start_date).getFullYear();
 
@@ -1003,8 +939,6 @@ export const fallbackGetWinningRFQsBySupplierInDateRangeFromSRMDB = async (
       acc[year].rfqs.push(rfq);
       return acc;
     }, {});
-
-    // Convert to array format
     const result = Object.values(yearlyGrouped).sort(
       (a: any, b: any) => b.year - a.year,
     );
@@ -1037,8 +971,6 @@ export const fallbackGetLostRFQsBySupplierInDateRangeFromSRMDB = async (
 
     const start = new Date(startDate);
     const end = new Date(endDate);
-
-    // Get participants for this supplier
     const participants = await RFQParticipant.findAll({
       where: {
         supplier_pkid: supplierPkid,
@@ -1050,7 +982,6 @@ export const fallbackGetLostRFQsBySupplierInDateRangeFromSRMDB = async (
 
     const lostRfqs = [];
     for (const participant of participants) {
-      // Check if this participant has any offers
       const offers = await SupplierOffer.findAll({
         where: {
           rfq_participant_pkid: participant.get('pkid'),
@@ -1076,8 +1007,6 @@ export const fallbackGetLostRFQsBySupplierInDateRangeFromSRMDB = async (
           break;
         }
       }
-
-      // If participated but no winning offers, it's a lost RFQ
       if (offers.length > 0 && !hasWinningOffer) {
         const rfq = await RFQ.findOne({
           where: {
@@ -1085,7 +1014,7 @@ export const fallbackGetLostRFQsBySupplierInDateRangeFromSRMDB = async (
             rfq_start_date: {
               [Op.between]: [start, end],
             },
-            status: 'Ended', // Only count completed RFQs
+            status: 'Ended',
             is_deleted: {
               [Op.or]: [false, null],
             },
@@ -1097,8 +1026,6 @@ export const fallbackGetLostRFQsBySupplierInDateRangeFromSRMDB = async (
         }
       }
     }
-
-    // ✅ FIXED: Group by year and format like SRM API response
     const yearlyGrouped = lostRfqs.reduce((acc: any, rfq: any) => {
       const year = new Date(rfq.rfq_start_date).getFullYear();
 
@@ -1114,8 +1041,6 @@ export const fallbackGetLostRFQsBySupplierInDateRangeFromSRMDB = async (
       acc[year].rfqs.push(rfq);
       return acc;
     }, {});
-
-    // Convert to array format
     const result = Object.values(yearlyGrouped).sort(
       (a: any, b: any) => b.year - a.year,
     );
@@ -1284,10 +1209,6 @@ export const fallbackGetAllRFQParticipantsByRFQIdFromSRMDB = async (
   }
 };
 
-// ================================
-// SRM CONTRACT FALLBACK FUNCTIONS
-// ================================
-
 export const fallbackGetAllContractsByIndustryIdFromSRMDB = async (
   industryPkid: number,
 ) => {
@@ -1297,8 +1218,6 @@ export const fallbackGetAllContractsByIndustryIdFromSRMDB = async (
     );
 
     await srmContractDB.authenticate();
-
-    // ✅ SIMPLE APPROACH: Get master contracts first, then get details separately
     const masterContracts = await MasterContract.findAll({
       where: {
         industry_pkid: industryPkid,
@@ -1312,14 +1231,11 @@ export const fallbackGetAllContractsByIndustryIdFromSRMDB = async (
     console.log(
       `📊 Found ${masterContracts.length} master contracts for Industry ${industryPkid}`,
     );
-
-    // ✅ For each master contract, get its detail contracts separately
     const contractsWithDetails = await Promise.all(
       masterContracts.map(async (masterContract) => {
         const masterData = masterContract.toJSON();
 
         try {
-          // Get detail contracts for this master contract
           const detailContracts = await DetailContract.findAll({
             where: {
               master_contract_pkid: masterData.pkid,
@@ -1328,14 +1244,11 @@ export const fallbackGetAllContractsByIndustryIdFromSRMDB = async (
               },
             },
           });
-
-          // For each detail contract, get its shipments separately
           const detailsWithShipments = await Promise.all(
             detailContracts.map(async (detailContract) => {
               const detailData = detailContract.toJSON();
 
               try {
-                // Get history shipments
                 const historyShipments = await HistoryShipment.findAll({
                   where: {
                     detail_contract_pkid: detailData.pkid,
@@ -1344,8 +1257,6 @@ export const fallbackGetAllContractsByIndustryIdFromSRMDB = async (
                     },
                   },
                 });
-
-                // Get requested periodic shipments
                 const requestedPeriodicShipments =
                   await RequestedPeriodicShipment.findAll({
                     where: {
@@ -1419,8 +1330,6 @@ export const fallbackGetAllContractsBySupplierIdFromSRMDB = async (
     );
 
     await srmContractDB.authenticate();
-
-    // ✅ SIMPLE APPROACH: Get master contracts first, then get details separately
     const masterContracts = await MasterContract.findAll({
       where: {
         supplier_pkid: supplierPkid,
@@ -1434,14 +1343,11 @@ export const fallbackGetAllContractsBySupplierIdFromSRMDB = async (
     console.log(
       `📊 Found ${masterContracts.length} master contracts for Supplier ${supplierPkid}`,
     );
-
-    // ✅ For each master contract, get its detail contracts separately
     const contractsWithDetails = await Promise.all(
       masterContracts.map(async (masterContract) => {
         const masterData = masterContract.toJSON();
 
         try {
-          // Get detail contracts for this master contract
           const detailContracts = await DetailContract.findAll({
             where: {
               master_contract_pkid: masterData.pkid,
@@ -1450,14 +1356,11 @@ export const fallbackGetAllContractsBySupplierIdFromSRMDB = async (
               },
             },
           });
-
-          // For each detail contract, get its shipments separately
           const detailsWithShipments = await Promise.all(
             detailContracts.map(async (detailContract) => {
               const detailData = detailContract.toJSON();
 
               try {
-                // Get history shipments
                 const historyShipments = await HistoryShipment.findAll({
                   where: {
                     detail_contract_pkid: detailData.pkid,
@@ -1466,8 +1369,6 @@ export const fallbackGetAllContractsBySupplierIdFromSRMDB = async (
                     },
                   },
                 });
-
-                // Get requested periodic shipments
                 const requestedPeriodicShipments =
                   await RequestedPeriodicShipment.findAll({
                     where: {
@@ -1541,8 +1442,6 @@ export const fallbackGetTopSuppliersByIndustryIdFromSRMDB = async (
     );
 
     await srmContractDB.authenticate();
-
-    // Get all contracts for this industry and group by supplier
     const contracts = await MasterContract.findAll({
       where: {
         industry_pkid: industryPkid,
@@ -1552,15 +1451,11 @@ export const fallbackGetTopSuppliersByIndustryIdFromSRMDB = async (
       },
       attributes: ['supplier_pkid'],
     });
-
-    // Count contracts per supplier
     const supplierCounts = contracts.reduce((acc: any, contract: any) => {
       const supplierId = contract.get('supplier_pkid');
       acc[supplierId] = (acc[supplierId] || 0) + 1;
       return acc;
     }, {});
-
-    // Convert to array and sort by count
     const result = Object.entries(supplierCounts)
       .map(([supplier_pkid, detail_contract_count]) => ({
         supplier_pkid: parseInt(supplier_pkid),
@@ -1569,7 +1464,7 @@ export const fallbackGetTopSuppliersByIndustryIdFromSRMDB = async (
       .sort(
         (a: any, b: any) => b.detail_contract_count - a.detail_contract_count,
       )
-      .slice(0, 10); // Top 10
+      .slice(0, 10);
 
     console.log(
       `✅ [Fallback SRM] Found top ${result.length} suppliers for Industry ${industryPkid}`,
@@ -1594,8 +1489,6 @@ export const fallbackGetTopIndustriesBySupplierIdFromSRMDB = async (
     );
 
     await srmContractDB.authenticate();
-
-    // Get all contracts for this supplier and group by industry
     const contracts = await MasterContract.findAll({
       where: {
         supplier_pkid: supplierPkid,
@@ -1605,15 +1498,11 @@ export const fallbackGetTopIndustriesBySupplierIdFromSRMDB = async (
       },
       attributes: ['industry_pkid'],
     });
-
-    // Count contracts per industry
     const industryCounts = contracts.reduce((acc: any, contract: any) => {
       const industryId = contract.get('industry_pkid');
       acc[industryId] = (acc[industryId] || 0) + 1;
       return acc;
     }, {});
-
-    // Convert to array and sort by count
     const result = Object.entries(industryCounts)
       .map(([industry_pkid, detail_contract_count]) => ({
         industry_pkid: parseInt(industry_pkid),
@@ -1622,7 +1511,7 @@ export const fallbackGetTopIndustriesBySupplierIdFromSRMDB = async (
       .sort(
         (a: any, b: any) => b.detail_contract_count - a.detail_contract_count,
       )
-      .slice(0, 10); // Top 10
+      .slice(0, 10);
 
     console.log(
       `✅ [Fallback SRM] Found top ${result.length} industries for Supplier ${supplierPkid}`,
@@ -1647,8 +1536,6 @@ export const fallbackGetTopIndustryItemsByIndustryIdFromSRMDB = async (
     );
 
     await srmContractDB.authenticate();
-
-    // Get detail contracts for this industry
     const detailContracts = await DetailContract.findAll({
       include: [
         {
@@ -1670,16 +1557,12 @@ export const fallbackGetTopIndustryItemsByIndustryIdFromSRMDB = async (
       },
       attributes: ['industry_item_pkid', 'target_grand_total'],
     });
-
-    // Group by industry item and sum grand totals
     const itemTotals = detailContracts.reduce((acc: any, detail: any) => {
       const itemId = detail.get('industry_item_pkid');
       const total = parseFloat(detail.get('target_grand_total') || '0');
       acc[itemId] = (acc[itemId] || 0) + total;
       return acc;
     }, {});
-
-    // Convert to array and sort by total
     const result = Object.entries(itemTotals)
       .map(([industry_item_pkid, total_actual_grand_total]) => ({
         industry_item_pkid: parseInt(industry_item_pkid),
@@ -1692,7 +1575,7 @@ export const fallbackGetTopIndustryItemsByIndustryIdFromSRMDB = async (
           parseFloat(b.total_actual_grand_total) -
           parseFloat(a.total_actual_grand_total),
       )
-      .slice(0, 10); // Top 10
+      .slice(0, 10);
 
     console.log(
       `✅ [Fallback SRM] Found top ${result.length} industry items for Industry ${industryPkid}`,
@@ -1719,8 +1602,6 @@ export const fallbackGetTopSupplierItemsByIndustryIdFromSRMDB = async (
     );
 
     await srmContractDB.authenticate();
-
-    // Get detail contracts for this industry
     const detailContracts = await DetailContract.findAll({
       include: [
         {
@@ -1742,16 +1623,12 @@ export const fallbackGetTopSupplierItemsByIndustryIdFromSRMDB = async (
       },
       attributes: ['supplier_item_pkid', 'target_grand_total'],
     });
-
-    // Group by supplier item and sum grand totals
     const itemTotals = detailContracts.reduce((acc: any, detail: any) => {
       const itemId = detail.get('supplier_item_pkid');
       const total = parseFloat(detail.get('target_grand_total') || '0');
       acc[itemId] = (acc[itemId] || 0) + total;
       return acc;
     }, {});
-
-    // Convert to array and sort by total
     const result = Object.entries(itemTotals)
       .map(([supplier_item_pkid, total_actual_grand_total]) => ({
         supplier_item_pkid: parseInt(supplier_item_pkid),
@@ -1764,7 +1641,7 @@ export const fallbackGetTopSupplierItemsByIndustryIdFromSRMDB = async (
           parseFloat(b.total_actual_grand_total) -
           parseFloat(a.total_actual_grand_total),
       )
-      .slice(0, 10); // Top 10
+      .slice(0, 10);
 
     console.log(
       `✅ [Fallback SRM] Found top ${result.length} supplier items for Industry ${industryPkid}`,
@@ -1791,8 +1668,6 @@ export const fallbackGetTopIndustryItemsBySupplierIdFromSRMDB = async (
     );
 
     await srmContractDB.authenticate();
-
-    // Get detail contracts for this supplier
     const detailContracts = await DetailContract.findAll({
       include: [
         {
@@ -1814,16 +1689,12 @@ export const fallbackGetTopIndustryItemsBySupplierIdFromSRMDB = async (
       },
       attributes: ['industry_item_pkid', 'target_grand_total'],
     });
-
-    // Group by industry item and sum grand totals
     const itemTotals = detailContracts.reduce((acc: any, detail: any) => {
       const itemId = detail.get('industry_item_pkid');
       const total = parseFloat(detail.get('target_grand_total') || '0');
       acc[itemId] = (acc[itemId] || 0) + total;
       return acc;
     }, {});
-
-    // Convert to array and sort by total
     const result = Object.entries(itemTotals)
       .map(([industry_item_pkid, total_actual_grand_total]) => ({
         industry_item_pkid: parseInt(industry_item_pkid),
@@ -1836,7 +1707,7 @@ export const fallbackGetTopIndustryItemsBySupplierIdFromSRMDB = async (
           parseFloat(b.total_actual_grand_total) -
           parseFloat(a.total_actual_grand_total),
       )
-      .slice(0, 10); // Top 10
+      .slice(0, 10);
 
     console.log(
       `✅ [Fallback SRM] Found top ${result.length} industry items for Supplier ${supplierPkid}`,
@@ -1863,20 +1734,18 @@ export const fallbackGetTopSupplierItemsBySupplierIdFromSRMDB = async (
     );
 
     await srmContractDB.authenticate();
-
-    // ✅ FIXED APPROACH: Get detail contracts for this supplier, then aggregate supplier items
     const detailContracts = await DetailContract.findAll({
       include: [
         {
           model: MasterContract,
-          as: 'masterContract', // Use the correct association alias
+          as: 'masterContract',
           where: {
             supplier_pkid: supplierPkid,
             is_deleted: {
               [Op.or]: [false, null],
             },
           },
-          attributes: [], // We don't need master contract fields
+          attributes: [],
         },
       ],
       where: {
@@ -1890,8 +1759,6 @@ export const fallbackGetTopSupplierItemsBySupplierIdFromSRMDB = async (
     console.log(
       `📊 Found ${detailContracts.length} detail contracts for Supplier ${supplierPkid}`,
     );
-
-    // Group by supplier item and sum grand totals
     const itemTotals = detailContracts.reduce((acc: any, detail: any) => {
       const itemId = detail.get('supplier_item_pkid');
       const total = parseFloat(detail.get('target_grand_total') || '0');
@@ -1905,19 +1772,16 @@ export const fallbackGetTopSupplierItemsBySupplierIdFromSRMDB = async (
     }, {});
 
     console.log('📊 Aggregated supplier item totals:', itemTotals);
-
-    // Convert to array and sort by total
     const result = Object.entries(itemTotals)
       .map(([supplier_item_pkid, total_actual_grand_total]) => ({
         supplier_item_pkid: parseInt(supplier_item_pkid),
         total_actual_grand_total: (
           total_actual_grand_total as number
         ).toString(),
-        // ✅ ADD MOCK SUPPLIER ITEM DATA (since we don't have supplierItem relation)
         supplierItem: {
           pkid: parseInt(supplier_item_pkid),
           supplier_pkid: supplierPkid,
-          name: `Supplier Item ${supplier_item_pkid}`, // Mock name for now
+          name: `Supplier Item ${supplier_item_pkid}`,
         },
       }))
       .sort(
@@ -1925,7 +1789,7 @@ export const fallbackGetTopSupplierItemsBySupplierIdFromSRMDB = async (
           parseFloat(b.total_actual_grand_total) -
           parseFloat(a.total_actual_grand_total),
       )
-      .slice(0, 10); // Top 10
+      .slice(0, 10);
 
     console.log(
       `✅ [Fallback SRM] Found top ${result.length} supplier items for Supplier ${supplierPkid}:`,
@@ -1987,8 +1851,6 @@ export const fallbackGetTotalHistoryShipmentByIndustryAndYearFromSRMDB = async (
       },
       order: [['target_deadline_date', 'DESC']],
     });
-
-    // ✅ FIXED: Group by year and format like SRM API response
     const yearlyGrouped = historyShipments.reduce((acc: any, shipment: any) => {
       const year = new Date(shipment.target_deadline_date).getFullYear();
 
@@ -2004,8 +1866,6 @@ export const fallbackGetTotalHistoryShipmentByIndustryAndYearFromSRMDB = async (
       acc[year].historyShipments.push(shipment.toJSON());
       return acc;
     }, {});
-
-    // Convert to array format
     const result = Object.values(yearlyGrouped).sort(
       (a: any, b: any) => b.year - a.year,
     );
@@ -2069,8 +1929,6 @@ export const fallbackGetTotalHistoryShipmentBySupplierAndYearFromSRMDB = async (
       },
       order: [['target_deadline_date', 'DESC']],
     });
-
-    // ✅ FIXED: Group by year and format like SRM API response
     const yearlyGrouped = historyShipments.reduce((acc: any, shipment: any) => {
       const year = new Date(shipment.target_deadline_date).getFullYear();
 
@@ -2086,8 +1944,6 @@ export const fallbackGetTotalHistoryShipmentBySupplierAndYearFromSRMDB = async (
       acc[year].historyShipments.push(shipment.toJSON());
       return acc;
     }, {});
-
-    // Convert to array format
     const result = Object.values(yearlyGrouped).sort(
       (a: any, b: any) => b.year - a.year,
     );
@@ -2145,8 +2001,6 @@ export const fallbackGetAllHistoryShipmentByIndustryForAllYearsFromSRMDB =
         },
         order: [['target_deadline_date', 'DESC']],
       });
-
-      // Group by year
       const yearlyData = historyShipments.reduce((acc: any, shipment: any) => {
         const year = new Date(shipment.target_deadline_date).getFullYear();
         if (!acc[year]) {
@@ -2218,8 +2072,6 @@ export const fallbackGetAllHistoryShipmentBySupplierForAllYearsFromSRMDB =
         },
         order: [['target_deadline_date', 'DESC']],
       });
-
-      // Group by year
       const yearlyData = historyShipments.reduce((acc: any, shipment: any) => {
         const year = new Date(shipment.target_deadline_date).getFullYear();
         if (!acc[year]) {
@@ -2448,8 +2300,6 @@ export const fallbackGetTotalTargetAndActualTotalPriceByIndustryAndYearFromSRMDB
           },
         },
       });
-
-      // Process each detail contract to calculate target vs actual
       const result = detailContracts.map((detail: any) => {
         const detailData = detail.toJSON();
         const historyShipments = detailData.historyShipments || [];
@@ -2535,8 +2385,6 @@ export const fallbackGetTotalTargetAndActualTotalPriceBySupplierAndYearFromSRMDB
           },
         },
       });
-
-      // Process each detail contract to calculate target vs actual
       const result = detailContracts.map((detail: any) => {
         const detailData = detail.toJSON();
         const historyShipments = detailData.historyShipments || [];
@@ -2741,8 +2589,6 @@ export const fallbackGetAllMasterContractMetricsInYearBySupplierIdFromSRMDB =
         },
         order: [['created_date', 'DESC']],
       });
-
-      // ✅ FIXED: Group by year and format like SRM API response
       const yearlyGrouped = contracts.reduce((acc: any, contract: any) => {
         const year = new Date(contract.created_date).getFullYear();
 
@@ -2762,8 +2608,6 @@ export const fallbackGetAllMasterContractMetricsInYearBySupplierIdFromSRMDB =
         acc[year].masterContracts.push(contract.toJSON());
         return acc;
       }, {});
-
-      // Convert to array format
       const result = Object.values(yearlyGrouped).sort(
         (a: any, b: any) => a.year - b.year,
       );

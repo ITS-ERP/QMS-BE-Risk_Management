@@ -5,7 +5,7 @@ import { getQMSContext } from '../utility/requestHelper';
 
 dotenv.config();
 
-// ERP - Basic instances (keep existing names for backward compatibility)
+// ERP - Basic
 export const erpInventoryApi = axios.create({
   baseURL: process.env.BASE_URL_ERP_INVENTORY,
 });
@@ -18,7 +18,7 @@ export const erpAssetApi = axios.create({
   baseURL: process.env.BASE_URL_ERP_ASSET,
 });
 
-// ERP with Auth Support - REQUIRED for ERP system access
+// ERP with Auth
 export const erpInventoryAPI = (req: Request) => {
   const context = getQMSContext(req);
   return axios.create({
@@ -74,12 +74,12 @@ export const crmContractApi = axios.create({
   baseURL: process.env.BASE_URL_CRM_CONTRACT,
 });
 
-// FORECAST - Basic instance (backward compatibility)
+// FORECAST - Basic
 export const forecastApi = axios.create({
   baseURL: process.env.BASE_URL_FORECAST,
 });
 
-// FORECAST with Auth Support - REQUIRED for authenticated requests
+// FORECAST with Auth
 export const forecastAPI = (req: Request) => {
   const context = getQMSContext(req);
   return axios.create({

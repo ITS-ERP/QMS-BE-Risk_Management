@@ -8,7 +8,6 @@ import {
   AssetStockTakeItem,
 } from '../utility/interfaces';
 
-// EXISTING functions (keep unchanged for backward compatibility)
 export const getAsset = async () => {
   return erpAssetApi.get('/asset');
 };
@@ -24,8 +23,6 @@ export const getMaintanedAsset = async () => {
 export const getAssetStockTake = async () => {
   return erpAssetApi.get(`/asset_stock_take/`);
 };
-
-// NEW functions with auth support
 export const getAssetWithAuth = (
   req: Request,
 ): Promise<{ data: ERPApiResponse<AssetItem> }> =>

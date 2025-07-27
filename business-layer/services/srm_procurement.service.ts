@@ -75,9 +75,9 @@ interface SupplierData {
  */
 export class SRMProcurementService {
   constructor() {
-    console.log(
-      '🚀 [SRM Procurement Service] Initialized with RabbitMQ support',
-    );
+    // console.log(
+    //   '🚀 [SRM Procurement Service] Initialized with RabbitMQ support',
+    // );
   }
 
   // ============================================================================

@@ -6,11 +6,8 @@ import {
   TransferItem,
 } from '../utility/interfaces';
 
-// EXISTING functions (keep unchanged)
 export const getAllReceive = () => erpInventoryApi.get(`/receive`);
 export const getAllTransfer = () => erpInventoryApi.get(`/transfer`);
-
-// NEW functions with auth support
 export const getAllReceiveWithAuth = (
   req: Request,
 ): Promise<{ data: ERPApiResponse<ReceiveItem> }> =>

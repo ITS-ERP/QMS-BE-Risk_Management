@@ -3,11 +3,6 @@ import { SRMProcurementService } from '../../business-layer/services/srm_procure
 import { BaseController } from '../common/base.controller';
 import { MessagesKey } from '../../helpers/messages/messagesKey';
 
-/**
- * SRM Procurement Controller for Risk Management
- * Updated to work with new SRM integration system
- * Maintains same endpoint names for compatibility but uses tenant-based parameters
- */
 export class SRMProcurementController extends BaseController {
   private srmProcurementService: SRMProcurementService;
 
@@ -42,10 +37,6 @@ export class SRMProcurementController extends BaseController {
   // NEW - DIRECT RFQ REJECT ENDPOINTS (untuk menggantikan delay endpoints)
   // ============================================================================
 
-  /**
-   * Get Direct RFQ reject count (untuk forecast)
-   * Supports both industry_tenant_id and supplier_tenant_id
-   */
   public async getDirectRFQRejectCountController(
     req: Request,
     res: Response,
@@ -129,10 +120,6 @@ export class SRMProcurementController extends BaseController {
     }
   }
 
-  /**
-   * Get RFQ reject summary (alias untuk getRFQLossSummaryController)
-   * Supports both industry_tenant_id and supplier_tenant_id
-   */
   public async getRFQRejectSummaryController(
     req: Request,
     res: Response,
@@ -214,10 +201,6 @@ export class SRMProcurementController extends BaseController {
   // INDUSTRY PERSPECTIVE - RFQ DELAY RISK ANALYSIS
   // ============================================================================
 
-  /**
-   * Get RFQ on-time vs delayed count for industry analysis
-   * Only supports industry_tenant_id
-   */
   public async getRFQOnTimeDelayedCountController(
     req: Request,
     res: Response,
@@ -258,10 +241,6 @@ export class SRMProcurementController extends BaseController {
     }
   }
 
-  /**
-   * Get RFQ delay count for industry analysis
-   * Only supports industry_tenant_id
-   */
   public async getRFQDelayCountController(
     req: Request,
     res: Response,
@@ -301,10 +280,6 @@ export class SRMProcurementController extends BaseController {
     }
   }
 
-  /**
-   * Get RFQ delay summary for industry analysis
-   * Only supports industry_tenant_id
-   */
   public async getRFQDelaySummaryController(
     req: Request,
     res: Response,
@@ -345,10 +320,6 @@ export class SRMProcurementController extends BaseController {
     }
   }
 
-  /**
-   * Get RFQ delay risk rate trend for industry analysis
-   * Only supports industry_tenant_id
-   */
   public async getRFQDelayRiskRateTrendController(
     req: Request,
     res: Response,
@@ -393,10 +364,6 @@ export class SRMProcurementController extends BaseController {
   // DUAL PERSPECTIVE - RFQ WIN/LOSS RISK ANALYSIS (Industry OR Supplier)
   // ============================================================================
 
-  /**
-   * Get RFQ win vs lose count
-   * Supports both industry_tenant_id (Direct RFQ) and supplier_tenant_id (Open & Invitation RFQ)
-   */
   public async getWinLoseCountController(
     req: Request,
     res: Response,
@@ -472,10 +439,6 @@ export class SRMProcurementController extends BaseController {
     }
   }
 
-  /**
-   * Get RFQ lose count
-   * Supports both industry_tenant_id (Direct RFQ) and supplier_tenant_id (Open & Invitation RFQ)
-   */
   public async getLoseCountController(
     req: Request,
     res: Response,
@@ -551,10 +514,6 @@ export class SRMProcurementController extends BaseController {
     }
   }
 
-  /**
-   * Get RFQ loss summary
-   * Supports both industry_tenant_id (Direct RFQ) and supplier_tenant_id (Open & Invitation RFQ)
-   */
   public async getRFQLossSummaryController(
     req: Request,
     res: Response,
@@ -630,10 +589,6 @@ export class SRMProcurementController extends BaseController {
     }
   }
 
-  /**
-   * Get RFQ loss risk rate trend
-   * Supports both industry_tenant_id (Direct RFQ) and supplier_tenant_id (Open & Invitation RFQ)
-   */
   public async getRFQLossRiskRateTrendController(
     req: Request,
     res: Response,
@@ -714,10 +669,6 @@ export class SRMProcurementController extends BaseController {
   // ADDITIONAL ANALYTICS ENDPOINTS
   // ============================================================================
 
-  /**
-   * Get comprehensive RFQ statistics for industry
-   * New endpoint for enhanced analytics
-   */
   public async getComprehensiveRFQStatsController(
     req: Request,
     res: Response,
@@ -758,10 +709,6 @@ export class SRMProcurementController extends BaseController {
     }
   }
 
-  /**
-   * Get comprehensive RFQ statistics for supplier
-   * New endpoint for enhanced analytics
-   */
   public async getSupplierRFQStatsController(
     req: Request,
     res: Response,
@@ -806,10 +753,6 @@ export class SRMProcurementController extends BaseController {
   // HELPER METHODS
   // ============================================================================
 
-  /**
-   * Enhanced error handling with detailed error information
-   * Uses parent class handleError method to maintain compatibility
-   */
   private handleDetailedError(
     req: Request,
     res: Response,

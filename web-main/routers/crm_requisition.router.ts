@@ -3,8 +3,6 @@ import { CRMRequisitionController } from '../controllers/crm_requisition.control
 
 const router = Router();
 const crmRequisitionController = new CRMRequisitionController();
-
-// Basic data endpoints
 router.get('/lor', (req, res) =>
   crmRequisitionController.getAllCRMLoRController(req, res),
 );
@@ -12,8 +10,6 @@ router.get('/lor', (req, res) =>
 router.get('/loa', (req, res) =>
   crmRequisitionController.getAllCRMLoAController(req, res),
 );
-
-// Accept/Reject trend endpoints
 router.get('/lor-accept-reject', (req, res) =>
   crmRequisitionController.getAllLoRAcceptRejectController(req, res),
 );
@@ -29,8 +25,6 @@ router.get('/loa-accept-reject', (req, res) =>
 router.get('/loa-reject', (req, res) =>
   crmRequisitionController.getLoARejectController(req, res),
 );
-
-// Summary endpoints
 router.get('/lor-rejection-summary', (req, res) =>
   crmRequisitionController.getLoRRejectionSummaryController(req, res),
 );
@@ -38,8 +32,6 @@ router.get('/lor-rejection-summary', (req, res) =>
 router.get('/loa-rejection-summary', (req, res) =>
   crmRequisitionController.getLoARejectionSummaryController(req, res),
 );
-
-// Risk rate trend endpoints
 router.get('/lor-rejection-risk-rate', (req, res) =>
   crmRequisitionController.getLoRRejectionRiskRateTrendController(req, res),
 );

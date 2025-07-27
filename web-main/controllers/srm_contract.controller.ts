@@ -3,11 +3,6 @@ import { SRMContractService } from '../../business-layer/services/srm_contract.s
 import { BaseController } from '../common/base.controller';
 import { MessagesKey } from '../../helpers/messages/messagesKey';
 
-/**
- * SRM Contract Controller for Risk Management
- * Updated to work with new SRM integration system
- * Maintains same endpoint names for compatibility but uses tenant-based parameters
- */
 export class SRMContractController extends BaseController {
   private srmContractService: SRMContractService;
 
@@ -15,10 +10,6 @@ export class SRMContractController extends BaseController {
     super();
     this.srmContractService = new SRMContractService();
   }
-
-  // ============================================================================
-  // LEGACY COMPATIBILITY ENDPOINT
-  // ============================================================================
   public async getAllSRMContractController(
     req: Request,
     res: Response,
@@ -38,14 +29,6 @@ export class SRMContractController extends BaseController {
     }
   }
 
-  // ============================================================================
-  // DELIVERY PERFORMANCE ANALYSIS
-  // ============================================================================
-
-  /**
-   * Get on-time vs late delivery trend analysis
-   * Updated to use tenant-based parameters with flexible industry/supplier filtering
-   */
   public async getAllOnTimeVsLateTrendController(
     req: Request,
     res: Response,
@@ -57,8 +40,6 @@ export class SRMContractController extends BaseController {
       const supplier_tenant_id = req.query.supplier_tenant_id as
         | string
         | undefined;
-
-      // Validate at least one parameter is provided
       if (!industry_tenant_id && !supplier_tenant_id) {
         return res.status(400).json({
           message:
@@ -67,8 +48,6 @@ export class SRMContractController extends BaseController {
             'Missing required parameter: industry_tenant_id OR supplier_tenant_id',
         });
       }
-
-      // Validate industry_tenant_id if provided
       let industryTenantIdNum: number | undefined;
       if (industry_tenant_id) {
         industryTenantIdNum = parseInt(industry_tenant_id, 10);
@@ -79,8 +58,6 @@ export class SRMContractController extends BaseController {
           });
         }
       }
-
-      // Validate supplier_tenant_id if provided
       let supplierTenantIdNum: number | undefined;
       if (supplier_tenant_id) {
         supplierTenantIdNum = parseInt(supplier_tenant_id, 10);
@@ -111,10 +88,6 @@ export class SRMContractController extends BaseController {
     }
   }
 
-  /**
-   * Get late delivery trend (only late deliveries)
-   * Updated to use tenant-based parameters
-   */
   public async getLateTrendController(
     req: Request,
     res: Response,
@@ -126,8 +99,6 @@ export class SRMContractController extends BaseController {
       const supplier_tenant_id = req.query.supplier_tenant_id as
         | string
         | undefined;
-
-      // Validate at least one parameter is provided
       if (!industry_tenant_id && !supplier_tenant_id) {
         return res.status(400).json({
           message:
@@ -164,10 +135,6 @@ export class SRMContractController extends BaseController {
     }
   }
 
-  /**
-   * Get late receipt summary
-   * Updated to use tenant-based parameters with flexible parameter order
-   */
   public async getLateReceiptSummaryController(
     req: Request,
     res: Response,
@@ -208,10 +175,6 @@ export class SRMContractController extends BaseController {
     }
   }
 
-  /**
-   * Get late receipt risk rate trend
-   * Updated to use tenant-based parameters
-   */
   public async getLateReceiptRiskRateTrendController(
     req: Request,
     res: Response,
@@ -252,14 +215,6 @@ export class SRMContractController extends BaseController {
     }
   }
 
-  // ============================================================================
-  // QUANTITY COMPLIANCE ANALYSIS
-  // ============================================================================
-
-  /**
-   * Get quantity compliance analysis (target vs actual quantity)
-   * Updated to use tenant-based parameters
-   */
   public async getQuantityComplianceController(
     req: Request,
     res: Response,
@@ -300,10 +255,6 @@ export class SRMContractController extends BaseController {
     }
   }
 
-  /**
-   * Get non-compliant quantity trend
-   * Updated to use tenant-based parameters
-   */
   public async getNonCompliantQuantityController(
     req: Request,
     res: Response,
@@ -344,10 +295,6 @@ export class SRMContractController extends BaseController {
     }
   }
 
-  /**
-   * Get quantity mismatch summary
-   * Updated to use tenant-based parameters
-   */
   public async getQuantityMismatchSummaryController(
     req: Request,
     res: Response,
@@ -388,10 +335,6 @@ export class SRMContractController extends BaseController {
     }
   }
 
-  /**
-   * Get quantity mismatch risk rate trend
-   * Updated to use tenant-based parameters
-   */
   public async getQuantityMismatchRiskRateTrendController(
     req: Request,
     res: Response,
@@ -432,14 +375,6 @@ export class SRMContractController extends BaseController {
     }
   }
 
-  // ============================================================================
-  // CONTRACT VOLUME ANALYSIS
-  // ============================================================================
-
-  /**
-   * Get total contract count analysis
-   * Updated to use tenant-based parameters
-   */
   public async getContractTotalController(
     req: Request,
     res: Response,
@@ -479,10 +414,6 @@ export class SRMContractController extends BaseController {
     }
   }
 
-  /**
-   * Get contract decline summary
-   * Updated to use tenant-based parameters
-   */
   public async getContractDeclineSummaryController(
     req: Request,
     res: Response,
@@ -523,10 +454,6 @@ export class SRMContractController extends BaseController {
     }
   }
 
-  /**
-   * Get contract decline risk rate trend
-   * Updated to use tenant-based parameters
-   */
   public async getContractDeclineRiskRateTrendController(
     req: Request,
     res: Response,
@@ -567,14 +494,6 @@ export class SRMContractController extends BaseController {
     }
   }
 
-  // ============================================================================
-  // ADDITIONAL ANALYTICS ENDPOINTS
-  // ============================================================================
-
-  /**
-   * Get top suppliers for industry
-   * New endpoint for enhanced analytics
-   */
   public async getTopSuppliersController(
     req: Request,
     res: Response,
@@ -614,10 +533,6 @@ export class SRMContractController extends BaseController {
     }
   }
 
-  /**
-   * Get top industries for supplier
-   * New endpoint for enhanced analytics
-   */
   public async getTopIndustriesController(
     req: Request,
     res: Response,
@@ -657,14 +572,6 @@ export class SRMContractController extends BaseController {
     }
   }
 
-  // ============================================================================
-  // HELPER METHODS
-  // ============================================================================
-
-  /**
-   * Validate and parse tenant ID parameter
-   * Reusable validation logic that returns null for empty/invalid values
-   */
   private validateTenantId(
     tenantId: string | undefined,
     paramName: string,
@@ -681,10 +588,6 @@ export class SRMContractController extends BaseController {
     return tenantIdNum;
   }
 
-  /**
-   * Enhanced error handling with detailed error information
-   * Uses parent class handleError method to maintain compatibility
-   */
   private handleDetailedError(
     req: Request,
     res: Response,
@@ -692,8 +595,6 @@ export class SRMContractController extends BaseController {
     statusCode: number = 500,
   ): Response {
     console.error('SRM Contract Controller Error:', error);
-
-    // Use parent class handleError method for compatibility
     return super.handleError(req, res, error, statusCode);
   }
 }

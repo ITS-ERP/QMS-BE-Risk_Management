@@ -76,7 +76,6 @@ export const ProductionRequest = erpManufacturingDB.define(
       type: DataTypes.BIGINT,
       allowNull: true,
     },
-    // Audit fields...
     created_by: { type: DataTypes.STRING, allowNull: true },
     created_date: { type: DataTypes.DATE, allowNull: true },
     created_host: { type: DataTypes.STRING, allowNull: true },
@@ -169,7 +168,6 @@ export const InspectionProduct = erpManufacturingDB.define(
       type: DataTypes.BIGINT,
       allowNull: true,
     },
-    // Audit fields...
     created_by: { type: DataTypes.STRING, allowNull: true },
     created_date: { type: DataTypes.DATE, allowNull: true },
     created_host: { type: DataTypes.STRING, allowNull: true },

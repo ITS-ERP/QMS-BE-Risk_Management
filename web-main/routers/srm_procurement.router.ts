@@ -3,8 +3,6 @@ import { SRMProcurementController } from '../controllers/srm_procurement.control
 
 const router = Router();
 const srmProcurementController = new SRMProcurementController();
-
-// UTAMA:
 router.get('/', (req, res) =>
   srmProcurementController.getAllSRMProcurementController(req, res),
 );
@@ -24,8 +22,6 @@ router.get('/rfq-win-lose-count', (req, res) =>
 router.get('/rfq-lose-count', (req, res) =>
   srmProcurementController.getLoseCountController(req, res),
 );
-
-// TAMBAHAN EXISTING:
 router.get('/rfq-delay-summary', (req, res) =>
   srmProcurementController.getRFQDelaySummaryController(req, res),
 );
@@ -49,8 +45,6 @@ router.get('/comprehensive-rfq-stats', (req, res) =>
 router.get('/supplier-rfq-stats', (req, res) =>
   srmProcurementController.getSupplierRFQStatsController(req, res),
 );
-
-// NEW - Direct RFQ Reject endpoints
 router.get('/direct-rfq-reject-count', (req, res) =>
   srmProcurementController.getDirectRFQRejectCountController(req, res),
 );

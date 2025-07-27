@@ -87,7 +87,6 @@ export const Receive = erpInventoryDB.define(
       type: DataTypes.BIGINT,
       allowNull: true,
     },
-    // Audit fields...
     created_by: { type: DataTypes.STRING, allowNull: true },
     created_date: { type: DataTypes.DATE, allowNull: true },
     created_host: { type: DataTypes.STRING, allowNull: true },
@@ -146,7 +145,6 @@ export const ReceiveDetail = erpInventoryDB.define(
       type: DataTypes.BIGINT,
       allowNull: true,
     },
-    // Audit fields...
     created_by: { type: DataTypes.STRING, allowNull: true },
     created_date: { type: DataTypes.DATE, allowNull: true },
     created_host: { type: DataTypes.STRING, allowNull: true },
@@ -236,7 +234,6 @@ export const Transfer = erpInventoryDB.define(
       type: DataTypes.BIGINT,
       allowNull: true,
     },
-    // Audit fields...
     created_by: { type: DataTypes.STRING, allowNull: true },
     created_date: { type: DataTypes.DATE, allowNull: true },
     created_host: { type: DataTypes.STRING, allowNull: true },
@@ -295,7 +292,6 @@ export const TransferDetail = erpInventoryDB.define(
       type: DataTypes.BIGINT,
       allowNull: true,
     },
-    // Audit fields...
     created_by: { type: DataTypes.STRING, allowNull: true },
     created_date: { type: DataTypes.DATE, allowNull: true },
     created_host: { type: DataTypes.STRING, allowNull: true },
@@ -312,8 +308,6 @@ export const TransferDetail = erpInventoryDB.define(
     timestamps: false,
   },
 );
-
-// Set up relationships
 Receive.hasMany(ReceiveDetail, {
   foreignKey: 'receive_pkid',
   as: 'receiveDetails',

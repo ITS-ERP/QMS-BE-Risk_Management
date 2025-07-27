@@ -3,12 +3,10 @@ import {
   getLetterOfRequestsViaRPC,
   getLetterOfAgreementsViaRPC,
 } from '../../rabbit/requestCRMData';
-
-// Interface untuk Letter of Request
 interface LetterOfRequest {
   pkid: number;
   code: string;
-  industry_pkid: number; // tenant_id milik industry
+  industry_pkid: number;
   confirmation_due_date: string;
   delivery_date: string;
   start_date: string | null;
@@ -18,10 +16,8 @@ interface LetterOfRequest {
   contract_type: string;
   status: string;
   message: string | null;
-  tenant_id: number; // tenant_id milik retail
+  tenant_id: number;
 }
-
-// Interface untuk Letter of Agreement
 interface LetterOfAgreement {
   pkid: number;
   code: string;
@@ -31,21 +27,14 @@ interface LetterOfAgreement {
   confirmation_due_date: string;
   status: string;
   letter_of_request_pkid: number;
-  tenant_id: number; // tenant_id milik retail
+  tenant_id: number;
 }
 
 export class CRMRequisitionService {
-  // 🎯 UPDATED: Get all Letter of Request menggunakan RabbitMQ
   async fetchAllCRMLoR(req: Request) {
-    // Create a mock tenant_id for RabbitMQ call since risk monitoring doesn't have specific tenant context
-    // We'll use a broad range to get all data, then filter in the calling methods
-    const tenant_id = 1; // Default tenant for broad data fetching
-
-    // Gunakan tanggal default untuk range yang luas
+    const tenant_id = 1;
     const startDate = new Date('2020-01-01');
     const endDate = new Date('2030-12-31');
-
-    // 🎯 USE RABBITMQ INSTEAD OF DIRECT API
     const response = (await getLetterOfRequestsViaRPC(
       req,
       startDate,
@@ -55,18 +44,10 @@ export class CRMRequisitionService {
 
     return response;
   }
-
-  // 🎯 UPDATED: Get all Letter of Agreement menggunakan RabbitMQ
   async fetchAllCRMLoA(req: Request) {
-    // Create a mock tenant_id for RabbitMQ call since risk monitoring doesn't have specific tenant context
-    // We'll use a broad range to get all data, then filter in the calling methods
-    const tenant_id = 1; // Default tenant for broad data fetching
-
-    // Gunakan tanggal default untuk range yang luas
+    const tenant_id = 1;
     const startDate = new Date('2020-01-01');
     const endDate = new Date('2030-12-31');
-
-    // 🎯 USE RABBITMQ INSTEAD OF DIRECT API
     const response = (await getLetterOfAgreementsViaRPC(
       req,
       startDate,
@@ -81,7 +62,6 @@ export class CRMRequisitionService {
     industry_tenant_id?: number,
     retail_tenant_id?: number,
   ) {
-    // 🎯 Create mock request for RabbitMQ call
     const mockReq = { headers: {} } as Request;
     const data = await this.fetchAllCRMLoR(mockReq);
 
@@ -89,8 +69,6 @@ export class CRMRequisitionService {
       [key: string]: { accepted: number; rejected: number };
     } = {};
     const filteredYears: Set<string> = new Set();
-
-    // Filter data berdasarkan tenant_id
     const filteredData = data.filter((item: LetterOfRequest) => {
       let includeItem = true;
 
@@ -137,14 +115,11 @@ export class CRMRequisitionService {
   }
 
   async getLoRReject(industry_tenant_id?: number, retail_tenant_id?: number) {
-    // 🎯 Create mock request for RabbitMQ call
     const mockReq = { headers: {} } as Request;
     const data = await this.fetchAllCRMLoR(mockReq);
 
     const yearlyReject: { [key: string]: { rejected: number } } = {};
     const filteredYears: Set<string> = new Set();
-
-    // Filter data berdasarkan tenant_id
     const filteredData = data.filter((item: LetterOfRequest) => {
       let includeItem = true;
 
@@ -194,14 +169,9 @@ export class CRMRequisitionService {
     industry_tenant_id?: number,
     retail_tenant_id?: number,
   ) {
-    // 🎯 Create mock request for RabbitMQ call
     const mockReq = { headers: {} } as Request;
-
-    // Ambil data LoA dan LoR untuk join
     const loaData = await this.fetchAllCRMLoA(mockReq);
     const lorData = await this.fetchAllCRMLoR(mockReq);
-
-    // Create mapping dari LoR pkid ke industry_pkid
     const lorToIndustryMapping = new Map<number, number>();
     lorData.forEach((lor: LetterOfRequest) => {
       lorToIndustryMapping.set(lor.pkid, lor.industry_pkid);
@@ -211,17 +181,11 @@ export class CRMRequisitionService {
       [key: string]: { accepted: number; rejected: number };
     } = {};
     const filteredYears: Set<string> = new Set();
-
-    // Filter data LoA berdasarkan tenant_id
     const filteredData = loaData.filter((item: LetterOfAgreement) => {
       let includeItem = true;
-
-      // Filter berdasarkan retail tenant_id
       if (retail_tenant_id && item.tenant_id !== retail_tenant_id) {
         includeItem = false;
       }
-
-      // Filter berdasarkan industry tenant_id (melalui join dengan LoR)
       if (industry_tenant_id) {
         const relatedIndustryPkid = lorToIndustryMapping.get(
           item.letter_of_request_pkid,
@@ -266,14 +230,9 @@ export class CRMRequisitionService {
   }
 
   async getLoAReject(industry_tenant_id?: number, retail_tenant_id?: number) {
-    // 🎯 Create mock request for RabbitMQ call
     const mockReq = { headers: {} } as Request;
-
-    // Ambil data LoA dan LoR untuk join
     const loaData = await this.fetchAllCRMLoA(mockReq);
     const lorData = await this.fetchAllCRMLoR(mockReq);
-
-    // Create mapping dari LoR pkid ke industry_pkid
     const lorToIndustryMapping = new Map<number, number>();
     lorData.forEach((lor: LetterOfRequest) => {
       lorToIndustryMapping.set(lor.pkid, lor.industry_pkid);
@@ -281,17 +240,11 @@ export class CRMRequisitionService {
 
     const yearlyReject: { [key: string]: { rejected: number } } = {};
     const filteredYears: Set<string> = new Set();
-
-    // Filter data LoA berdasarkan tenant_id
     const filteredData = loaData.filter((item: LetterOfAgreement) => {
       let includeItem = true;
-
-      // Filter berdasarkan retail tenant_id
       if (retail_tenant_id && item.tenant_id !== retail_tenant_id) {
         includeItem = false;
       }
-
-      // Filter berdasarkan industry tenant_id (melalui join dengan LoR)
       if (industry_tenant_id) {
         const relatedIndustryPkid = lorToIndustryMapping.get(
           item.letter_of_request_pkid,
@@ -334,8 +287,6 @@ export class CRMRequisitionService {
 
     return allYearlyReject;
   }
-
-  // Summary untuk Penolakan LoR
   async getLoRRejectionSummary(
     industry_tenant_id?: number,
     retail_tenant_id?: number,
@@ -369,8 +320,6 @@ export class CRMRequisitionService {
           : 0.0,
     };
   }
-
-  // Summary untuk Penolakan LoA
   async getLoARejectionSummary(
     industry_tenant_id?: number,
     retail_tenant_id?: number,
@@ -404,8 +353,6 @@ export class CRMRequisitionService {
           : 0.0,
     };
   }
-
-  // Risk Rate Trend untuk Penolakan LoR
   async getLoRRejectionRiskRateTrend(
     industry_tenant_id?: number,
     retail_tenant_id?: number,
@@ -428,8 +375,6 @@ export class CRMRequisitionService {
 
     return riskRateTrend;
   }
-
-  // Risk Rate Trend untuk Penolakan LoA
   async getLoARejectionRiskRateTrend(
     industry_tenant_id?: number,
     retail_tenant_id?: number,

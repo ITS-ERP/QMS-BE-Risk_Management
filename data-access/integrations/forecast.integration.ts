@@ -1,7 +1,5 @@
 import { Request } from 'express';
 import { forecastAPI } from '.';
-
-// INDUSTRY - Updated to use tenant_id with authentication
 export const getRejectReceiveByYearIndustry = (
   req: Request,
   industry_tenant_id: number,
@@ -25,14 +23,6 @@ export const getDefectInspectionProductByYearIndustry = (
   forecastAPI(req).get(
     `/general_forecast?endpoint=defect_inspection_product_by_year&industry_tenant_id=${industry_tenant_id}`,
   );
-
-// export const getDelayedSRMIndustry = (
-//   req: Request,
-//   industry_tenant_id: number,
-// ) =>
-//   forecastAPI(req).get(
-//     `/general_forecast?endpoint=delayed_count&industry_tenant_id=${industry_tenant_id}`,
-//   );
 
 export const getDirectRFQRejectIndustry = (
   req: Request,
@@ -91,8 +81,6 @@ export const getNoncompliantQuantityCRMIndustry = (
   forecastAPI(req).get(
     `/general_forecast?endpoint=crm_noncompliant_quantity&industry_tenant_id=${industry_tenant_id}`,
   );
-
-// SUPPLIER - Updated to use tenant_id with authentication
 export const getLoseCountSupplier = (
   req: Request,
   supplier_tenant_id: number,
@@ -121,8 +109,6 @@ export const getTotalContractSRMSupplier = (
   forecastAPI(req).get(
     `/general_forecast?endpoint=total_contract&supplier_tenant_id=${supplier_tenant_id}`,
   );
-
-// RETAIL - Updated to use tenant_id with authentication
 export const getLORRejectRetail = (req: Request, retail_tenant_id: number) =>
   forecastAPI(req).get(
     `/general_forecast?endpoint=lor_reject&retail_tenant_id=${retail_tenant_id}`,

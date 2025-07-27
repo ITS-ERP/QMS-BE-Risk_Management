@@ -3,8 +3,6 @@ import { SRMContractController } from '../controllers/srm_contract.controller';
 
 const router = Router();
 const srmContractController = new SRMContractController();
-
-// UTAMA:
 router.get('/', (req, res) =>
   srmContractController.getAllSRMContractController(req, res),
 );
@@ -28,8 +26,6 @@ router.get('/noncompliant-quantity', (req, res) =>
 router.get('/total-contract', (req, res) =>
   srmContractController.getContractTotalController(req, res),
 );
-
-// TAMBAHAN:
 router.get('/contract-decline-summary', (req, res) =>
   srmContractController.getContractDeclineSummaryController(req, res),
 );

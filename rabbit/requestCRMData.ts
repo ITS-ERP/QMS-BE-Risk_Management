@@ -13,10 +13,6 @@ import {
 } from '../business-layer/services/fallbackCRM.service';
 import type { CRMContractData } from '../business-layer/services/fallbackCRM.service';
 
-// ================================
-// TYPE DEFINITIONS
-// ================================
-
 interface RabbitMQCRMRequestPayload {
   tenant_id?: number;
   industry_id?: number;
@@ -29,10 +25,6 @@ interface RabbitMQCRMRequestPayload {
     authorization?: string;
   };
 }
-
-// ================================
-// EXISTING FUNCTIONS (unchanged)
-// ================================
 
 export const getLetterOfRequestsViaRPC = async (
   req: Request,
@@ -399,7 +391,7 @@ export const getContractDetailsWithShipmentsViaRPC = async (
 
     const requestPayload: RabbitMQCRMRequestPayload = {
       tenant_id: tenantId,
-      start_date: undefined, // Contract details tidak perlu filter tanggal
+      start_date: undefined,
       end_date: undefined,
       headers: {
         authorization: req.headers.authorization,
@@ -413,13 +405,6 @@ export const getContractDetailsWithShipmentsViaRPC = async (
   });
 };
 
-// ================================
-// NEW FUNCTIONS FOR CONTRACT ASSESSMENT
-// ================================
-
-/**
- * Get contract by pkid via RabbitMQ with fallback to database
- */
 export const getCRMContractByPkidViaRPC = async (
   req: Request,
   contract_pkid: number,
@@ -509,9 +494,6 @@ export const getCRMContractByPkidViaRPC = async (
   });
 };
 
-/**
- * Get all CRM contracts via RabbitMQ with fallback to database
- */
 export const getAllCRMContractsViaRPC = async (
   req: Request,
 ): Promise<CRMContractData[]> => {
@@ -596,9 +578,6 @@ export const getAllCRMContractsViaRPC = async (
   });
 };
 
-/**
- * Get CRM contracts by industry_id via RabbitMQ with fallback to database
- */
 export const getCRMContractsByIndustryIdViaRPC = async (
   req: Request,
   industry_id: number,
@@ -688,9 +667,6 @@ export const getCRMContractsByIndustryIdViaRPC = async (
   });
 };
 
-/**
- * Get CRM contracts by retail_id via RabbitMQ with fallback to database
- */
 export const getCRMContractsByRetailIdViaRPC = async (
   req: Request,
   retail_id: number,
@@ -780,10 +756,6 @@ export const getCRMContractsByRetailIdViaRPC = async (
   });
 };
 
-/**
- * Get CRM contracts with user resolution via RabbitMQ with fallback to database
- * This is a high-level function that combines multiple RPC calls for assessment
- */
 export const getCRMContractsWithUserResolutionViaRPC = async (
   req: Request,
   tenant_id: number,
@@ -795,14 +767,12 @@ export const getCRMContractsWithUserResolutionViaRPC = async (
     );
 
     if (user_type === 'industry') {
-      // For industry: get contracts by industry_pkid
       const contracts = await getCRMContractsByIndustryIdViaRPC(req, tenant_id);
       console.log(
         `✅ [QMS Consumer] Retrieved ${contracts.length} CRM industry contracts`,
       );
       return contracts || [];
     } else if (user_type === 'retail') {
-      // For retail: get contracts by retail_pkid
       const contracts = await getCRMContractsByRetailIdViaRPC(req, tenant_id);
       console.log(
         `✅ [QMS Consumer] Retrieved ${contracts.length} CRM retail contracts`,
@@ -818,7 +788,6 @@ export const getCRMContractsWithUserResolutionViaRPC = async (
       error,
     );
 
-    // Final fallback: use database fallback
     try {
       const { fallbackGetCRMContractsWithUserResolution } = await import(
         '../business-layer/services/fallbackCRM.service'
@@ -837,7 +806,7 @@ export const getCRMContractsWithUserResolutionViaRPC = async (
         `❌ [QMS Consumer] All CRM fallback methods failed:`,
         finalError,
       );
-      return []; // Return empty array instead of throwing
+      return [];
     }
   }
 };

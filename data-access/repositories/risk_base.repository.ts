@@ -44,20 +44,12 @@ export class RiskBaseRepository extends BaseRepository<
     return count > 0;
   }
 
-  /**
-   * Check if risk bases already exist for specific tenant and risk_user
-   * @param req Request object
-   * @param tenantId Tenant ID
-   * @param riskUser Risk user type (Industry, Supplier, Retail)
-   * @returns Promise<boolean>
-   */
   async checkExistingByTenantAndRiskUser(
     req: Request,
     tenantId: number,
     riskUser: string,
   ): Promise<boolean> {
     try {
-      // ✅ Tanpa check is_deleted - ambil semua yang ada di database
       const count = await this.model.count({
         where: {
           tenant_id: tenantId,
@@ -76,20 +68,12 @@ export class RiskBaseRepository extends BaseRepository<
     }
   }
 
-  /**
-   * Get count of existing risk bases by tenant and risk_user
-   * @param req Request object
-   * @param tenantId Tenant ID
-   * @param riskUser Risk user type
-   * @returns Promise<number>
-   */
   async getCountByTenantAndRiskUser(
     req: Request,
     tenantId: number,
     riskUser: string,
   ): Promise<number> {
     try {
-      // ✅ Tanpa check is_deleted - ambil semua yang ada di database
       const count = await this.model.count({
         where: {
           tenant_id: tenantId,
@@ -104,20 +88,12 @@ export class RiskBaseRepository extends BaseRepository<
     }
   }
 
-  /**
-   * Find all risk bases for specific tenant and risk_user
-   * @param req Request object
-   * @param tenantId Tenant ID
-   * @param riskUser Risk user type
-   * @returns Promise<Model<RiskBaseAttributes>[]>
-   */
   async findByTenantAndRiskUser(
     req: Request,
     tenantId: number,
     riskUser: string,
   ): Promise<Model<RiskBaseAttributes>[]> {
     try {
-      // ✅ Tanpa check is_deleted - ambil semua yang ada di database
       const riskBases = await this.model.findAll({
         where: {
           tenant_id: tenantId,
@@ -140,20 +116,12 @@ export class RiskBaseRepository extends BaseRepository<
     }
   }
 
-  /**
-   * Bulk create risk bases with enhanced error handling
-   * @param req Request object
-   * @param entities Array of risk base entities to create
-   * @returns Promise<Model<RiskBaseAttributes>[] | string>
-   */
   async bulkCreateWithValidation(
     req: Request,
     entities: CreationAttributes<Model<RiskBaseAttributes>>[],
   ): Promise<Model<RiskBaseAttributes>[] | string> {
     try {
       console.log(`🚀 Starting bulk creation of ${entities.length} risk bases`);
-
-      // Validate that all entities have required fields
       const validationErrors: string[] = [];
       entities.forEach((entity, index) => {
         if (!entity.risk_name) {
@@ -172,8 +140,6 @@ export class RiskBaseRepository extends BaseRepository<
         console.error('❌ Bulk create validation failed:', errorMessage);
         return errorMessage;
       }
-
-      // Use transaction for bulk insert
       const result = await db.sequelize.transaction(
         async (transaction: Transaction) => {
           return await this.model.bulkCreate(entities, {
@@ -197,13 +163,6 @@ export class RiskBaseRepository extends BaseRepository<
     }
   }
 
-  /**
-   * Delete all risk bases for specific tenant and risk_user (soft delete)
-   * @param req Request object
-   * @param tenantId Tenant ID
-   * @param riskUser Risk user type
-   * @returns Promise<number> Number of affected rows
-   */
   async softDeleteByTenantAndRiskUser(
     req: Request,
     tenantId: number,
@@ -236,13 +195,6 @@ export class RiskBaseRepository extends BaseRepository<
     }
   }
 
-  /**
-   * Restore all risk bases for specific tenant and risk_user
-   * @param req Request object
-   * @param tenantId Tenant ID
-   * @param riskUser Risk user type
-   * @returns Promise<number> Number of affected rows
-   */
   async restoreByTenantAndRiskUser(
     req: Request,
     tenantId: number,
@@ -263,7 +215,7 @@ export class RiskBaseRepository extends BaseRepository<
         where: {
           tenant_id: tenantId,
           risk_user: riskUser,
-          is_deleted: true, // Restore hanya yang sudah di-delete (true/1)
+          is_deleted: true,
         },
       });
 
@@ -278,13 +230,6 @@ export class RiskBaseRepository extends BaseRepository<
     }
   }
 
-  /**
-   * Find risk bases with duplicate risk_name for same tenant and risk_user
-   * @param req Request object
-   * @param tenantId Tenant ID
-   * @param riskUser Risk user type
-   * @returns Promise<Model<RiskBaseAttributes>[]>
-   */
   async findDuplicatesByTenantAndRiskUser(
     req: Request,
     tenantId: number,
@@ -320,15 +265,6 @@ export class RiskBaseRepository extends BaseRepository<
     }
   }
 
-  /**
-   * Update single risk mitigation for specific tenant and risk_user by risk_name
-   * @param req Request object
-   * @param tenantId Tenant ID
-   * @param riskUser Risk user type
-   * @param riskName Risk name to update
-   * @param riskMitigation New risk mitigation
-   * @returns Promise<number> Number of affected rows
-   */
   async updateSingleMitigationByTenantAndRiskUser(
     req: Request,
     tenantId: number,
@@ -364,23 +300,6 @@ export class RiskBaseRepository extends BaseRepository<
     }
   }
 
-  /**
-   * Update single risk mitigation by PKID (alternative approach)
-   * @param req Request object
-   * @param tenantId Tenant ID
-   * @param riskUser Risk user type
-   * @param pkid Risk base PKID
-   * @param riskMitigation New risk mitigation
-   * @returns Promise<number> Number of affected rows
-   */
-  /**
-   * Update risk_mitigation for multiple risk bases by tenant and risk_user
-   * @param req Request object
-   * @param tenantId Tenant ID
-   * @param riskUser Risk user type
-   * @param updates Array of {risk_name, risk_mitigation} updates
-   * @returns Promise<number> Number of affected rows
-   */
   async bulkUpdateMitigationByTenantAndRiskUser(
     req: Request,
     tenantId: number,
@@ -389,8 +308,6 @@ export class RiskBaseRepository extends BaseRepository<
   ): Promise<number> {
     try {
       let totalAffectedRows = 0;
-
-      // Use transaction for bulk updates
       await db.sequelize.transaction(async (transaction: Transaction) => {
         for (const update of updates) {
           const updateValues: Partial<RiskBaseAttributes> = {
@@ -425,14 +342,6 @@ export class RiskBaseRepository extends BaseRepository<
     }
   }
 
-  /**
-   * Find risk base by PKID and validate ownership by tenant
-   * @param req Request object
-   * @param pkid Risk base PKID
-   * @param tenantId Tenant ID
-   * @param riskUser Risk user type
-   * @returns Promise<Model<RiskBaseAttributes> | null>
-   */
   async findByPkidAndTenant(
     req: Request,
     pkid: number,
@@ -443,14 +352,11 @@ export class RiskBaseRepository extends BaseRepository<
       console.log(
         `🔍 DEBUG: Looking for PKID ${pkid}, tenant_id ${tenantId}, risk_user ${riskUser}`,
       );
-
-      // ✅ Sederhana: tanpa check is_deleted dulu untuk debug
       const riskBase = await this.model.findOne({
         where: {
           pkid: pkid,
           tenant_id: tenantId,
           risk_user: riskUser,
-          // Hapus is_deleted check dulu untuk debug
         },
       });
 
@@ -471,8 +377,6 @@ export class RiskBaseRepository extends BaseRepository<
       return null;
     }
   }
-
-  //region Original methods (unchanged)
   async create(
     req: Request,
     entity: CreationAttributes<Model<RiskBaseAttributes>>,
@@ -513,5 +417,4 @@ export class RiskBaseRepository extends BaseRepository<
   async restore(req: Request, pkid: number): Promise<void> {
     return super.restore(req, pkid);
   }
-  //endregion
 }

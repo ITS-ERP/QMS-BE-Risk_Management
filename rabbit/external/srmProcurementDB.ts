@@ -13,8 +13,6 @@ export const srmProcurementDB = new Sequelize(
     logging: false,
   },
 );
-
-// RFQ Model
 export const RFQ = srmProcurementDB.define(
   'rfqs',
   {
@@ -173,7 +171,6 @@ export const RFQ = srmProcurementDB.define(
     timestamps: false,
   },
 );
-// Direct RFQ Model
 export const DirectRFQ = srmProcurementDB.define(
   'direct_rfqs',
   {
@@ -286,8 +283,6 @@ export const DirectRFQ = srmProcurementDB.define(
     timestamps: false,
   },
 );
-
-// RFQ Participants Model
 export const RFQParticipant = srmProcurementDB.define(
   'rfq_participants',
   {
@@ -376,7 +371,6 @@ export const RFQParticipant = srmProcurementDB.define(
     timestamps: false,
   },
 );
-// Bid Items Model
 export const BidItem = srmProcurementDB.define(
   'bid_items',
   {
@@ -461,8 +455,6 @@ export const BidItem = srmProcurementDB.define(
     timestamps: false,
   },
 );
-
-// Supplier Model (for procurement database)
 export const SupplierProcurement = srmProcurementDB.define(
   'suppliers',
   {
@@ -535,8 +527,6 @@ export const SupplierProcurement = srmProcurementDB.define(
     timestamps: false,
   },
 );
-
-// Industry Model
 export const Industry = srmProcurementDB.define(
   'industries',
   {
@@ -604,7 +594,6 @@ export const Industry = srmProcurementDB.define(
     timestamps: false,
   },
 );
-// Supplier Items Model
 export const SupplierItem = srmProcurementDB.define(
   'supplier_items',
   {
@@ -672,8 +661,6 @@ export const SupplierItem = srmProcurementDB.define(
     timestamps: false,
   },
 );
-
-// Bid Item Winners Model
 export const BidItemWinner = srmProcurementDB.define(
   'bid_item_winners',
   {
@@ -757,8 +744,6 @@ export const BidItemWinner = srmProcurementDB.define(
     timestamps: false,
   },
 );
-
-// Supplier Offers Model
 export const SupplierOffer = srmProcurementDB.define(
   'supplier_offers',
   {

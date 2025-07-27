@@ -10,8 +10,6 @@ export class ManufacturingController extends BaseController {
     super();
     this.manufacturingService = new ManufacturingService();
   }
-
-  // PRODUCTION REQUEST CONTROLLERS
   public async getAllProductionRequestHeaderController(
     req: Request,
     res: Response,
@@ -20,8 +18,6 @@ export class ManufacturingController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -54,8 +50,6 @@ export class ManufacturingController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -87,8 +81,6 @@ export class ManufacturingController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -121,8 +113,6 @@ export class ManufacturingController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -146,8 +136,6 @@ export class ManufacturingController extends BaseController {
       return this.handleError(req, res, error, 500);
     }
   }
-
-  // INSPECTION PRODUCT CONTROLLERS
   public async getAllInspectionProductController(
     req: Request,
     res: Response,
@@ -156,8 +144,6 @@ export class ManufacturingController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -190,8 +176,6 @@ export class ManufacturingController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -224,8 +208,6 @@ export class ManufacturingController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -258,8 +240,6 @@ export class ManufacturingController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -292,8 +272,6 @@ export class ManufacturingController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -326,8 +304,6 @@ export class ManufacturingController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -351,8 +327,6 @@ export class ManufacturingController extends BaseController {
       return this.handleError(req, res, error, 500);
     }
   }
-
-  // RISK ANALYSIS CONTROLLER
   public async getDefectRiskRateTrendController(
     req: Request,
     res: Response,
@@ -361,8 +335,6 @@ export class ManufacturingController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',

@@ -10,26 +10,15 @@ import {
 } from '../../rabbit/requestERPData';
 
 export class ManufacturingService {
-  // ================================
-  // PRODUCTION REQUEST METHODS
-  // ================================
-
-  /**
-   * 🎯 UPDATED: Fetch production requests menggunakan RabbitMQ
-   */
   async fetchProductionRequestHeader(
     req: Request,
     industry_tenant_id?: number,
   ): Promise<ProductionRequestItem[]> {
     const context = getQMSContext(req);
-
-    // 🎯 USE RABBITMQ INSTEAD OF DIRECT API
     const response = (await getProductionRequestsViaRPC(
       req,
       context.tenant_id_number,
     )) as ProductionRequestItem[];
-
-    // Filter berdasarkan tenant_id - prioritas industry_tenant_id jika ada, fallback ke context
     const targetTenantId = industry_tenant_id || context.tenant_id_number;
     const filteredData = response.filter(
       (item: ProductionRequestItem) =>
@@ -39,22 +28,15 @@ export class ManufacturingService {
     return filteredData;
   }
 
-  /**
-   * 🎯 UPDATED: Fetch inspection products menggunakan RabbitMQ
-   */
   async fetchInspectionProduct(
     req: Request,
     industry_tenant_id?: number,
   ): Promise<InspectionProductItem[]> {
     const context = getQMSContext(req);
-
-    // 🎯 USE RABBITMQ INSTEAD OF DIRECT API
     const response = (await getInspectionProductsViaRPC(
       req,
       context.tenant_id_number,
     )) as InspectionProductItem[];
-
-    // Filter berdasarkan tenant_id - prioritas industry_tenant_id jika ada, fallback ke context
     const targetTenantId = industry_tenant_id || context.tenant_id_number;
     const filteredData = response.filter(
       (item: InspectionProductItem) =>
@@ -182,10 +164,6 @@ export class ManufacturingService {
 
     return allYearlyData;
   }
-
-  // ================================
-  // INSPECTION PRODUCT METHODS
-  // ================================
 
   async getInspectionProductType(
     req: Request,
@@ -341,13 +319,6 @@ export class ManufacturingService {
     return top5Yearly;
   }
 
-  // ================================
-  // RISK ANALYSIS METHODS
-  // ================================
-
-  /**
-   * Risk Rate Trend untuk Defect (Produk Cacat)
-   */
   async getDefectRiskRateTrend(
     req: Request,
     industry_tenant_id?: number,
@@ -370,10 +341,6 @@ export class ManufacturingService {
 
     return riskRateTrend;
   }
-
-  // ================================
-  // ADDITIONAL ANALYTICS METHODS
-  // ================================
 
   async getProductionByStatus(
     req: Request,

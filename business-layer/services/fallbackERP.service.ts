@@ -10,10 +10,6 @@ import {
   InspectionProduct,
 } from '../../rabbit/external/erpManufacturingDB';
 
-// ================================
-// TYPE DEFINITIONS FOR ERP DATA
-// ================================
-
 export interface ERPReceiveData {
   pkid: number;
   code: string;
@@ -169,13 +165,6 @@ export interface ERPInspectionProductData {
   deleted_host?: string;
 }
 
-// ================================
-// INVENTORY FALLBACK FUNCTIONS
-// ================================
-
-/**
- * Fallback: Get receives from ERP Inventory Database
- */
 export const fallbackGetReceivesFromERPInventoryDB = async (
   tenant_id: number,
 ): Promise<ERPReceiveData[]> => {
@@ -200,10 +189,7 @@ export const fallbackGetReceivesFromERPInventoryDB = async (
       where: {
         [Op.and]: [
           {
-            [Op.or]: [
-              { tenant_id: tenant_id },
-              { tenant_id: null }, // Include null for backward compatibility
-            ],
+            [Op.or]: [{ tenant_id: tenant_id }, { tenant_id: null }],
           },
           {
             is_deleted: {
@@ -234,9 +220,6 @@ export const fallbackGetReceivesFromERPInventoryDB = async (
   }
 };
 
-/**
- * Fallback: Get transfers from ERP Inventory Database
- */
 export const fallbackGetTransfersFromERPInventoryDB = async (
   tenant_id: number,
 ): Promise<ERPTransferData[]> => {
@@ -261,10 +244,7 @@ export const fallbackGetTransfersFromERPInventoryDB = async (
       where: {
         [Op.and]: [
           {
-            [Op.or]: [
-              { tenant_id: tenant_id },
-              { tenant_id: null }, // Include null for backward compatibility
-            ],
+            [Op.or]: [{ tenant_id: tenant_id }, { tenant_id: null }],
           },
           {
             is_deleted: {
@@ -295,13 +275,6 @@ export const fallbackGetTransfersFromERPInventoryDB = async (
   }
 };
 
-// ================================
-// MANUFACTURING FALLBACK FUNCTIONS
-// ================================
-
-/**
- * Fallback: Get production requests from ERP Manufacturing Database
- */
 export const fallbackGetProductionRequestsFromERPManufacturingDB = async (
   tenant_id: number,
 ): Promise<ERPProductionRequestData[]> => {
@@ -314,10 +287,7 @@ export const fallbackGetProductionRequestsFromERPManufacturingDB = async (
       where: {
         [Op.and]: [
           {
-            [Op.or]: [
-              { tenant_id: tenant_id },
-              { tenant_id: null }, // Include null for backward compatibility
-            ],
+            [Op.or]: [{ tenant_id: tenant_id }, { tenant_id: null }],
           },
           {
             is_deleted: {
@@ -344,9 +314,6 @@ export const fallbackGetProductionRequestsFromERPManufacturingDB = async (
   }
 };
 
-/**
- * Fallback: Get inspection products from ERP Manufacturing Database
- */
 export const fallbackGetInspectionProductsFromERPManufacturingDB = async (
   tenant_id: number,
 ): Promise<ERPInspectionProductData[]> => {
@@ -359,10 +326,7 @@ export const fallbackGetInspectionProductsFromERPManufacturingDB = async (
       where: {
         [Op.and]: [
           {
-            [Op.or]: [
-              { tenant_id: tenant_id },
-              { tenant_id: null }, // Include null for backward compatibility
-            ],
+            [Op.or]: [{ tenant_id: tenant_id }, { tenant_id: null }],
           },
           {
             is_deleted: {
@@ -389,13 +353,6 @@ export const fallbackGetInspectionProductsFromERPManufacturingDB = async (
   }
 };
 
-// ================================
-// ENHANCED FALLBACK FUNCTIONS
-// ================================
-
-/**
- * Fallback: Get receives by date range from ERP Inventory Database
- */
 export const fallbackGetReceivesByDateRangeFromERPInventoryDB = async (
   tenant_id: number,
   start_date: Date,
@@ -458,9 +415,6 @@ export const fallbackGetReceivesByDateRangeFromERPInventoryDB = async (
   }
 };
 
-/**
- * Fallback: Get transfers by date range from ERP Inventory Database
- */
 export const fallbackGetTransfersByDateRangeFromERPInventoryDB = async (
   tenant_id: number,
   start_date: Date,
@@ -523,15 +477,9 @@ export const fallbackGetTransfersByDateRangeFromERPInventoryDB = async (
   }
 };
 
-/**
- * Fallback: Test ERP database connections
- * Helper function to verify ERP database connectivity
- */
 export const fallbackTestERPConnections = async () => {
   try {
     console.log(`🔍 [Fallback Test] Testing ERP database connections...`);
-
-    // Test inventory DB
     const receiveTest = (await Receive.findOne({
       limit: 1,
       raw: true,
@@ -547,8 +495,6 @@ export const fallbackTestERPConnections = async () => {
     console.log(
       `✅ [Fallback Test] ERP Transfer DB connection: ${transferTest ? 'SUCCESS' : 'EMPTY TABLE'}`,
     );
-
-    // Test manufacturing DB
     const productionRequestTest = (await ProductionRequest.findOne({
       limit: 1,
       raw: true,
@@ -581,13 +527,6 @@ export const fallbackTestERPConnections = async () => {
   }
 };
 
-// ================================
-// AGGREGATION HELPER FUNCTIONS
-// ================================
-
-/**
- * Fallback: Get receive statistics by tenant
- */
 export const fallbackGetReceiveStatsByTenant = async (
   tenant_id: number,
 ): Promise<{
@@ -633,9 +572,6 @@ export const fallbackGetReceiveStatsByTenant = async (
   }
 };
 
-/**
- * Fallback: Get transfer statistics by tenant
- */
 export const fallbackGetTransferStatsByTenant = async (
   tenant_id: number,
 ): Promise<{
@@ -681,9 +617,6 @@ export const fallbackGetTransferStatsByTenant = async (
   }
 };
 
-/**
- * Fallback: Get inspection product statistics by tenant
- */
 export const fallbackGetInspectionProductStatsByTenant = async (
   tenant_id: number,
 ): Promise<{

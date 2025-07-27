@@ -674,9 +674,6 @@ export const getWinningOffersByParticipantIdViaRPC = async (
     });
   });
 };
-// ================================
-// SRM PROCUREMENT FUNCTIONS (CONTINUED)
-// ================================
 
 export const getRFQsBySupplierIdViaRPC = async (
   req: Request,
@@ -1041,1104 +1038,6 @@ export const getTotalRFQByStatusBySupplierIdViaRPC = async (
     });
   });
 };
-
-// ================================
-// SRM CONTRACT FUNCTIONS
-// ================================
-
-export const getAllContractsByIndustryIdViaRPC = async (
-  req: Request,
-  industryPkid: number,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_all_contracts_by_industry_id';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting All Contracts for Industry ${industryPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for All Contracts by Industry. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetAllContractsByIndustryIdFromSRMDB(industryPkid);
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received ${response?.length || 0} Contracts for Industry ${industryPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing All Contracts by Industry response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      industry_pkid: industryPkid,
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getAllContractsBySupplierIdViaRPC = async (
-  req: Request,
-  supplierPkid: number,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_all_contracts_by_supplier_id';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting All Contracts for Supplier ${supplierPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for All Contracts by Supplier. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetAllContractsBySupplierIdFromSRMDB(supplierPkid);
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received ${response?.length || 0} Contracts for Supplier ${supplierPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing All Contracts by Supplier response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      supplier_pkid: supplierPkid,
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getTopSuppliersByIndustryIdViaRPC = async (
-  req: Request,
-  industryPkid: number,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_top_suppliers_by_industry_id';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting Top Suppliers for Industry ${industryPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for Top Suppliers. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetTopSuppliersByIndustryIdFromSRMDB(industryPkid);
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received ${response?.length || 0} Top Suppliers for Industry ${industryPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing Top Suppliers response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      industry_pkid: industryPkid,
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-// ================================
-// SRM CONTRACT FUNCTIONS (CONTINUED)
-// ================================
-
-export const getTopIndustriesBySupplierIdViaRPC = async (
-  req: Request,
-  supplierPkid: number,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_top_industries_by_supplier_id';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting Top Industries for Supplier ${supplierPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for Top Industries. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetTopIndustriesBySupplierIdFromSRMDB(supplierPkid);
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received ${response?.length || 0} Top Industries for Supplier ${supplierPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing Top Industries response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      supplier_pkid: supplierPkid,
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getTopIndustryItemsByIndustryIdViaRPC = async (
-  req: Request,
-  industryPkid: number,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_top_industry_items_by_industry_id';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting Top Industry Items for Industry ${industryPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for Top Industry Items. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetTopIndustryItemsByIndustryIdFromSRMDB(industryPkid);
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received ${response?.length || 0} Top Industry Items for Industry ${industryPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing Top Industry Items response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      industry_pkid: industryPkid,
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getTopSupplierItemsByIndustryIdViaRPC = async (
-  req: Request,
-  industryPkid: number,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_top_supplier_items_by_industry_id';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting Top Supplier Items for Industry ${industryPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for Top Supplier Items by Industry. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetTopSupplierItemsByIndustryIdFromSRMDB(industryPkid);
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received ${response?.length || 0} Top Supplier Items for Industry ${industryPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing Top Supplier Items by Industry response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      industry_pkid: industryPkid,
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getTopIndustryItemsBySupplierIdViaRPC = async (
-  req: Request,
-  supplierPkid: number,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_top_industry_items_by_supplier_id';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting Top Industry Items for Supplier ${supplierPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for Top Industry Items by Supplier. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetTopIndustryItemsBySupplierIdFromSRMDB(supplierPkid);
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received ${response?.length || 0} Top Industry Items for Supplier ${supplierPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing Top Industry Items by Supplier response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      supplier_pkid: supplierPkid,
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getTopSupplierItemsBySupplierIdViaRPC = async (
-  req: Request,
-  supplierPkid: number,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_top_supplier_items_by_supplier_id';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting Top Supplier Items for Supplier ${supplierPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for Top Supplier Items by Supplier. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetTopSupplierItemsBySupplierIdFromSRMDB(supplierPkid);
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received ${response?.length || 0} Top Supplier Items for Supplier ${supplierPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing Top Supplier Items by Supplier response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      supplier_pkid: supplierPkid,
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getTotalHistoryShipmentByIndustryAndYearViaRPC = async (
-  req: Request,
-  industryPkid: number,
-  startDate: Date,
-  endDate: Date,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_total_history_shipment_by_industry_and_year';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting Total History Shipment for Industry ${industryPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for Total History Shipment by Industry. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetTotalHistoryShipmentByIndustryAndYearFromSRMDB(
-            industryPkid,
-            startDate,
-            endDate,
-          );
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received Total History Shipment for Industry ${industryPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing Total History Shipment response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      industry_pkid: industryPkid,
-      start_date: startDate.toISOString(),
-      end_date: endDate.toISOString(),
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getTotalHistoryShipmentBySupplierAndYearViaRPC = async (
-  req: Request,
-  supplierPkid: number,
-  startDate: Date,
-  endDate: Date,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_total_history_shipment_by_supplier_and_year';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting Total History Shipment for Supplier ${supplierPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for Total History Shipment by Supplier. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetTotalHistoryShipmentBySupplierAndYearFromSRMDB(
-            supplierPkid,
-            startDate,
-            endDate,
-          );
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received Total History Shipment for Supplier ${supplierPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing Total History Shipment response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      supplier_pkid: supplierPkid,
-      start_date: startDate.toISOString(),
-      end_date: endDate.toISOString(),
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getAllHistoryShipmentByIndustryForAllYearsViaRPC = async (
-  req: Request,
-  industryPkid: number,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_all_history_shipment_by_industry_for_all_years';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting All History Shipment for Industry ${industryPkid} for All Years via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for All History Shipment by Industry. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetAllHistoryShipmentByIndustryForAllYearsFromSRMDB(
-            industryPkid,
-          );
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received ${response?.length || 0} All History Shipment for Industry ${industryPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing All History Shipment response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      industry_pkid: industryPkid,
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getAllHistoryShipmentBySupplierForAllYearsViaRPC = async (
-  req: Request,
-  supplierPkid: number,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_all_history_shipment_by_supplier_for_all_years';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting All History Shipment for Supplier ${supplierPkid} for All Years via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for All History Shipment by Supplier. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetAllHistoryShipmentBySupplierForAllYearsFromSRMDB(
-            supplierPkid,
-          );
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received ${response?.length || 0} All History Shipment for Supplier ${supplierPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing All History Shipment response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      supplier_pkid: supplierPkid,
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-// ================================
-// SRM PROCUREMENT FUNCTIONS (REMAINING)
-// ================================
 
 export const getTotalDirectRFQByStatusByIndustryIdViaRPC = async (
   req: Request,
@@ -2509,592 +1408,6 @@ export const getTotalRFQLastYearsBySupplierIdViaRPC = async (
     });
   });
 };
-
-// ================================
-// SRM CONTRACT FUNCTIONS (REMAINING)
-// ================================
-
-export const getHistoryShipmentsLastYearsByIndustryViaRPC = async (
-  req: Request,
-  industryPkid: number,
-  range: number,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_history_shipments_last_years_by_industry';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting History Shipments Last Years for Industry ${industryPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for History Shipments Last Years. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetHistoryShipmentsLastYearsByIndustryFromSRMDB(
-            industryPkid,
-            range,
-          );
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received History Shipments Last Years for Industry ${industryPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing History Shipments Last Years response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      industry_pkid: industryPkid,
-      range: range,
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getHistoryShipmentsLastYearsBySupplierViaRPC = async (
-  req: Request,
-  supplierPkid: number,
-  range: number,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_history_shipments_last_years_by_supplier';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting History Shipments Last Years for Supplier ${supplierPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for History Shipments Last Years. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetHistoryShipmentsLastYearsBySupplierFromSRMDB(
-            supplierPkid,
-            range,
-          );
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received History Shipments Last Years for Supplier ${supplierPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing History Shipments Last Years response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      supplier_pkid: supplierPkid,
-      range: range,
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getTotalTargetAndActualTotalPriceByIndustryAndYearViaRPC = async (
-  req: Request,
-  industryPkid: number,
-  startDate: Date,
-  endDate: Date,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue =
-    'rpc_get_total_target_and_actual_total_price_by_industry_and_year';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting Total Target and Actual Price for Industry ${industryPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for Total Target and Actual Price. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetTotalTargetAndActualTotalPriceByIndustryAndYearFromSRMDB(
-            industryPkid,
-            startDate,
-            endDate,
-          );
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received Total Target and Actual Price for Industry ${industryPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing Total Target and Actual Price response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      industry_pkid: industryPkid,
-      start_date: startDate.toISOString(),
-      end_date: endDate.toISOString(),
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getTotalTargetAndActualTotalPriceBySupplierAndYearViaRPC = async (
-  req: Request,
-  supplierPkid: number,
-  startDate: Date,
-  endDate: Date,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue =
-    'rpc_get_total_target_and_actual_total_price_by_supplier_and_year';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting Total Target and Actual Price for Supplier ${supplierPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for Total Target and Actual Price. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetTotalTargetAndActualTotalPriceBySupplierAndYearFromSRMDB(
-            supplierPkid,
-            startDate,
-            endDate,
-          );
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received Total Target and Actual Price for Supplier ${supplierPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing Total Target and Actual Price response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      supplier_pkid: supplierPkid,
-      start_date: startDate.toISOString(),
-      end_date: endDate.toISOString(),
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getAllMasterContractMetricsInYearByIndustryIdViaRPC = async (
-  req: Request,
-  industryPkid: number,
-  startDate: Date,
-  endDate: Date,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_all_master_contract_metrics_in_year_by_industry_id';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting All Master Contract Metrics in Year for Industry ${industryPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for All Master Contract Metrics in Year. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetAllMasterContractMetricsInYearByIndustryIdFromSRMDB(
-            industryPkid,
-            startDate,
-            endDate,
-          );
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received All Master Contract Metrics in Year for Industry ${industryPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing All Master Contract Metrics in Year response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      industry_pkid: industryPkid,
-      start_date: startDate.toISOString(),
-      end_date: endDate.toISOString(),
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-export const getAllMasterContractMetricsInYearBySupplierIdViaRPC = async (
-  req: Request,
-  supplierPkid: number,
-  startDate: Date,
-  endDate: Date,
-) => {
-  const connection = await amqp.connect(
-    process.env.RABBITMQ_URL || 'amqp://localhost',
-  );
-  const channel = await connection.createChannel();
-
-  const queue = 'rpc_get_all_master_contract_metrics_in_year_by_supplier_id';
-  const correlationId = uuidv4();
-  const tempQueue = await channel.assertQueue('', { exclusive: true });
-
-  console.log(
-    `📡 [QMS Consumer] Requesting All Master Contract Metrics in Year for Supplier ${supplierPkid} via RabbitMQ`,
-  );
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(async () => {
-      console.warn(
-        '⚠️ [QMS Consumer] RabbitMQ timeout for All Master Contract Metrics in Year. Falling back to SRM Database...',
-      );
-      try {
-        const fallbackData =
-          await fallbackGetAllMasterContractMetricsInYearBySupplierIdFromSRMDB(
-            supplierPkid,
-            startDate,
-            endDate,
-          );
-        resolve(fallbackData);
-      } catch (fallbackError) {
-        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
-        reject(fallbackError);
-      } finally {
-        try {
-          await channel.close();
-          await connection.close();
-        } catch (closeErr) {
-          console.warn(
-            '⚠️ [QMS Consumer] Warning: failed to close connection:',
-            closeErr,
-          );
-        }
-      }
-    }, 5000);
-
-    channel.consume(
-      tempQueue.queue,
-      async (msg) => {
-        if (msg?.properties.correlationId === correlationId) {
-          clearTimeout(timeout);
-          try {
-            const response = JSON.parse(msg.content.toString());
-            console.log(
-              `✅ [QMS Consumer] Received All Master Contract Metrics in Year for Supplier ${supplierPkid} via RabbitMQ`,
-            );
-            resolve(response);
-          } catch (parseErr) {
-            console.error(
-              '❌ [QMS Consumer] Error parsing All Master Contract Metrics in Year response:',
-              parseErr,
-            );
-            reject(parseErr);
-          } finally {
-            try {
-              await channel.close();
-              await connection.close();
-            } catch (closeErr) {
-              console.warn(
-                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
-                closeErr,
-              );
-            }
-          }
-        }
-      },
-      { noAck: true },
-    );
-
-    const requestPayload = {
-      supplier_pkid: supplierPkid,
-      start_date: startDate.toISOString(),
-      end_date: endDate.toISOString(),
-      headers: {
-        authorization: req.headers.authorization,
-      },
-    };
-
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
-      correlationId,
-      replyTo: tempQueue.queue,
-    });
-  });
-};
-
-// ================================
-// ADDITIONAL SRM PROCUREMENT FUNCTIONS (REMAINING)
-// ================================
 
 export const getTotalDirectRFQLastYearsByIndustryIdViaRPC = async (
   req: Request,
@@ -3925,6 +2238,1676 @@ export const getAllMasterContractMetricsBySupplierIdViaRPC = async (
 
     const requestPayload = {
       supplier_pkid: supplierPkid,
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+// ================================
+// SRM CONTRACT FUNCTIONS
+// ================================
+
+export const getAllContractsByIndustryIdViaRPC = async (
+  req: Request,
+  industryPkid: number,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_all_contracts_by_industry_id';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting All Contracts for Industry ${industryPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for All Contracts by Industry. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetAllContractsByIndustryIdFromSRMDB(industryPkid);
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received ${response?.length || 0} Contracts for Industry ${industryPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing All Contracts by Industry response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      industry_pkid: industryPkid,
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getAllContractsBySupplierIdViaRPC = async (
+  req: Request,
+  supplierPkid: number,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_all_contracts_by_supplier_id';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting All Contracts for Supplier ${supplierPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for All Contracts by Supplier. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetAllContractsBySupplierIdFromSRMDB(supplierPkid);
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received ${response?.length || 0} Contracts for Supplier ${supplierPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing All Contracts by Supplier response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      supplier_pkid: supplierPkid,
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getTopSuppliersByIndustryIdViaRPC = async (
+  req: Request,
+  industryPkid: number,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_top_suppliers_by_industry_id';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting Top Suppliers for Industry ${industryPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for Top Suppliers. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetTopSuppliersByIndustryIdFromSRMDB(industryPkid);
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received ${response?.length || 0} Top Suppliers for Industry ${industryPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing Top Suppliers response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      industry_pkid: industryPkid,
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getTopIndustriesBySupplierIdViaRPC = async (
+  req: Request,
+  supplierPkid: number,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_top_industries_by_supplier_id';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting Top Industries for Supplier ${supplierPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for Top Industries. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetTopIndustriesBySupplierIdFromSRMDB(supplierPkid);
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received ${response?.length || 0} Top Industries for Supplier ${supplierPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing Top Industries response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      supplier_pkid: supplierPkid,
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getTopIndustryItemsByIndustryIdViaRPC = async (
+  req: Request,
+  industryPkid: number,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_top_industry_items_by_industry_id';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting Top Industry Items for Industry ${industryPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for Top Industry Items. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetTopIndustryItemsByIndustryIdFromSRMDB(industryPkid);
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received ${response?.length || 0} Top Industry Items for Industry ${industryPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing Top Industry Items response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      industry_pkid: industryPkid,
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getTopSupplierItemsByIndustryIdViaRPC = async (
+  req: Request,
+  industryPkid: number,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_top_supplier_items_by_industry_id';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting Top Supplier Items for Industry ${industryPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for Top Supplier Items by Industry. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetTopSupplierItemsByIndustryIdFromSRMDB(industryPkid);
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received ${response?.length || 0} Top Supplier Items for Industry ${industryPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing Top Supplier Items by Industry response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      industry_pkid: industryPkid,
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getTopIndustryItemsBySupplierIdViaRPC = async (
+  req: Request,
+  supplierPkid: number,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_top_industry_items_by_supplier_id';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting Top Industry Items for Supplier ${supplierPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for Top Industry Items by Supplier. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetTopIndustryItemsBySupplierIdFromSRMDB(supplierPkid);
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received ${response?.length || 0} Top Industry Items for Supplier ${supplierPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing Top Industry Items by Supplier response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      supplier_pkid: supplierPkid,
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getTopSupplierItemsBySupplierIdViaRPC = async (
+  req: Request,
+  supplierPkid: number,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_top_supplier_items_by_supplier_id';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting Top Supplier Items for Supplier ${supplierPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for Top Supplier Items by Supplier. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetTopSupplierItemsBySupplierIdFromSRMDB(supplierPkid);
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received ${response?.length || 0} Top Supplier Items for Supplier ${supplierPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing Top Supplier Items by Supplier response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      supplier_pkid: supplierPkid,
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getTotalHistoryShipmentByIndustryAndYearViaRPC = async (
+  req: Request,
+  industryPkid: number,
+  startDate: Date,
+  endDate: Date,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_total_history_shipment_by_industry_and_year';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting Total History Shipment for Industry ${industryPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for Total History Shipment by Industry. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetTotalHistoryShipmentByIndustryAndYearFromSRMDB(
+            industryPkid,
+            startDate,
+            endDate,
+          );
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received Total History Shipment for Industry ${industryPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing Total History Shipment response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      industry_pkid: industryPkid,
+      start_date: startDate.toISOString(),
+      end_date: endDate.toISOString(),
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getTotalHistoryShipmentBySupplierAndYearViaRPC = async (
+  req: Request,
+  supplierPkid: number,
+  startDate: Date,
+  endDate: Date,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_total_history_shipment_by_supplier_and_year';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting Total History Shipment for Supplier ${supplierPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for Total History Shipment by Supplier. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetTotalHistoryShipmentBySupplierAndYearFromSRMDB(
+            supplierPkid,
+            startDate,
+            endDate,
+          );
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received Total History Shipment for Supplier ${supplierPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing Total History Shipment response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      supplier_pkid: supplierPkid,
+      start_date: startDate.toISOString(),
+      end_date: endDate.toISOString(),
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getAllHistoryShipmentByIndustryForAllYearsViaRPC = async (
+  req: Request,
+  industryPkid: number,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_all_history_shipment_by_industry_for_all_years';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting All History Shipment for Industry ${industryPkid} for All Years via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for All History Shipment by Industry. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetAllHistoryShipmentByIndustryForAllYearsFromSRMDB(
+            industryPkid,
+          );
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received ${response?.length || 0} All History Shipment for Industry ${industryPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing All History Shipment response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      industry_pkid: industryPkid,
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getAllHistoryShipmentBySupplierForAllYearsViaRPC = async (
+  req: Request,
+  supplierPkid: number,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_all_history_shipment_by_supplier_for_all_years';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting All History Shipment for Supplier ${supplierPkid} for All Years via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for All History Shipment by Supplier. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetAllHistoryShipmentBySupplierForAllYearsFromSRMDB(
+            supplierPkid,
+          );
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received ${response?.length || 0} All History Shipment for Supplier ${supplierPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing All History Shipment response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      supplier_pkid: supplierPkid,
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getHistoryShipmentsLastYearsByIndustryViaRPC = async (
+  req: Request,
+  industryPkid: number,
+  range: number,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_history_shipments_last_years_by_industry';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting History Shipments Last Years for Industry ${industryPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for History Shipments Last Years. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetHistoryShipmentsLastYearsByIndustryFromSRMDB(
+            industryPkid,
+            range,
+          );
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received History Shipments Last Years for Industry ${industryPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing History Shipments Last Years response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      industry_pkid: industryPkid,
+      range: range,
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getHistoryShipmentsLastYearsBySupplierViaRPC = async (
+  req: Request,
+  supplierPkid: number,
+  range: number,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_history_shipments_last_years_by_supplier';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting History Shipments Last Years for Supplier ${supplierPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for History Shipments Last Years. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetHistoryShipmentsLastYearsBySupplierFromSRMDB(
+            supplierPkid,
+            range,
+          );
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received History Shipments Last Years for Supplier ${supplierPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing History Shipments Last Years response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      supplier_pkid: supplierPkid,
+      range: range,
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getTotalTargetAndActualTotalPriceByIndustryAndYearViaRPC = async (
+  req: Request,
+  industryPkid: number,
+  startDate: Date,
+  endDate: Date,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue =
+    'rpc_get_total_target_and_actual_total_price_by_industry_and_year';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting Total Target and Actual Price for Industry ${industryPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for Total Target and Actual Price. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetTotalTargetAndActualTotalPriceByIndustryAndYearFromSRMDB(
+            industryPkid,
+            startDate,
+            endDate,
+          );
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received Total Target and Actual Price for Industry ${industryPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing Total Target and Actual Price response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      industry_pkid: industryPkid,
+      start_date: startDate.toISOString(),
+      end_date: endDate.toISOString(),
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getTotalTargetAndActualTotalPriceBySupplierAndYearViaRPC = async (
+  req: Request,
+  supplierPkid: number,
+  startDate: Date,
+  endDate: Date,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue =
+    'rpc_get_total_target_and_actual_total_price_by_supplier_and_year';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting Total Target and Actual Price for Supplier ${supplierPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for Total Target and Actual Price. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetTotalTargetAndActualTotalPriceBySupplierAndYearFromSRMDB(
+            supplierPkid,
+            startDate,
+            endDate,
+          );
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received Total Target and Actual Price for Supplier ${supplierPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing Total Target and Actual Price response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      supplier_pkid: supplierPkid,
+      start_date: startDate.toISOString(),
+      end_date: endDate.toISOString(),
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getAllMasterContractMetricsInYearByIndustryIdViaRPC = async (
+  req: Request,
+  industryPkid: number,
+  startDate: Date,
+  endDate: Date,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_all_master_contract_metrics_in_year_by_industry_id';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting All Master Contract Metrics in Year for Industry ${industryPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for All Master Contract Metrics in Year. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetAllMasterContractMetricsInYearByIndustryIdFromSRMDB(
+            industryPkid,
+            startDate,
+            endDate,
+          );
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received All Master Contract Metrics in Year for Industry ${industryPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing All Master Contract Metrics in Year response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      industry_pkid: industryPkid,
+      start_date: startDate.toISOString(),
+      end_date: endDate.toISOString(),
+      headers: {
+        authorization: req.headers.authorization,
+      },
+    };
+
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(requestPayload)), {
+      correlationId,
+      replyTo: tempQueue.queue,
+    });
+  });
+};
+
+export const getAllMasterContractMetricsInYearBySupplierIdViaRPC = async (
+  req: Request,
+  supplierPkid: number,
+  startDate: Date,
+  endDate: Date,
+) => {
+  const connection = await amqp.connect(
+    process.env.RABBITMQ_URL || 'amqp://localhost',
+  );
+  const channel = await connection.createChannel();
+
+  const queue = 'rpc_get_all_master_contract_metrics_in_year_by_supplier_id';
+  const correlationId = uuidv4();
+  const tempQueue = await channel.assertQueue('', { exclusive: true });
+
+  console.log(
+    `📡 [QMS Consumer] Requesting All Master Contract Metrics in Year for Supplier ${supplierPkid} via RabbitMQ`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(async () => {
+      console.warn(
+        '⚠️ [QMS Consumer] RabbitMQ timeout for All Master Contract Metrics in Year. Falling back to SRM Database...',
+      );
+      try {
+        const fallbackData =
+          await fallbackGetAllMasterContractMetricsInYearBySupplierIdFromSRMDB(
+            supplierPkid,
+            startDate,
+            endDate,
+          );
+        resolve(fallbackData);
+      } catch (fallbackError) {
+        console.error('❌ [QMS Consumer] Fallback failed:', fallbackError);
+        reject(fallbackError);
+      } finally {
+        try {
+          await channel.close();
+          await connection.close();
+        } catch (closeErr) {
+          console.warn(
+            '⚠️ [QMS Consumer] Warning: failed to close connection:',
+            closeErr,
+          );
+        }
+      }
+    }, 5000);
+
+    channel.consume(
+      tempQueue.queue,
+      async (msg) => {
+        if (msg?.properties.correlationId === correlationId) {
+          clearTimeout(timeout);
+          try {
+            const response = JSON.parse(msg.content.toString());
+            console.log(
+              `✅ [QMS Consumer] Received All Master Contract Metrics in Year for Supplier ${supplierPkid} via RabbitMQ`,
+            );
+            resolve(response);
+          } catch (parseErr) {
+            console.error(
+              '❌ [QMS Consumer] Error parsing All Master Contract Metrics in Year response:',
+              parseErr,
+            );
+            reject(parseErr);
+          } finally {
+            try {
+              await channel.close();
+              await connection.close();
+            } catch (closeErr) {
+              console.warn(
+                '⚠️ [QMS Consumer] Warning: closing after resolve failed:',
+                closeErr,
+              );
+            }
+          }
+        }
+      },
+      { noAck: true },
+    );
+
+    const requestPayload = {
+      supplier_pkid: supplierPkid,
+      start_date: startDate.toISOString(),
+      end_date: endDate.toISOString(),
       headers: {
         authorization: req.headers.authorization,
       },

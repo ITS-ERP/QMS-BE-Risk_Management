@@ -19,8 +19,6 @@ export class AssetController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -43,8 +41,6 @@ export class AssetController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -76,8 +72,6 @@ export class AssetController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -109,8 +103,6 @@ export class AssetController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -142,8 +134,6 @@ export class AssetController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -175,8 +165,6 @@ export class AssetController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -203,8 +191,6 @@ export class AssetController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',
@@ -231,8 +217,6 @@ export class AssetController extends BaseController {
       const industry_tenant_id = req.query.industry_tenant_id
         ? Number(req.query.industry_tenant_id)
         : undefined;
-
-      // Validate parameter
       if (req.query.industry_tenant_id && isNaN(industry_tenant_id!)) {
         return res.status(400).json({
           message: 'industry_tenant_id must be a valid number',

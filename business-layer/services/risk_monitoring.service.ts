@@ -6,14 +6,10 @@ import { SRMContractService } from './srm_contract.service';
 import { CRMRequisitionService } from './crm_requisition.service';
 import { CRMContractService } from './crm_contract.service';
 import { RiskBaseService } from './risk_base.service';
-
-// Interface untuk data trend risk rate
 export interface RiskRateTrendData {
   year: string;
   value: number;
 }
-
-// Interface untuk hasil monitoring risiko
 export interface RiskMonitoringResult {
   risk_name: string;
   risk_desc: string;
@@ -40,16 +36,6 @@ export class RiskMonitoringService {
     this.riskBaseService = new RiskBaseService();
   }
 
-  /**
-   * Mendapatkan data monitoring risiko berdasarkan user
-   * PERBAIKAN: Menggunakan getTenantRiskBases untuk automatic tenant filtering
-   * @param req Request object dengan authentication
-   * @param riskUser Tipe user (Industry, SUPPLIER, RETAIL)
-   * @param industryTenantId Tenant ID industri (opsional - untuk backward compatibility)
-   * @param supplierTenantId Tenant ID supplier (opsional - untuk backward compatibility)
-   * @param retailTenantId Tenant ID retail (opsional - untuk backward compatibility)
-   * @returns Data monitoring risiko
-   */
   async getRiskMonitoring(
     req: Request,
     riskUser: string,
@@ -64,24 +50,16 @@ export class RiskMonitoringService {
         supplierTenantId,
         retailTenantId,
       });
-
-      // PERBAIKAN: Gunakan getTenantRiskBases untuk automatic tenant filtering
       const riskBaseList = await this.riskBaseService.getTenantRiskBases(req);
 
       console.log(
         `[RiskMonitoring] Found ${riskBaseList.length} risk bases for authenticated tenant`,
       );
-
-      // Filter berdasarkan risk_user yang diminta
       const filteredRiskBaseList = riskBaseList.filter(
         (riskBase) =>
           riskBase.risk_user.toLowerCase() === riskUser.toLowerCase(),
       );
-
-      // Normalisasi riskUser
       const normalizedRiskUser = riskUser.toLowerCase();
-
-      // Urutan risk_name yang diharapkan berdasarkan tipe user
       const desiredOrders: Record<string, string[]> = {
         industry: [
           'Ketidaksesuaian Jumlah (Received Items)',
@@ -131,8 +109,6 @@ export class RiskMonitoringService {
       }
 
       const riskMonitoringList: RiskMonitoringResult[] = [];
-
-      // Loop untuk setiap risiko dan dapatkan data trend
       for (const riskBase of sortedRiskBaseList) {
         try {
           const { risk_name, risk_desc, risk_group } = riskBase;
@@ -140,15 +116,10 @@ export class RiskMonitoringService {
           console.log(
             `[RiskMonitoring] Processing risk: ${risk_name} (${risk_group}) - Tenant: ${riskBase.tenant_id}`,
           );
-
-          // Inisialisasi dengan array kosong
           let riskRateTrend: RiskRateTrendData[] = [];
-
-          // Normalisasi riskUser untuk pencocokan yang tidak case-sensitive
           const normalizedRiskUser = riskUser.toLowerCase();
 
           try {
-            // Gunakan helper method untuk mendapatkan trend data
             riskRateTrend = await this.getTrendDataByRiskType(
               req,
               normalizedRiskUser,
@@ -162,8 +133,6 @@ export class RiskMonitoringService {
             console.log(
               `[RiskMonitoring] Got ${riskRateTrend.length} trend data points for ${risk_name}`,
             );
-
-            // Log sample data untuk debugging
             if (riskRateTrend.length > 0) {
               console.log(
                 `[RiskMonitoring] Sample trend data for ${risk_name}:`,
@@ -175,15 +144,11 @@ export class RiskMonitoringService {
               `Error fetching trend data for risk ${risk_name}:`,
               trendError,
             );
-            riskRateTrend = []; // Set default empty array in case of error
+            riskRateTrend = [];
           }
-
-          // Pastikan trend_data selalu diinisialisasi dengan array kosong jika undefined
           if (!riskRateTrend) {
             riskRateTrend = [];
           }
-
-          // Tambahkan risiko dan trend ke hasil
           riskMonitoringList.push({
             risk_name,
             risk_desc,
@@ -192,8 +157,6 @@ export class RiskMonitoringService {
           });
         } catch (riskError) {
           console.error(`Error processing risk:`, riskError);
-
-          // Tambahkan data minimal untuk risiko yang gagal diproses
           if (riskBase) {
             riskMonitoringList.push({
               risk_name: riskBase.risk_name || 'Error retrieving risk name',
@@ -211,15 +174,10 @@ export class RiskMonitoringService {
       return riskMonitoringList;
     } catch (error) {
       console.error('Error in getRiskMonitoring:', error);
-      // Kembalikan array kosong jika terjadi error pada level tinggi
       return [];
     }
   }
 
-  /**
-   * ALTERNATIF: Jika ingin menggunakan manual criteria dengan tenant_id
-   * Uncomment method ini dan comment method getRiskMonitoring di atas jika ingin menggunakan approach manual
-   */
   /*
   async getRiskMonitoringManual(
     req: Request,
@@ -232,11 +190,7 @@ export class RiskMonitoringService {
       console.log(`[RiskMonitoring] Getting risk monitoring for:`, {
         riskUser, industryTenantId, supplierTenantId, retailTenantId
       });
-
-      // PERBAIKAN: Tambahkan tenant_id ke criteria
       const criteria: any = { risk_user: riskUser };
-      
-      // Tambahkan tenant_id filter berdasarkan risk_user
       if (riskUser.toLowerCase() === 'industry' && industryTenantId) {
         criteria.tenant_id = industryTenantId;
       } else if (riskUser.toLowerCase() === 'supplier' && supplierTenantId) {
@@ -250,8 +204,6 @@ export class RiskMonitoringService {
       const riskBaseList = await this.riskBaseService.findRiskBasesByCriteria(req, criteria);
       
       console.log(`[RiskMonitoring] Found ${riskBaseList.length} risk bases for ${riskUser} with tenant filter`);
-
-      // ... rest of the processing logic sama seperti method di atas
     } catch (error) {
       console.error('Error in getRiskMonitoring:', error);
       return [];
@@ -259,10 +211,6 @@ export class RiskMonitoringService {
   }
   */
 
-  /**
-   * Helper method untuk mendapatkan trend data berdasarkan risk type
-   * PERBAIKAN: Extract logic ke method terpisah untuk lebih mudah maintenance
-   */
   private async getTrendDataByRiskType(
     req: Request,
     normalizedRiskUser: string,
@@ -304,9 +252,6 @@ export class RiskMonitoringService {
     return [];
   }
 
-  /**
-   * Helper method untuk mendapatkan trend data Industry
-   */
   private async getIndustryTrendData(
     req: Request,
     risk_group: string,
@@ -392,9 +337,6 @@ export class RiskMonitoringService {
     return [];
   }
 
-  /**
-   * Helper method untuk mendapatkan trend data Supplier
-   */
   private async getSupplierTrendData(
     req: Request,
     risk_group: string,
@@ -438,9 +380,6 @@ export class RiskMonitoringService {
     return [];
   }
 
-  /**
-   * Helper method untuk mendapatkan trend data Retail
-   */
   private async getRetailTrendData(
     risk_group: string,
     risk_name: string,
@@ -479,17 +418,6 @@ export class RiskMonitoringService {
     return [];
   }
 
-  /**
-   * Mendapatkan data monitoring untuk satu risiko spesifik
-   * PERBAIKAN: Menggunakan getTenantRiskBases untuk consistency
-   * @param req Request object dengan authentication
-   * @param riskUser Tipe user (Industry, SUPPLIER, RETAIL)
-   * @param riskName Nama risiko
-   * @param industryTenantId Tenant ID industri (opsional - untuk backward compatibility)
-   * @param supplierTenantId Tenant ID supplier (opsional - untuk backward compatibility)
-   * @param retailTenantId Tenant ID retail (opsional - untuk backward compatibility)
-   * @returns Data monitoring untuk risiko spesifik
-   */
   async getSpecificRiskMonitoring(
     req: Request,
     riskUser: string,
@@ -506,15 +434,11 @@ export class RiskMonitoringService {
         supplierTenantId,
         retailTenantId,
       });
-
-      // PERBAIKAN: Gunakan getTenantRiskBases untuk automatic tenant filtering
       const riskBaseList = await this.riskBaseService.getTenantRiskBases(req);
 
       console.log(
         `[SpecificRisk] Found ${riskBaseList.length} risk bases for authenticated tenant`,
       );
-
-      // Filter berdasarkan risk_user dan risk_name
       const specificRiskBase = riskBaseList.find(
         (riskBase) =>
           riskBase.risk_user.toLowerCase() === riskUser.toLowerCase() &&
@@ -533,11 +457,7 @@ export class RiskMonitoringService {
       console.log(
         `[SpecificRisk] Found risk: ${risk_name} (${risk_group}) - Tenant: ${specificRiskBase.tenant_id}`,
       );
-
-      // Normalisasi riskUser untuk pencocokan yang tidak case-sensitive
       const normalizedRiskUser = riskUser.toLowerCase();
-
-      // Gunakan helper method yang sama
       let riskRateTrend: RiskRateTrendData[] = [];
 
       try {
@@ -559,15 +479,11 @@ export class RiskMonitoringService {
           `Error fetching trend data for specific risk ${risk_name}:`,
           trendError,
         );
-        riskRateTrend = []; // Set default empty array in case of error
+        riskRateTrend = [];
       }
-
-      // Pastikan trend_data selalu diinisialisasi dengan array kosong jika undefined
       if (!riskRateTrend) {
         riskRateTrend = [];
       }
-
-      // Kembalikan hasil monitoring untuk risiko spesifik
       return {
         risk_name,
         risk_desc,
